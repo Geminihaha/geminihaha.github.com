@@ -9,4 +9,10 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target" : { "namespace": "android_app", "package_name": "kr.midri.geminihaha.testinstantapp",
                "sha256_cert_fingerprints": ["39:DE:88:4D:9F:7A:95:49:79:53:63:77:6D:04:6B:FF:C1:07:5C:32:9B:79:04:3A:B2:2F:CE:58:0C:B0:0F:20"] }
-}]
+},
+{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target" : { "namespace": "android_app", "package_name": "kr.midri.geminihaha.testinstantapp",
+               "sha256_cert_fingerprints": ["2B:D7:D4:29:59:4D:29:6D:F1:41:3F:6C:15:C5:A5:05:FB:B1:23:3E:7B:09:93:98:B9:45:70:C4:F3:C3:3B:BD"] }
+}
+]
