@@ -1,10 +1,4 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "web",
-    "site": "https://geminihaha.github.io"
-  }
-},
+[
 {
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target" : { "namespace": "android_app", "package_name": "kr.midri.geminihaha.testinstantapp",
