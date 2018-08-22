@@ -5,6 +5,12 @@
     "author": "Built For Me Inc.",
     "version": "1.2",
     "short_name": "LinkedIncognito",
-
+    "prefer_related_applications": true,
+    "related_applications": [
+      {
+        "platform": "play",
+        "id": "com.midri.geminihaha.testinstantapp"
+      }
+    ]
 
 }
