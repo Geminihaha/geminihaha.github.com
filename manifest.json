@@ -1,10 +1,10 @@
 {
     "manifest_version": 2,
-    "name": "LinkedIncognito",
-    "description": "Anonymizes candidates to reduce unconscious bias.",
+    "name": "geminihaha GitHub",
+    "description": "geminihaha GitHub.",
     "author": "Built For Me Inc.",
-    "version": "1.2",
-    "short_name": "LinkedIncognito",
+    "version": "1.0.0",
+    "short_name": "geminihahaGitHub",
     "prefer_related_applications": false,
     "related_applications": [
       {
