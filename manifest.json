@@ -5,7 +5,7 @@
     "author": "Built For Me Inc.",
     "version": "1.2",
     "short_name": "LinkedIncognito",
-    "prefer_related_applications": true,
+    "prefer_related_applications": false,
     "related_applications": [
       {
         "platform": "play",
