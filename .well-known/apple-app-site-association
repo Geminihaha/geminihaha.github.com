@@ -3,8 +3,7 @@
     { 
 	    "apps": [], 
 	    "details": [
-	    { "appID": "L54C52L6Z6.com.seerooinfo.apppos", "paths": ["*"] },
-	    { "appID": "com.naver.www", "paths": ["*"] }
+	    { "appID": "L54C52L6Z6.com.seerooinfo.apppos", "paths": ["*"] }	    
 	    ]
     }
 }
