@@ -2,6 +2,9 @@
     "applinks": 
     { 
 	    "apps": [], 
-	    "details": [{ "appID": "L54C52L6Z6.com.seerooinfo.apppos", "paths": ["*"] }]
+	    "details": [
+	    { "appID": "L54C52L6Z6.com.seerooinfo.apppos", "paths": ["*"] },
+	    { "appID": "com.naver.www", "paths": ["*"] }
+	    ]
     }
 }
