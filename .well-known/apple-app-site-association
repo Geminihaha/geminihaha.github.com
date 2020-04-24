@@ -2,6 +2,6 @@
     "applinks": 
     { 
 	    "apps": [], 
-	    "details": [{ "appID": "yourTeamID1.com.your.domain1", "paths": ["*"] }]
+	    "details": [{ "appID": "com.smartbank.ios", "paths": ["*"] }]
     }
 }
