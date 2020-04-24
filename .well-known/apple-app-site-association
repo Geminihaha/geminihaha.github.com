@@ -2,6 +2,6 @@
     "applinks": 
     { 
 	    "apps": [], 
-	    "details": [{ "appID": "com.smartbank.ios", "paths": ["*"] }]
+	    "details": [{ "appID": "kr.co.smartbank.SmartSavings", "paths": ["*"] }]
     }
 }
