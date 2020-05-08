@@ -2,6 +2,6 @@
 {
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target" : { "namespace": "android_app", "package_name": "com.smartbank.android",
-               "sha256_cert_fingerprints": ["2B:D7:D4:29:59:4D:29:6D:F1:41:3F:6C:15:C5:A5:05:FB:B1:23:3E:7B:09:93:98:B9:45:70:C4:F3:C3:3B:BD"] }
+               "sha256_cert_fingerprints": ["5B:8B:86:EF:B6:2C:08:44:BB:4B:BB:8A:BF:40:D7:D3:78:03:A6:4F:EF:A2:75:ED:AD:EC:BB:6A:9F:6B:F9:52"] }
 }
 ]
