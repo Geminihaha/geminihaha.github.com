@@ -11,7 +11,7 @@
 			if(ua.match(/Android/i)) deviceType = 'android';
 			else if(ua.match(/iPhone/i) || ua.match(/iPad/i) || ua.match(/iPod/i)) deviceType = 'ios';
 
-			
+			window.top.location.assign("intent://startApp?pageUrl=MCS0053#Intent;scheme=smartsavings;package=com.smartbank.android;end");
 	                //window.top.location.href = "smartsavings://startApp?pageUrl='MCS0053'";
 		};
     
@@ -48,7 +48,7 @@
     // getAndroidVersion(); //"4.2.1"
     // parseInt(getAndroidVersion(), 10); //4
     // parseFloat(getAndroidVersion()); //4.2
-window.top.location.assign("intent://startApp?pageUrl=MCS0053#Intent;scheme=smartsavings;package=com.smartbank.android;end");
+
 	
 </script>
 <head>  
