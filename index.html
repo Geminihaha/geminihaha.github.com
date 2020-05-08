@@ -4,6 +4,16 @@
 <link rel="manifest" href="/manifest.json"/> 
 <script src="app.js"></script>
 <script type="text/javascript">
+    var deviceType;
+	var ua = navigator.userAgent;
+    
+    window.onload = function() {
+			if(ua.match(/Android/i)) deviceType = 'android';
+			else if(ua.match(/iPhone/i) || ua.match(/iPad/i) || ua.match(/iPod/i)) deviceType = 'ios';
+
+			window.top.location.href = "intent://startApp?pageUrl=MCS0053#Intent;scheme=smartsavings;package=com.smartbank.android;end"
+		};
+    
     function getAndroidVersion(ua) {
         ua = (ua || navigator.userAgent).toLowerCase(); 
         var match = ua.match(/android\s([0-9\.]*)/);
