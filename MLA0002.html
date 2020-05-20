@@ -9,13 +9,12 @@
 	<script>
 		var deviceType;
 		var ua = navigator.userAgent;
-		var pu;
 		var appParam = "";
 
 		window.onload = function() {
-			//params = getUrlParams();
-			pu = getParam("pu");
-			appParam = genAppSchemeParam();
+			var pu = getParam("pu");
+			appParam = genAppSchemeParam(pu);
+			
 			if(ua.match(/Android/i)) deviceType = 'android';
 			else if(ua.match(/iPhone/i) || ua.match(/iPad/i) || ua.match(/iPod/i)) deviceType = 'ios';
 
@@ -49,10 +48,10 @@
 		    	return sval;
 		}
 		
-		function genAppSchemeParam(){
+		function genAppSchemeParam(sname){
 			var param = "";
 			if (pu.length > 1){
-				param = '?pageUrl=' + pu;
+				param = '?pageUrl=' + sname;
 			}
 			return param;
 		}
