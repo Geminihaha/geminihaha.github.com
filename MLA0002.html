@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="format-detection" content="telephone=no">
+	<title></title>
+	<link rel="stylesheet" href="../css/style_landing.css" />
+	<script>
+		var deviceType;
+		var ua = navigator.userAgent;
+
+		window.onload = function() {
+			if(ua.match(/Android/i)) deviceType = 'android';
+			else if(ua.match(/iPhone/i) || ua.match(/iPad/i) || ua.match(/iPod/i)) deviceType = 'ios';
+
+			domove();
+		};
+
+		function domove() {
+			if(deviceType == 'android')
+				window.top.location.href = "intent://startApp?pageUrl=MCS0053#Intent;scheme=smartsavings;package=com.smartsavings.android;end";
+			else if(deviceType == 'ios')
+				window.top.location.href = "smartsavings://startApp?pageUrl='MCS0053'";
+		}
+
+		function doinstall() {
+			if(deviceType == 'android')
+				window.top.location.href = "https://play.google.com/store/apps/details?id=com.smartbank.android";
+			else if(deviceType == 'ios')
+				window.top.location.href = "https://itunes.apple.com/kr/app/apple-store/id1071977178";
+		}
+
+	</script>
+</head>
+<body>
+	<div id="wrap">
+		<div class="flex_box">
+			<div class="flex_item">
+				<div class="message_wrap">
+					<div class="cont">
+						<div>
+							<a href=""><img src="../images/bi.png" alt="smart저축은행" class="bi"></a>
+						</div>
+						<div class="cont_w">
+							<p>앱으로 바로 이동합니다</p>
+							<a href="javascript:domove();"><button type="button" class="but">앱에서 보기<i class="icon">
+								<img src="../images/ic_go.png" alt="">
+							</i></button></a>
+						</div>
+						<div class="cont_w">
+							<p>앱이 설치되지않은 경우<br>앱을 설치해주세요</p>
+							<a href="javascript:doinstall();"><button type="button" class="but download">앱 다운로드<i class="icon">
+								<img src="../images/ic_download.png" alt="">
+							</i></button></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
