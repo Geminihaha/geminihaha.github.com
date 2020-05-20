@@ -25,9 +25,9 @@
 
 		function domove() {
 			if(deviceType == 'android')
-				window.top.location.href = "intent://startApp?"+appParam+"#Intent;scheme=smartsavings;package=com.smartbank.android;end";
+				window.top.location.href = "intent://startApp"+appParam+"#Intent;scheme=smartsavings;package=com.smartbank.android;end";
 			else if(deviceType == 'ios')
-				window.top.location.href = "smartsavings://startApp?"+appParam;
+				window.top.location.href = "smartsavings://startApp"+appParam;
 		}
 
 		function doinstall() {
@@ -52,7 +52,7 @@
 		function genAppSchemeParam(){
 			var param = "";
 			if (pu.length > 1){
-				param = 'pageUrl=' + pu;
+				param = '?pageUrl=' + pu;
 			}
 			return param;
 		}
