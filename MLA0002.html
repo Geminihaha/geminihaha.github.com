@@ -9,12 +9,16 @@
 	<script>
 		var deviceType;
 		var ua = navigator.userAgent;
+		var params;
 
 		window.onload = function() {
+			params = getUrlParams();
+			
 			if(ua.match(/Android/i)) deviceType = 'android';
 			else if(ua.match(/iPhone/i) || ua.match(/iPad/i) || ua.match(/iPod/i)) deviceType = 'ios';
 
 			domove();
+			
 		};
 
 		function domove() {
@@ -29,6 +33,12 @@
 				window.top.location.href = "https://play.google.com/store/apps/details?id=com.smartbank.android";
 			else if(deviceType == 'ios')
 				window.top.location.href = "https://itunes.apple.com/kr/app/apple-store/id1071977178";
+		}
+		
+		function getUrlParams() {
+ 			var params = {};
+    			window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(str, key, value) { params[key] = value; });
+    			return params;
 		}
 
 	</script>
