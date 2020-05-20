@@ -10,9 +10,11 @@
 		var deviceType;
 		var ua = navigator.userAgent;
 		var params;
+		var pu;
 
 		window.onload = function() {
-			params = getUrlParams();
+			//params = getUrlParams();
+			pu = getParam("pu");
 			
 			if(ua.match(/Android/i)) deviceType = 'android';
 			else if(ua.match(/iPhone/i) || ua.match(/iPad/i) || ua.match(/iPod/i)) deviceType = 'ios';
@@ -39,6 +41,18 @@
  			var params = {};
     			window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(str, key, value) { params[key] = value; });
     			return params;
+		}
+		
+		// url 에서 parameter 추출
+		function getParam(sname) {
+		   var params = location.search.substr(location.search.indexOf("?") + 1);
+		    var sval = "";
+		    params = params.split("&");
+		    for (var i = 0; i < params.length; i++) {
+			temp = params[i].split("=");
+			if ([temp[0]] == sname) { sval = temp[1]; }
+		    }
+		    return sval;
 		}
 
 	</script>
