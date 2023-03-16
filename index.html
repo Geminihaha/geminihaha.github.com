@@ -58,11 +58,13 @@
     };
 	
     function callmapgbc(){
-	window.location.href = 'intent://data?openUrl=Mbti.jsx#Intent;scheme=mapgbc;package=com.gbc.mapgbc;end'
+	    var data = `Mbti.jsx`
+	location.href = 'intent://data?openUrl=${data}#Intent;scheme=mapgbc;package=com.gbc.mapgbc;end'
     }
 
     function callmapgbc2(){
-	window.location.href = `intent://data?openUrl=Mbti.jsx#Intent;scheme=mapgbc;package=com.gbc.mapgbc;end`
+	var data = `Mbti.jsx`
+	location.href = `intent://data?openUrl=${data}#Intent;scheme=mapgbc;package=com.gbc.mapgbc;end`
     }
 
     // getAndroidVersion(); //"4.2.1"
