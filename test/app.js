@@ -1,8 +1,8 @@
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth - 100;
-canvas.height = window.innerHeight - 100;
+canvas.width = window.innerWidth - 500;
+canvas.height = window.innerHeight - 500;
 
 var dino = {
     x : 10,
@@ -14,8 +14,6 @@ var dino = {
         ctx.fillRect(this.x, this.y, this.width, this.height)
     }
 }
-dino.x += 1
-dino.draw();
 
 class Cactus {
     constructor(){
@@ -31,17 +29,31 @@ class Cactus {
     }
 }
 
-var cactus = new Cactus();
 
+var cactusArr = [];
+var timer = 0.0;
 
 function callFrames(){
     requestAnimationFrame(callFrames);
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+    timer++
 
-    cactus.x -= 1
-    cactus.draw();
+    if (timer % 120 === 0){
+        var cactus = new Cactus();
+        cactusArr.push(cactus)
+    }
+
     dino.draw();
+    var i = 0;
+    for (i = 0 ; i < cactusArr.length; i++){
+        cactusArr[i].x--;
+        cactusArr[i].draw();
+    }
+//    cactusArr.forEach((cactusItem)=>{
+//        cactusItem.x--;
+//        cactusItem.draw();
+//    })
+
 }
 
 callFrames();
-
