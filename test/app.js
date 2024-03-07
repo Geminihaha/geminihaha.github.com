@@ -14,5 +14,5 @@ var dino = {
         ctx.fillRect(this.x, this.y, this.width, this.height)
     }
 
-    dino.draw()
+    dino.draw();
 }
