@@ -1,8 +1,8 @@
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth - 500;
-canvas.height = window.innerHeight - 500;
+canvas.width = 500;
+canvas.height = 500;
 
 var dino = {
     x : 10,
