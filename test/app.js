@@ -3,6 +3,10 @@ var ctx = canvas.getContext('2d');
 
 canvas.width = 500;
 canvas.height = 200;
+var cactusArr = [];
+var timer = 0.0;
+var isJump = false;
+var animId = 0;
 
 var dino = {
     x : 100,
@@ -28,12 +32,6 @@ class Cactus {
         ctx.fillRect(this.x, this.y, this.width, this.height)
     }
 }
-
-
-var cactusArr = [];
-var timer = 0.0;
-var isJump = false;
-var animId = 0;
 
 function callFrames(){
     animId = requestAnimationFrame(callFrames);
