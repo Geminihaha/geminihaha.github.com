@@ -12,6 +12,7 @@ var app2 = new Vue({
         message: '이 페이지는 ' + date + ' 에 로드 되었습니다'
     }
 })
+
 var example1 = new Vue({
 el: '#example-1',
     data: {
@@ -19,6 +20,13 @@ el: '#example-1',
     }
 })
 
+var example2 = new Vue({
+    el: '#example-2',
+        data: {
+            counter2: 0
+        }
+    })
+    
 var testData = {
         t1:"1" ,
         t2:"2" }
