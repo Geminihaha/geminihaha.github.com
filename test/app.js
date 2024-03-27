@@ -14,8 +14,11 @@ var dino = {
     width : 10,
     height : 50,
     draw(){
-        ctx.fillStyle = 'green'
-        ctx.fillRect(this.x, this.y, this.width, this.height)
+        // ctx.fillStyle = 'green'
+        // ctx.fillRect(this.x, this.y, this.width, this.height)
+        const Img = new Image(this.width, this.height);
+        Img.src = "https://img.icons8.com/?size=60&id=106735&format=png";
+        ctx.drawImage(Img, this.x, this.y);
     }
 }
 
@@ -26,10 +29,14 @@ class Cactus {
     this.width = 10;
     this.height = 50;
     }
-   draw()
+    draw()
     {
-        ctx.fillStyle = 'red'
-        ctx.fillRect(this.x, this.y, this.width, this.height)
+        // ctx.fillStyle = 'red'
+        // ctx.fillRect(this.x, this.y, this.width, this.height)
+        const Img = new Image(this.width, this.height);
+        Img.src = "https://img.icons8.com/?size=96&id=4thTqrbZySUa&format=png";
+        ctx.drawImage(Img, this.x, this.y);
+        
     }
 }
 
