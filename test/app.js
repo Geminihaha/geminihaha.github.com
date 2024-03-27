@@ -18,7 +18,10 @@ var dino = {
         // ctx.fillRect(this.x, this.y, this.width, this.height)
         const Img = new Image(this.width, this.height);
         Img.src = "https://img.icons8.com/?size=60&id=106735&format=png";
-        ctx.drawImage(Img, this.x, this.y);
+        Img.addEventListener("load", (e) => {
+            ctx.drawImage(Img, this.x, this.y);
+          });
+        // ctx.drawImage(Img, this.x, this.y);
     }
 }
 
@@ -35,7 +38,10 @@ class Cactus {
         // ctx.fillRect(this.x, this.y, this.width, this.height)
         const Img = new Image(this.width, this.height);
         Img.src = "https://img.icons8.com/?size=96&id=4thTqrbZySUa&format=png";
-        ctx.drawImage(Img, this.x, this.y);
+        Img.addEventListener("load", (e) => {
+            ctx.drawImage(Img, this.x, this.y);
+          });
+        // ctx.drawImage(Img, this.x, this.y);
         
     }
 }
