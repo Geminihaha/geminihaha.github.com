@@ -17,11 +17,11 @@ var dino = {
         // ctx.fillStyle = 'green'
         // ctx.fillRect(this.x, this.y, this.width, this.height)
         const Img = new Image(this.width, this.height);
-        Img.src = "https://img.icons8.com/?size=60&id=106735&format=png";
-        Img.addEventListener("load", (e) => {
-            ctx.drawImage(Img, this.x, this.y);
-          });
-        // ctx.drawImage(Img, this.x, this.y);
+        Img.src = "ball.png";
+        // Img.addEventListener("load", (e) => {
+            // ctx.drawImage(Img, this.x, this.y);
+        //   });
+        ctx.drawImage(Img, this.x, this.y);
     }
 }
 
@@ -37,11 +37,11 @@ class Cactus {
         // ctx.fillStyle = 'red'
         // ctx.fillRect(this.x, this.y, this.width, this.height)
         const Img = new Image(this.width, this.height);
-        Img.src = "https://img.icons8.com/?size=96&id=4thTqrbZySUa&format=png";
-        Img.addEventListener("load", (e) => {
-            ctx.drawImage(Img, this.x, this.y);
-          });
-        // ctx.drawImage(Img, this.x, this.y);
+        Img.src = "wall.png";
+        // Img.addEventListener("load", (e) => {
+            // ctx.drawImage(Img, this.x, this.y);
+        //   });
+        ctx.drawImage(Img, this.x, this.y);
         
     }
 }
