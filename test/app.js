@@ -50,12 +50,14 @@ function callFrames(){
     animId = requestAnimationFrame(callFrames);
     timer++
 
-    if (timer % 240 === 0){
+    // if (timer % 240 === 0){
+    if (timer % 120 === 0){
         var cactus = new Cactus();
         cactusArr.push(cactus)
     }
 
-    if (timer % 4/*  */ === 0){
+    // if (timer % 4 === 0){
+    if (timer % 1 === 0){
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         dino.draw();
         var i = 0;
