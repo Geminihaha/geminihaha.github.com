@@ -48,31 +48,33 @@ class Cactus {
 
 function callFrames(){
     animId = requestAnimationFrame(callFrames);
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
     timer++
 
-    if (timer % 120 === 0){
+    if (timer % 240 === 0){
         var cactus = new Cactus();
         cactusArr.push(cactus)
     }
 
-    dino.draw();
-    var i = 0;
-    for (i = 0 ; i < cactusArr.length; i++){
-        cactusArr[i].x -= 2;
-        cactusArr[i].draw();
-        if (cactusArr[i].x == 0.0){
-            cactusArr.splice(0, 1)
-        }
-        if (dino.x >= cactusArr[i].x && dino.x <= cactusArr[i].x + 10
-            && dino.y >= cactusArr[i].y && dino.y <= cactusArr[i].y + 50 
-            )
-            {
-                console.error("crash!!");
-                cancelAnimationFrame(animId);
-                break;
+    if (timer % 4/*  */ === 0){
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        dino.draw();
+        var i = 0;
+        for (i = 0 ; i < cactusArr.length; i++){
+            cactusArr[i].x -= 2;
+            cactusArr[i].draw();
+            if (cactusArr[i].x == 0.0){
+                cactusArr.splice(0, 1)
             }
+            if (dino.x >= cactusArr[i].x && dino.x <= cactusArr[i].x + 10
+                && dino.y >= cactusArr[i].y && dino.y <= cactusArr[i].y + 50 
+                )
+                {
+                    console.error("crash!!");
+                    cancelAnimationFrame(animId);
+                    break;
+                }
 
+        }
     }
 
     if (isJump && dino.y >= -0.01){
