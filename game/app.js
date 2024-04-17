@@ -32,8 +32,7 @@ class Cactus {
     this.width = 10;
     this.height = 50;
     }
-    draw()
-    {
+    draw(){
         // ctx.fillStyle = 'red'
         // ctx.fillRect(this.x, this.y, this.width, this.height)
         const Img = new Image(this.width, this.height);
@@ -42,7 +41,6 @@ class Cactus {
             // ctx.drawImage(Img, this.x, this.y);
         //   });
         ctx.drawImage(Img, this.x, this.y);
-        
     }
 }
 
@@ -72,6 +70,7 @@ function callFrames(){
                 )
                 {
                     console.error("crash!!");
+                    alert("crash!!")
                     cancelAnimationFrame(animId);
                     break;
                 }
