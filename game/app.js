@@ -90,12 +90,12 @@ function callFrames(){
         cactusArr.push(cactus)
     }
 
+    const countElId = document.getElementById("countNumber");
+    var countNum = Number(countElId.value)
     // if (timer % 4 === 0){
     if (timer % 1 === 0){
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        count.draw();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         var i = 0;
-
         for (i = 0 ; i < cloudArr.length; i++){
             cloudArr[i].x -= 0.5;
             
@@ -112,13 +112,16 @@ function callFrames(){
             cactusArr[i].draw();
             if (cactusArr[i].x == 0.0){
                 cactusArr.splice(0, 1)
+                
+                countElId.value = countNum + 1;
             }
             if (dino.x >= cactusArr[i].x && dino.x <= cactusArr[i].x + 10
                 && dino.y >= cactusArr[i].y && dino.y <= cactusArr[i].y + 50 
                 )
                 {
-                    console.error("crash!!");
+                    console.log("crash!!");
                     alert("crash!!")
+                    countElId.value = 0
                     cancelAnimationFrame(animId);
                     break;
                 }
