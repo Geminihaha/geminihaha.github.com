@@ -186,6 +186,10 @@ function eventJump(){
     isJump = true
 }
 
+function eventStopJump(){
+    isJump = false
+}
+
 function restartCallFrame(){
     cactusArr.splice(0, cactusArr.length)
     airplaneArr.splice(0, airplaneArr.length)
