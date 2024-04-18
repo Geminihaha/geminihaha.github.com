@@ -4,14 +4,17 @@ var ctx = canvas.getContext('2d');
 canvas.width = 500;
 canvas.height = 200;
 var cactusArr = [];
+var airplaneArr = [];
 var cloudArr = [];
 var timer = 0.0;
 var isJump = false;
 var animId = 0;
 
+const countElId = document.getElementById("countNumber");
+
 var dino = {
     x : 100,
-    y : 100,
+    y : 150,
     width : 10,
     height : 50,
     draw(){
@@ -37,12 +40,26 @@ var count = {
     }
 }
 
+class Airplane {
+    constructor(){
+        this.x = 500;
+        this.y = 10;
+        this.width = 10;
+        this.height = 5;
+    }
+    draw(){
+        const Img = new Image(this.width, this.height);
+        Img.src = "airplane.png";
+        ctx.drawImage(Img, this.x, this.y);
+    }
+}
+
 class Cactus {
     constructor(){
         this.x = 500;
-        this.y = 100;
+        this.y = 150;
         this.width = 10;
-        this.height = 50;
+        this.height = 10;
     }
     draw(){
         // ctx.fillStyle = 'red'
@@ -90,7 +107,11 @@ function callFrames(){
         cactusArr.push(cactus)
     }
 
-    const countElId = document.getElementById("countNumber");
+    if (timer % 240 === 0){
+        var airplane = new Airplane();
+        airplaneArr.push(airplane)
+    }
+
     var countNum = Number(countElId.value)
     // if (timer % 4 === 0){
     if (timer % 1 === 0){
@@ -106,6 +127,21 @@ function callFrames(){
         }
 
         dino.draw();
+        
+        for (i = 0 ; i < airplaneArr.length; i++){
+            airplaneArr[i].x -= 1;
+            
+            airplaneArr[i].draw();
+            if (airplaneArr[i].x == 0.0){
+                airplaneArr.splice(0, 1)
+                countElId.value = countNum + 1;
+            }
+            if (dino.x >= airplaneArr[i].x && dino.x <= airplaneArr[i].x + 10
+                && dino.y >= airplaneArr[i].y && dino.y <= airplaneArr[i].y + 10 )
+            {
+                crashEvent();
+            }
+        }
 
         for (i = 0 ; i < cactusArr.length; i++){
             cactusArr[i].x -= 2;
@@ -116,15 +152,10 @@ function callFrames(){
                 countElId.value = countNum + 1;
             }
             if (dino.x >= cactusArr[i].x && dino.x <= cactusArr[i].x + 10
-                && dino.y >= cactusArr[i].y && dino.y <= cactusArr[i].y + 50 
-                )
-                {
-                    console.log("crash!!");
-                    alert("crash!!")
-                    countElId.value = 0
-                    cancelAnimationFrame(animId);
-                    break;
-                }
+                && dino.y >= cactusArr[i].y && dino.y <= cactusArr[i].y + 50 )
+            {
+                crashEvent();
+            }
 
         }
     }
@@ -135,11 +166,21 @@ function callFrames(){
             isJump = false
         }
     } else {
-        if (dino.y < 100){
+        if (dino.y < 150){
             dino.y += 3
         }
     }
 }
+
+function crashEvent(){
+    console.log("crash!!");
+    alert("crash!!")
+    cactusArr.splice(0, cactusArr.length)
+    airplaneArr.splice(0, airplaneArr.length)
+    countElId.value = 0
+    cancelAnimationFrame(animId);
+}
+
 
 function eventJump(){
     isJump = true
@@ -147,6 +188,7 @@ function eventJump(){
 
 function restartCallFrame(){
     cactusArr.splice(0, cactusArr.length)
+    airplaneArr.splice(0, airplaneArr.length)
     callFrames();
 }
 
