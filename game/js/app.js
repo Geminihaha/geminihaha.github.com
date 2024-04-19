@@ -87,8 +87,20 @@ class Cloud {
     }
 }
 
+createjs.Ticker.addEventListener("tick", handleTick);
+createjs.Ticker.framerate = 60;
+
+function handleTick(event) {
+    // Actions carried out each tick (aka frame)
+    callFrames();
+    if (!event.paused) {
+        // Actions carried out when the Ticker is not paused.
+        // callFrames();
+    }
+}
+
 function callFrames() {
-    animId = requestAnimationFrame(callFrames);
+    // animId = requestAnimationFrame(callFrames);
     timer++
 
     if (timer === 1 || timer % 480 === 0) {
@@ -99,7 +111,7 @@ function callFrames() {
         for (t = 0; t < 2; t++) {
             var cloud = new Cloud();
             cloudArr.push(cloud)
-            cloudArr[t].x = -100 + (t * 240);
+            cloudArr[t].x = -100 + (t * 280);
         }
     }
     if (timer % 80 === 0) {
@@ -176,7 +188,7 @@ function crashEvent() {
     cactusArr.splice(0, cactusArr.length)
     airplaneArr.splice(0, airplaneArr.length)
     countElId.value = 0
-    cancelAnimationFrame(animId);
+        // cancelAnimationFrame(animId);
 }
 
 
@@ -194,7 +206,7 @@ function restartCallFrame() {
     callFrames();
 }
 
-callFrames();
+//callFrames();
 
 //    cactusArr.forEach((cactusItem)=>{
 //        cactusItem.x--;
