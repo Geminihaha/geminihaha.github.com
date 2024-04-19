@@ -203,7 +203,7 @@ function eventStopJump() {
 function restartCallFrame() {
     cactusArr.splice(0, cactusArr.length)
     airplaneArr.splice(0, airplaneArr.length)
-    callFrames();
+        // callFrames();
 }
 
 //callFrames();
