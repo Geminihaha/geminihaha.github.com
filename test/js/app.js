@@ -185,10 +185,10 @@ function callFrames() {
 function crashEvent() {
     console.log("crash!!");
     alert("crash!!")
-        // cactusArr.splice(0, cactusArr.length)
-        // airplaneArr.splice(0, airplaneArr.length)
-        // countElId.value = 0
-        // cancelAnimationFrame(animId);
+    cactusArr.splice(0, cactusArr.length)
+    airplaneArr.splice(0, airplaneArr.length)
+    countElId.value = 0
+    cancelAnimationFrame(animId);
 }
 
 
