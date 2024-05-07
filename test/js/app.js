@@ -92,10 +92,9 @@ createjs.Ticker.framerate = 60;
 
 function handleTick(event) {
     // Actions carried out each tick (aka frame)
-    callFrames();
     if (!event.paused) {
         // Actions carried out when the Ticker is not paused.
-        // callFrames();
+        callFrames();
     }
 }
 
@@ -184,26 +183,29 @@ function callFrames() {
 
 function crashEvent() {
     console.log("crash!!");
-    alert("crash!!")
-    cactusArr.splice(0, cactusArr.length)
-    airplaneArr.splice(0, airplaneArr.length)
-    countElId.value = 0
-    cancelAnimationFrame(animId);
+    alert("crash!!");
+    // cactusArr.splice(0, cactusArr.length);
+    // airplaneArr.splice(0, airplaneArr.length);
+    // countElId.value = 0;
+    // cancelAnimationFrame(animId);
+    createjs.Ticker.removeAllEventListeners();
 }
 
 
 function eventJump() {
-    isJump = true
+    isJump = true;
 }
 
 function eventStopJump() {
-    isJump = false
+    isJump = false;
 }
 
 function restartCallFrame() {
-    cactusArr.splice(0, cactusArr.length)
-    airplaneArr.splice(0, airplaneArr.length)
-    callFrames();
+    cactusArr.splice(0, cactusArr.length);
+    airplaneArr.splice(0, airplaneArr.length);
+    // callFrames();
+    createjs.Ticker.addEventListener("tick", handleTick);
+    createjs.Ticker.framerate = 60;
 }
 
 //callFrames();
