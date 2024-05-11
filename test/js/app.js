@@ -182,11 +182,11 @@ function callFrames() {
 }
 
 function crashEvent() {
-    console.log("crash!!");
-    alert("crash!!");
+    console.log("아이구 부딪쳤네!!");
+    alert("아이구 부딪쳤네!!");
     // cactusArr.splice(0, cactusArr.length);
     // airplaneArr.splice(0, airplaneArr.length);
-    // countElId.value = 0;
+    countElId.value = 0;
     // cancelAnimationFrame(animId);
     createjs.Ticker.removeAllEventListeners();
 }
