@@ -1,8 +1,19 @@
+.canvas {
+    background-color: #eeeeee;
+    color: darkblue;
+    height: 200px;
+    width: 500px;
+    border-radius: 5px;
+    border-width: 5px;
+    border-color: #333333;
+}
+
 .eventBtn {
     background-color: #eeeeee;
     color: darkblue;
     height: 100px;
     width: 240px;
+    border-radius: 5px;
 }
 
 .eventJumpBtn {
@@ -10,4 +21,21 @@
     color: wheat;
     height: 100px;
     width: 240px;
+    border-radius: 5px;
+}
+
+.creditBtn {
+    background-color: #333333;
+    color: wheat;
+    height: 50px;
+    width: 240px;
+    border-radius: 5px;
+}
+
+.restartBtn {
+    background-color: #eeeeee;
+    color: darkblue;
+    height: 50px;
+    width: 240px;
+    border-radius: 5px;
 }

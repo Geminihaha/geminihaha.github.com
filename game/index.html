@@ -17,26 +17,29 @@
     <title>geminihaha's Jump Game</title>
 </head>
 
-<body style="max-height: 320px; max-width: 500px; scale: 192%;">
+<body style="max-height: 300px; max-width: 500px; scale: 192%;">
     <!-- <h2>geminihaha's Jump Game</h2> -->
-    <p style="height:20px; width:30px; position: relative;top:60px" > 점수 <input type="number" id="countNumber" value=0 style="height:20px; width:50px;"/></p> 
-        </br>
-        <canvas id="canvas">test</canvas>
-        <script src="./js/app.js"></script>
-        </br>
-        </br>
-        <!-- <button><a href="javascript:restartCallFrame()">에니메이션 블럭 점프 재시작</a></button> -->
-        <input type="button" id="resetBtn" onclick="restartCallFrame()" class="eventBtn" value="에니메이션 블럭 점프 재시작" accesskey="r" />
-        </br>
-        </br>
-        <!-- <button><a href="javascript:eventJump()">에니메이션 블럭 점프</a></button> -->
-        <input type="button" id="jumpBtn" onclick="eventJump()" class="eventJumpBtn" value="에니메이션 블럭 점프" />
-        <!-- <button><a href="javascript:eventJump()">에니메이션 블럭 점프</a></button> -->
-        ""    
-        <input type="button" id="jumpStopBtn" onclick="eventStopJump()" class="eventJumpBtn" value="에니메이션 블럭 점프 멈춤" />
-        </br>
-        </br>
-    </h2>
+    <p style="height:20px; width:30px; position: relative;top:60px; left:10px">
+        점수
+        <input type="number" id="countNumber" value=0 style="height:20px; width:50px;" />
+    </p>
+    </br>
+    <canvas id="canvas" class="canvas">test</canvas>
+    <script src="./js/app.js"></script>
+    </br>
+    </br>
+    <!-- <button><a href="javascript:restartCallFrame()">에니메이션 블럭 점프 재시작</a></button> -->
+    <input type="button" id="resetBtn" onclick="restartCallFrame()" class="restartBtn" value="에니메이션 블럭 점프 재시작" accesskey="r" /> --
+    <input type="button" id="jumpStopBtn" onclick="location.href='credit.html'" class="creditBtn" value="Credit" />
+    </br>
+    </br>
+    <!-- <button><a href="javascript:eventJump()">에니메이션 블럭 점프</a></button> -->
+    <input type="button" id="jumpBtn" onclick="eventJump()" class="eventJumpBtn" value="에니메이션 블럭 점프" />
+    <!-- <button><a href="javascript:eventJump()">에니메이션 블럭 점프</a></button> -->
+    --
+    <input type="button" id="jumpStopBtn" onclick="eventStopJump()" class="eventJumpBtn" value="에니메이션 블럭 점프 멈춤" />
+    </br>
+    </br>
 </body>
 
 </html>
