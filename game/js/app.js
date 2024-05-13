@@ -208,6 +208,16 @@ function restartCallFrame() {
     createjs.Ticker.framerate = 60;
 }
 
+window.addEventListener('keydown', (event) => {
+    if (/[j]/.test(event.key)) {
+        eventJump();
+    } else if (/[s]/.test(event.key)) {
+        eventStopJump();
+    } else if (/[r]/.test(event.key)) {
+        restartCallFrame();
+    }
+});
+
 //callFrames();
 
 //    cactusArr.forEach((cactusItem)=>{
