@@ -13,7 +13,7 @@
     color: darkblue;
     height: 100px;
     width: 240px;
-    border-radius: 5px;
+    border-radius: 50px;
 }
 
 .eventJumpBtn {
@@ -21,7 +21,7 @@
     color: wheat;
     height: 100px;
     width: 240px;
-    border-radius: 5px;
+    border-radius: 50px;
 }
 
 .creditBtn {
@@ -29,7 +29,7 @@
     color: wheat;
     height: 50px;
     width: 240px;
-    border-radius: 5px;
+    border-radius: 25px;
 }
 
 .restartBtn {
@@ -37,5 +37,5 @@
     color: darkblue;
     height: 50px;
     width: 240px;
-    border-radius: 5px;
+    border-radius: 25px;
 }
