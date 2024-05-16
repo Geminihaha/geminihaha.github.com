@@ -1,0 +1,13 @@
+.eventBtn {
+    background-color: #eeeeee;
+    color: darkblue;
+    height: 100px;
+    width: 240px;
+}
+
+.eventJumpBtn {
+    background-color: #555555;
+    color: wheat;
+    height: 100px;
+    width: 240px;
+}
