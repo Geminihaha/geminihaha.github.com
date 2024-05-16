@@ -21,7 +21,7 @@ var dino = {
         // ctx.fillStyle = 'green'
         // ctx.fillRect(this.x, this.y, this.width, this.height)
         const Img = new Image(this.width, this.height);
-        Img.src = "./img/ball.png";
+        Img.src = "./img/main_airplane.png";
         // Img.addEventListener("load", (e) => {
         // ctx.drawImage(Img, this.x, this.y);
         //   });
@@ -65,7 +65,7 @@ class Cactus {
         // ctx.fillStyle = 'red'
         // ctx.fillRect(this.x, this.y, this.width, this.height)
         const Img = new Image(this.width, this.height);
-        Img.src = "./img/wall.png";
+        Img.src = "./img/transport.png";
         // Img.addEventListener("load", (e) => {
         // ctx.drawImage(Img, this.x, this.y);
         //   });
