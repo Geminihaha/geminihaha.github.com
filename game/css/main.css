@@ -11,31 +11,33 @@
 .eventBtn {
     background-color: #eeeeee;
     color: darkblue;
-    height: 100px;
-    width: 240px;
-    border-radius: 50px;
+    height: 80px;
+    width: 80px;
+    border-radius: 80px;
 }
 
 .eventJumpBtn {
     background-color: #555555;
     color: wheat;
-    height: 100px;
-    width: 240px;
-    border-radius: 50px;
+    height: 80px;
+    width: 80px;
+    border-radius: 80px;
+    position: relative;
+    top: -90px;
 }
 
 .creditBtn {
     background-color: #333333;
     color: wheat;
-    height: 50px;
-    width: 240px;
-    border-radius: 25px;
+    height: 30px;
+    width: 80px;
+    border-radius: 15px;
 }
 
 .restartBtn {
     background-color: #eeeeee;
     color: darkblue;
-    height: 50px;
-    width: 240px;
-    border-radius: 25px;
+    height: 30px;
+    width: 80px;
+    border-radius: 15px;
 }
