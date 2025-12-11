@@ -23,13 +23,16 @@
         점수 <input type="number" id="countNumber" value=0 style="height:20px; width:50px;" />
     </p>
     <p style="width: 500px;text-align: center;">
+        <input type="button" id="startBtn" onclick="startGame()" class="startBtn" value="게임 시작" />
         <input type="button" id="resetBtn" onclick="restartCallFrame()" class="restartBtn" value="재시작 (r)" />
-        <input type="button" id="jumpStopBtn" onclick="location.href='credit.html'" class="creditBtn" value="Credit" />
+        <input type="button" id="creditBtn" onclick="location.href='credit.html'" class="creditBtn" value="Credit" />
     </p>
     <canvas id="canvas" class="canvas">test</canvas>
     <script src="./js/app.js"></script>
-    <input type="button" id="jumpBtn" onclick="eventJump()" class="eventJumpBtn" value="점프 (j)" />
-    <input type="button" id="jumpStopBtn" onclick="eventStopJump()" class="eventJumpBtn" value="점프 멈춤 (s)" style="position: relative;left: 330px;" />
+    <div style="text-align: center; margin-top: 10px;">
+        <input type="button" id="jumpBtn" onclick="eventJump()" class="eventJumpBtn" value="점프 (j)" />
+        <input type="button" id="jumpStopBtn" onclick="eventStopJump()" class="eventJumpBtn" value="점프 멈춤 (s)" />
+    </div>
 
 </body>
 

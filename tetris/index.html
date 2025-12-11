@@ -8,7 +8,18 @@
 </head>
 <body>
     <h1>Tetris</h1>
+    <div id="score">Score: 0</div>
     <canvas id="tetris" width="240" height="400"></canvas>
+    <div>
+        <button id="start-button" onclick="startGame()">Start Game</button>
+    </div>
+    <div>
+        <button id="left-button" onclick="moveLeft()">Left</button>
+        <button id="right-button" onclick="moveRight()">Right</button>
+        <button id="down-button" onclick="drop()">Down</button>
+        <button id="rotate-clockwise-button" onclick="rotateClockwise()">Rotate Clockwise</button>
+        <button id="rotate-counter-clockwise-button" onclick="rotateCounterClockwise()">Rotate Counter-Clockwise</button>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

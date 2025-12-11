@@ -212,6 +212,27 @@ function updateScore() {
     document.getElementById('score').innerText = player.score;
 }
 
+// Button controls
+function moveLeft() {
+    playerMove(-1);
+}
+
+function moveRight() {
+    playerMove(1);
+}
+
+function drop() {
+    playerDrop();
+}
+
+function rotateClockwise() {
+    playerRotate(1);
+}
+
+function rotateCounterClockwise() {
+    playerRotate(-1);
+}
+
 document.addEventListener('keydown', event => {
     if (event.keyCode === 37) {
         playerMove(-1);
