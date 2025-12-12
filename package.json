@@ -1,0 +1,11 @@
+{
+  "name": "new-project",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "npx http-server / -c-1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

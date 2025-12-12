@@ -6,8 +6,8 @@
 
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    # pkgs.go
     # pkgs.python311
+    # pkgs.go
     # pkgs.python311Packages.pip
     # pkgs.nodejs_20
     # pkgs.nodePackages.nodemon
@@ -21,20 +21,32 @@
       # "vscodevim.vim"
     ];
 
-    # Enable previews
+     # Enable previews and customize configuration
     previews = {
       enable = true;
       previews = {
-        # web = {
-        #   # Example: run "npm run dev" with PORT set to IDX's defined port for previews,
-        #   # and show it in IDX's web preview panel
-        #   command = ["npm" "run" "dev"];
-        #   manager = "web";
-        #   env = {
-        #     # Environment variables to set for your server
-        #     PORT = "$PORT";
-        #   };
-        # };
+        # The following object sets web previews
+        web = {
+          command = [
+            "npm"
+            "run"
+            "start"
+            "--"
+            "--port"
+            "$PORT"
+            "--host"
+            "0.0.0.0"
+            "--disable-host-check"
+          ];
+          manager = "web";
+          # Optionally, specify a directory that contains your web app
+          # cwd = "app/client";
+        };
+        # The following object sets Android previews
+        # Note that this is supported only on Flutter workspaces
+        android = {
+          manager = "flutter";
+        };
       };
     };
 
