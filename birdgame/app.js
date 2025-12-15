@@ -7,20 +7,28 @@ const bg = new Image();
 const pipeNorth = new Image();
 const pipeSouth = new Image();
 
-bird.src = '../game/img/airplane.png';
+bird.src = './assets/bird_ca.png';
 bg.src = '../assets/art/sky.png';
-pipeNorth.src = '../game/img/wall.png';
-pipeSouth.src = '../game/img/wall.png';
+pipeNorth.src = './assets/tree_top.png';
+pipeSouth.src = './assets/tree_bottom.png';
 
 let birdX = 10;
 let birdY = 150;
 let velocityY = 0;
-const gravity = 0.5;
-const jump = -8;
+const gravity = 0.1;
+const jump = -2;
 
 let score = 0;
+let gameLoop;
 
 const pipe = [];
+
+function gameOver() {
+    cancelAnimationFrame(gameLoop);
+    if (confirm('Game over! Play again?')) {
+        location.reload();
+    }
+}
 
 function jumpBird() {
     velocityY = jump;
@@ -55,7 +63,8 @@ function draw() {
         if ((birdX + bird.width >= pipe[i].x && birdX <= pipe[i].x + pipeNorth.width &&
             (birdY <= pipe[i].y + pipeNorth.height || birdY + bird.height >= pipe[i].y + pipeNorth.height + 80)) ||
             birdY + bird.height >= canvas.height) {
-            location.reload();
+            gameOver();
+            return;
         }
 
         if (pipe[i] && pipe[i].x === 5) {
@@ -72,7 +81,7 @@ function draw() {
     ctx.font = '20px Verdana';
     ctx.fillText('Score: ' + score, 10, canvas.height - 20);
 
-    requestAnimationFrame(draw);
+    gameLoop = requestAnimationFrame(draw);
 }
 
 let imageCount = 0;
