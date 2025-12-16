@@ -20,31 +20,38 @@ const jump = -2;
 
 let score = 0;
 let gameLoop;
+let isGameOver = false;
 
 const pipe = [];
 
 function gameOver() {
+    isGameOver = true;
     cancelAnimationFrame(gameLoop);
     if (confirm('Game over! Play again?')) {
         location.reload();
     }
 }
 
+function restartGame() {
+    location.reload();
+}
+
 function jumpBird() {
-    velocityY = jump;
+    if (!isGameOver) {
+        velocityY = jump;
+    }
 }
 
 document.addEventListener('keydown', jumpBird);
 document.getElementById('jumpButton').addEventListener('click', jumpBird);
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+    // --- UPDATE LOGIC ---
+    velocityY += gravity;
+    birdY += velocityY;
 
+    let collisionDetected = false;
     for (let i = 0; i < pipe.length; i++) {
-        ctx.drawImage(pipeNorth, pipe[i].x, pipe[i].y);
-        ctx.drawImage(pipeSouth, pipe[i].x, pipe[i].y + pipeNorth.height + 80);
-
         pipe[i].x--;
 
         if (pipe[i].x === 125) {
@@ -60,28 +67,39 @@ function draw() {
             continue;
         }
 
-        if ((birdX + bird.width >= pipe[i].x && birdX <= pipe[i].x + pipeNorth.width &&
-            (birdY <= pipe[i].y + pipeNorth.height || birdY + bird.height >= pipe[i].y + pipeNorth.height + 80)) ||
-            birdY + bird.height >= canvas.height) {
-            gameOver();
-            return;
-        }
-
         if (pipe[i] && pipe[i].x === 5) {
             score++;
         }
+
+        // Collision detection
+        if ((birdX + bird.width >= pipe[i].x && birdX <= pipe[i].x + pipeNorth.width &&
+            (birdY <= pipe[i].y + pipeNorth.height || birdY + bird.height >= pipe[i].y + pipeNorth.height + 80)) ||
+            birdY + bird.height >= canvas.height) {
+            collisionDetected = true;
+        }
+    }
+
+    // --- DRAWING LOGIC ---
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < pipe.length; i++) {
+        ctx.drawImage(pipeNorth, pipe[i].x, pipe[i].y);
+        ctx.drawImage(pipeSouth, pipe[i].x, pipe[i].y + pipeNorth.height + 80);
     }
 
     ctx.drawImage(bird, birdX, birdY);
-
-    velocityY += gravity;
-    birdY += velocityY;
 
     ctx.fillStyle = '#000';
     ctx.font = '20px Verdana';
     ctx.fillText('Score: ' + score, 10, canvas.height - 20);
 
-    gameLoop = requestAnimationFrame(draw);
+    // --- LOOPING & GAME OVER LOGIC ---
+    if (collisionDetected) {
+        gameOver();
+    } else {
+        gameLoop = requestAnimationFrame(draw);
+    }
 }
 
 let imageCount = 0;
