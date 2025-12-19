@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BLE File Transfer</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <h1>BLE File Transfer</h1>
+  <input type="file" id="file-input">
+  <button id="connect-button">Connect to BLE Device</button>
+  <button id="send-button">Send File</button>
+
+  <script src="ble_file_transfer.js"></script>
+  <script>
+    const bleFileTransfer = new BLEFileTransfer();
+
+    const connectButton = document.getElementById('connect-button');
+    const sendButton = document.getElementById('send-button');
+    const fileInput = document.getElementById('file-input');
+
+    connectButton.addEventListener('click', () => {
+      bleFileTransfer.connect();
+    });
+
+    sendButton.addEventListener('click', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        bleFileTransfer.sendFile(file);
+      } else {
+        console.error('No file selected');
+      }
+    });
+  </script>
+</body>
+</html>
