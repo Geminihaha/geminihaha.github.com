@@ -1,47 +1,31 @@
-/*
-This is the comms protocol for pixl.js
-*/
-
-import { sharedEventDispatcher } from './event.js';
-import * as ble from './pixl.ble.js';
+import { sharedEventDispatcher } from './event';
+import * as pixl from './pixl.ble';
 import ByteBuffer from 'bytebuffer';
 
-const CMD_VFS_READ_FILE = 1;
-const CMD_VFS_WRITE_FILE = 2;
-const CMD_VFS_DELETE_FILE = 3;
-const CMD_VFS_LIST_FILES = 4;
-const CMD_VFS_GET_MTU = 5;
-
-const FLAG_START_OF_FILE = 1;
-const FLAG_END_OF_FILE = 2;
-const FLAG_ERROR_CONDITION = 4;
+const MTU_SIZE = 250;
+const MTU_MAX_DATA_SIZE = 247;
+const DF_HEADER_SIZE = 4;
+const DF_MAX_DATA_SIZE = MTU_MAX_DATA_SIZE - DF_HEADER_SIZE;
 
 var op_queue = [];
 var op_ongoing = false;
-var op_promise;
 
-var rx_promise_resolve;
-var rx_promise_reject;
-var rx_promise_timeout;
-
-function new_rx_promise() {
-  op_promise = new Promise((resolve, reject) => {
-    rx_promise_resolve = resolve;
-    rx_promise_reject = reject;
+export function op_queue_push(cmd, tx_data_cb, rx_data_cb) {
+  return new Promise((resolve, reject) => {
+    var op = {
+      cmd: cmd,
+      tx_data_cb: tx_data_cb,
+      rx_data_cb: rx_data_cb,
+      p_resolve: resolve,
+      p_reject: reject,
+    };
+    op_queue.push(op);
+    process_op_queue();
   });
-
-  // Fails after 2 seconds
-  rx_promise_timeout = setTimeout(() => {
-    rx_promise_reject('timeout');
-  }, 2000);
-  return op_promise;
 }
 
 function process_op_queue() {
-  if (op_ongoing) {
-    return;
-  }
-  if (op_queue.length > 0) {
+  if (!op_ongoing && op_queue.length > 0) {
     var op = op_queue.shift();
     proocess_op(op);
   }
@@ -51,7 +35,7 @@ function proocess_op(op) {
   new_rx_promise()
     .then((data) => {
       try {
-        var bb = ByteBuffer.wrap(data, true);
+        var bb = ByteBuffer.wrap(data);
         var h = read_header(bb);
         h.data = op.rx_data_cb(bb);
         op_ongoing = false;
@@ -68,7 +52,7 @@ function proocess_op(op) {
       process_op_queue();
     });
 
-  var bb = new ByteBuffer(undefined, true);
+  var bb = new ByteBuffer();
   op.tx_data_cb(bb);
   op_ongoing = true;
   tx_data_frame(op.cmd, 0, 0, bb).catch((e) => {
@@ -82,135 +66,581 @@ var m_api_reject;
 export function init() {
   sharedEventDispatcher().addListener('ble_rx_data', on_rx_data);
   sharedEventDispatcher().addListener('ble_disconnected', on_ble_disconnected);
+  ByteBuffer.DEFAULT_ENDIAN = ByteBuffer.LITTLE_ENDIAN;
 }
 
-function on_ble_disconnected() {
-  if (op_ongoing) {
-    op_ongoing = false;
-    rx_promise_reject('disconnected');
-    process_op_queue();
-  }
-}
-
-function on_rx_data(data) {
-  rx_promise_resolve(data);
-}
-
-function add_op(op) {
-  var p = new Promise((resolve, reject) => {
-    op.p_resolve = resolve;
-    op.p_reject = reject;
-  });
-  op_queue.push(op);
-  process_op_queue();
-  return p;
-}
-
-function read_header(bb) {
-  var len = bb.readShort();
-  var flags = bb.readByte();
-  var status = bb.readByte();
-  return {
-    len: len,
-    flags: flags,
-    status: status,
-  };
-}
-
-async function tx_data_frame(cmd, flags, status, payload_bb) {
-  var header_bb = new ByteBuffer(4, true);
-  header_bb.writeShort(payload_bb.limit);
-  header_bb.writeByte(flags);
-  header_bb.writeByte(status);
-  var bb = ByteBuffer.concat([header_bb.flip(), payload_bb.flip()], true);
-  await ble.send(cmd, bb.buffer);
-}
-
-// Higher level API functions
-export function vfs_get_mtu() {
-  return add_op({
-    cmd: CMD_VFS_GET_MTU,
-    tx_data_cb: (bb) => {},
-    rx_data_cb: (bb) => {
+export function get_version() {
+  console.log('get_version');
+  return op_queue_push(
+    0x01,
+    (b) => {},
+    (b) => {
+      var ver = read_string(b);
+      var ble_addr = '';
+      if (b.remaining()) {
+        ble_addr = read_string(b);
+      }
       return {
-        mtu: bb.readInt(),
+        ver: ver,
+        ble_addr: ble_addr,
       };
-    },
-  });
+    }
+  );
 }
 
-export function vfs_list_files(path) {
-  return add_op({
-    cmd: CMD_VFS_LIST_FILES,
-    tx_data_cb: (bb) => {
-      bb.writeCString(path);
+export function enter_dfu() {
+  console.log('enter_dfu');
+  return op_queue_push(
+    0x02,
+    (b) => {},
+    (b) => {}
+  );
+}
+
+export function vfs_get_drive_list() {
+  console.log('vfs_get_drive_list');
+  return op_queue_push(
+    0x10,
+    (b) => {},
+    (b) => {
+      var drives = [];
+      var d_cnt = b.readUint8();
+      if (d_cnt > 0) {
+        var drive = {};
+        drive.status = b.readUint8();
+        drive.label = String.fromCharCode(b.readByte());
+        drive.name = read_string(b);
+        drive.total_size = b.readUint32();
+        drive.used_size = b.readUint32();
+
+        drives.push(drive);
+      }
+      return drives;
+    }
+  );
+}
+
+export function vfs_drive_format(path) {
+  console.log('vfs_drive_format', path);
+  return op_queue_push(
+    0x11,
+    (b) => {
+      b.writeByte(path.charCodeAt(0));
     },
-    rx_data_cb: (bb) => {
+    (b) => {}
+  );
+}
+
+export function vfs_read_folder(dir) {
+  console.log('vfs_read_dir', dir);
+  return op_queue_push(
+    0x16,
+    (b) => {
+      write_string(b, dir);
+    },
+    (bb) => {
       var files = [];
       while (bb.remaining() > 0) {
         var file = {};
-        file.name = bb.readCString();
-        file.size = bb.readInt();
+        file.name = read_string(bb);
+        file.size = bb.readUint32();
+        file.type = bb.readUint8();
+        file.meta = read_meta(bb);
         files.push(file);
       }
       return files;
-    },
-  });
-}
-
-export function vfs_delete_file(path) {
-  return add_op({
-    cmd: CMD_VFS_DELETE_FILE,
-    tx_data_cb: (bb) => {
-      bb.writeCString(path);
-    },
-    rx_data_cb: (bb) => {
-      return {};
-    },
-  });
-}
-
-export function vfs_write_file(path, data) {
-  var mtu = 200; // default mtu
-  vfs_get_mtu().then((h) => {
-    mtu = h.data.mtu;
-  });
-
-  return new Promise((resolve, reject) => {
-    var offset = 0;
-    function write_chunk() {
-      var chunk_size = Math.min(data.byteLength - offset, mtu);
-      var chunk = data.slice(offset, offset + chunk_size);
-      var flags = 0;
-      if (offset == 0) {
-        flags |= FLAG_START_OF_FILE;
-      }
-      if (offset + chunk_size == data.byteLength) {
-        flags |= FLAG_END_OF_FILE;
-      }
-      add_op({
-        cmd: CMD_VFS_WRITE_FILE,
-        tx_data_cb: (bb) => {
-          bb.writeCString(path);
-          bb.writeInt(data.byteLength);
-          bb.append(chunk);
-        },
-        rx_data_cb: (bb) => {
-          return {};
-        },
-      })
-        .then((h) => {
-          offset += chunk_size;
-          if (offset < data.byteLength) {
-            write_chunk();
-          } else {
-            resolve(h);
-          }
-        })
-        .catch((e) => {
-          reject(e);
-        });
     }
-    write_chunk();
+  );
+}
+
+export function vfs_create_folder(dir) {
+  console.log('vfs_create_folder', dir);
+
+  return op_queue_push(
+    0x17,
+    (b) => {
+      path_validation(dir);
+      write_string(b, dir);
+    },
+    (b) => {}
+  );
+}
+
+export function vfs_remove(path) {
+  console.log('vfs_remove', path);
+
+  return op_queue_push(
+    0x18,
+    (b) => {
+      write_string(b, path);
+    },
+    (b) => {}
+  );
+}
+
+export function vfs_open_file(path, mode) {
+  console.log('vfs_open_file', path, mode);
+
+  return op_queue_push(
+    0x12,
+    (b) => {
+      path_validation(path);
+      write_string(b, path);
+      if (mode == 'r') {
+        b.writeUint8(0x8); //readonly
+      } else if (mode == 'w') {
+        b.writeUint8(0x16); //truc, create, write
+      }
+    },
+    (b) => {
+      return {
+        file_id: b.readUint8(),
+      };
+    }
+  );
+
+  return p;
+}
+
+export function vfs_close_file(file_id) {
+  console.log('vfs_close_file', file_id);
+
+  return op_queue_push(
+    0x13,
+    (b) => {
+      b.writeUint8(file_id);
+    },
+    (b) => {}
+  );
+}
+
+export function vfs_read_file(file_id) {
+  console.log('vfs_read_file', file_id);
+  return op_queue_push(
+    0x14,
+    (b) => {
+      b.writeUint8(file_id);
+    },
+    (b) => {
+      return b.readBytes(b.remaining());
+    }
+  );
+}
+
+export function vfs_write_file(file_id, data) {
+  console.log('vfs_write_file', file_id);
+  return op_queue_push(
+    0x15,
+    (b) => {
+      b.writeUint8(file_id);
+      write_bytes(b, data);
+    },
+    (b) => {}
+  );
+}
+
+export function vfs_update_meta(path, meta) {
+  console.log('vfs_update_meta', path, meta);
+  return op_queue_push(
+    0x1a,
+    (b) => {
+      write_string(b, path);
+      write_meta(b, meta);
+    },
+    (b) => {}
+  );
+}
+
+export function vfs_rename(old_path, new_path) {
+  console.log('vfs_rename', old_path, new_path);
+  return op_queue_push(
+    0x19,
+    (b) => {
+      path_validation(old_path);
+      path_validation(new_path);
+      write_string(b, old_path);
+      write_string(b, new_path);
+    },
+    (b) => {}
+  );
+}
+
+export function get_utf8_byte_size(str) {
+  return encode_utf8(str).length;
+}
+
+var file_write_queue = [];
+var file_write_ongoing = false;
+
+export function vfs_helper_write_file(
+  path,
+  file,
+  progress_cb,
+  success_cb,
+  error_cb
+) {
+  console.log(
+    '進來vfs_helper_write_file',
+    path,
+    file,
+    progress_cb,
+    success_cb,
+    error_cb
+  );
+  file_write_queue.push({
+    path: path,
+    file: file,
+    progress_cb: progress_cb,
+    success_cb: success_cb,
+    error_cb: error_cb,
+  });
+
+  vfs_process_file_write_queue();
+}
+
+function vfs_process_file_write_queue() {
+  if (!file_write_ongoing && file_write_queue.length > 0) {
+    var e = file_write_queue.shift();
+
+    file_write_ongoing = true;
+    vfs_process_file_write(
+      e.path,
+      e.file,
+      e.progress_cb,
+      e.success_cb,
+      e.error_cb,
+      (_) => {
+        file_write_ongoing = false;
+        console.log('vfs process file done', e.path);
+        vfs_process_file_write_queue();
+      }
+    );
+  }
+}
+
+function vfs_process_file_write(
+  path,
+  file,
+  progress_cb,
+  success_cb,
+  error_cb,
+  done_cb
+) {
+  console.log('vfs_process_file_write', path);
+  read_file_as_bytebuffer(file).then((buffer) => {
+    vfs_open_file(path, 'w')
+      .then((res) => {
+        if (res.status != 0) {
+          console.log('vfs_open_file error: status=', res.status);
+          error_cb(new Error('create file failed!'));
+          done_cb();
+          return;
+        }
+        //分批写入
+
+        var state = {
+          file: file,
+          file_id: res.data.file_id,
+          write_offset: 0,
+          file_size: buffer.remaining(),
+          batch_size: DF_MAX_DATA_SIZE - 1,
+          data_buffer: buffer,
+        };
+
+        function vfs_write_cb() {
+          if (state.write_offset < state.file_size) {
+            //vfs write
+            const batch_size = Math.min(
+              state.batch_size,
+              state.file_size - state.write_offset
+            );
+            const data_buffer = state.data_buffer.slice(
+              state.write_offset,
+              state.write_offset + batch_size
+            );
+            console.log(
+              'vfs_write_cb',
+              state.write_offset,
+              state.file_size,
+              batch_size
+            );
+            vfs_write_file(state.file_id, data_buffer)
+              .then((data) => {
+                state.write_offset += batch_size;
+                progress_cb(
+                  {
+                    written_bytes: state.write_offset,
+                    total_bytes: state.file_size,
+                  },
+                  state.file
+                );
+                vfs_write_cb();
+              })
+              .catch((e) => {
+                console.log('vfs write error', e);
+                vfs_close_file(state.file_id)
+                  .then((data) => {
+                    error_cb(e, state.file);
+                    done_cb();
+                  })
+                  .catch((e) => {
+                    console.log('vfs close error', e);
+                    error_cb(e, state.file);
+                    done_cb();
+                  });
+              });
+          } else {
+            console.log('vfs write end');
+            vfs_close_file(state.file_id)
+              .then((data) => {
+                success_cb(state.file);
+                done_cb();
+              })
+              .catch((e) => {
+                error_cb(e, state.file);
+                done_cb();
+              });
+          }
+        }
+
+        vfs_write_cb();
+      })
+      .catch((e) => {
+        console.log('vfs_open_file error', e);
+        error_cb(e);
+        done_cb();
+      });
   });
 }
+
+function path_validation(path) {
+  if (get_utf8_byte_size(path) > 63) {
+    throw new Error('文件路径最大不能超过63个字节');
+  }
+  if (path.length > 3) {
+    var p = path.lastIndexOf('/');
+    var file_name = path.substring(p + 1);
+    if (get_utf8_byte_size(file_name) > 47) {
+      throw new Error('文件名最大不能超过47个字节');
+    }
+  }
+}
+
+function read_file_as_bytebuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function () {
+      resolve(ByteBuffer.wrap(reader.result));
+    };
+    reader.onerror = function () {
+      reject(reader.error);
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function read_header(bb) {
+  return {
+    cmd: bb.readUint8(),
+    status: bb.readUint8(),
+    chunk: bb.readUint16(),
+  };
+}
+
+function read_meta(bb) {
+  var size = bb.readUint8();
+  var meta = {
+    notes: '',
+    flags: {
+      hide: false,
+    },
+  };
+  if (size == 0) {
+    return meta;
+  }
+  var mb = ByteBuffer.wrap(read_bytes_array(bb, size));
+  while (mb.remaining() > 0) {
+    var type = mb.readUint8(); //1 notes
+    if (type == 1) {
+      var type_size = mb.readUint8();
+      if (type_size > 0) {
+        var bytes = read_bytes_array(mb, type_size);
+        if (bytes.length > 0) {
+          meta['notes'] = decode_utf8(bytes);
+        }
+      }
+    } else if (type == 2) {
+      var flags = mb.readUint8();
+      if (flags & 1) {
+        meta.flags.hide = true;
+      }
+    }
+  }
+
+  return meta;
+}
+
+function write_meta(bb, meta) {
+  var notes = meta.notes;
+  var bytes = encode_utf8(notes);
+
+  if (bytes.length > 90) {
+    throw new Error(
+      '备注最大只能是90字节，即90个字符或30个汉字！（当前' +
+        bytes.length +
+        '字节）'
+    );
+  }
+
+  var tb = new ByteBuffer();
+  //notes
+  if (notes.length > 0) {
+    tb.writeUint8(1); //amiibo notes
+    tb.writeUint8(bytes.length);
+    for (var i = 0; i < bytes.length; i++) {
+      tb.writeUint8(bytes[i]);
+    }
+  }
+
+  //flags
+  tb.writeUint8(2);
+  var flags = 0;
+  if (meta.flags.hide) {
+    flags |= 1;
+  }
+  tb.writeUint8(flags);
+  tb.flip();
+
+  bb.writeUint8(tb.remaining());
+  write_bytes(bb, tb);
+}
+
+function decode_utf8(bytes) {
+  var encoded = '';
+  for (var i = 0; i < bytes.length; i++) {
+    encoded += '%' + bytes[i].toString(16);
+  }
+  return decodeURIComponent(encoded);
+}
+
+function encode_utf8(text) {
+  var code = encodeURIComponent(text);
+  var bytes = [];
+  for (var i = 0; i < code.length; i++) {
+    const c = code.charAt(i);
+    if (c === '%') {
+      const hex = code.charAt(i + 1) + code.charAt(i + 2);
+      const hexVal = parseInt(hex, 16);
+      bytes.push(hexVal);
+      i += 2;
+    } else bytes.push(c.charCodeAt(0));
+  }
+  return bytes;
+}
+
+function read_string(bb) {
+  var size = bb.readUint16();
+  var bytes = [];
+  for (var i = 0; i < size; i++) {
+    bytes.push(bb.readUint8());
+  }
+  return decode_utf8(bytes);
+}
+
+function write_string(bb, str) {
+  var bytes = encode_utf8(str);
+  bb.writeUint16(bytes.length);
+  for (var i = 0; i < bytes.length; i++) {
+    bb.writeUint8(bytes[i]);
+  }
+}
+
+function write_bytes(bb, buffer) {
+  var size = buffer.remaining();
+  for (var i = 0; i < size; i++) {
+    bb.writeUint8(buffer.readUint8());
+  }
+}
+
+function read_bytes_array(bb, size) {
+  var bytes = [];
+  for (var i = 0; i < size; i++) {
+    bytes.push(bb.readUint8());
+  }
+  return bytes;
+}
+
+function tx_data_frame(cmd, status, chunk, data) {
+  var bb = new ByteBuffer();
+  bb.writeUint8(cmd);
+  bb.writeUint8(status);
+  bb.writeUint16(chunk);
+  if (data) {
+    data.flip();
+    var data_remain = data.remaining();
+    for (var i = 0; i < data_remain; i++) {
+      bb.writeByte(data.readByte());
+    }
+  }
+  bb.flip();
+  return pixl.tx_data(bb.toArrayBuffer());
+}
+
+function new_rx_promise() {
+  return new Promise((resolve, reject) => {
+    m_api_reject = reject;
+    m_api_resolve = resolve;
+  });
+}
+
+var rx_bytebuffer = new ByteBuffer();
+var rx_chunk_state = 'NONE'; //NONE CHUNK,
+
+function on_rx_data(data) {
+  var buff = ByteBuffer.wrap(data);
+  var h = read_header(buff);
+  if (h.chunk & 0x8000) {
+    if (rx_chunk_state == 'NONE') {
+      write_bytes(rx_bytebuffer, ByteBuffer.wrap(data));
+      rx_chunk_state = 'CHUNK';
+    } else if (rx_chunk_state == 'CHUNK') {
+      write_bytes(rx_bytebuffer, buff); //next chunk, ignore header
+    }
+  } else {
+    var cb_data = data;
+    if (rx_chunk_state == 'CHUNK') {
+      //end of chunk
+      write_bytes(rx_bytebuffer, buff);
+      rx_bytebuffer.flip();
+      cb_data = rx_bytebuffer.toArrayBuffer();
+    } else if (rx_chunk_state == 'NONE') {
+      //single chunk
+      cb_data = data;
+    }
+
+    //call back
+    if (m_api_resolve) {
+      m_api_resolve(cb_data);
+      m_api_resolve = null;
+    }
+    rx_chunk_state = 'NONE';
+  }
+}
+
+function on_ble_disconnected() {
+  rx_bytebuffer.clear();
+  rx_chunk_state = 'NONE';
+
+  m_api_resolve = null;
+  m_api_reject = null;
+
+  file_write_queue = [];
+  file_write_ongoing = false;
+
+  op_queue = [];
+  op_ongoing = false;
+}
+
+// WEBPACK FOOTER //
+// ./src/lib/pixl.proto.js
