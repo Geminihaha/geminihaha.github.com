@@ -3462,7 +3462,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusDiv = document.getElementById("status");
   const fileOperations = document.getElementById("file-operations");
   const fileListElement = document.getElementById("file-list");
-  const ROOT_PATH = "a:/";
+  const ROOT_PATH = "E:/";
   init();
   sharedEventDispatcher().addListener("ble_connected", () => {
     statusDiv.textContent = "Status: Connected";
