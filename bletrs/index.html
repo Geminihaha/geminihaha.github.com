@@ -7,9 +7,22 @@
 <body>
   <h1>BLE File Transfer</h1>
   <div id="status">Status: Not Connected</div>
-  <input type="file" id="file-input">
-  <button id="connect-button">Connect to BLE Device</button>
-  <button id="send-button">Send File</button>
+  <div style="margin-bottom: 20px;">
+    <button id="connect-button">Connect to BLE Device</button>
+  </div>
+
+  <div id="file-operations" style="display:none;">
+    <div style="margin-bottom: 20px;">
+      <input type="file" id="file-input">
+      <button id="send-button">Send File</button>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <button id="refresh-button">Refresh File List</button>
+      <h3>Device Files:</h3>
+      <ul id="file-list"></ul>
+    </div>
+  </div>
 
   <script src="ble_file_transfer.js"></script>
   <script>
@@ -17,17 +30,44 @@
 
     const connectButton = document.getElementById('connect-button');
     const sendButton = document.getElementById('send-button');
+    const refreshButton = document.getElementById('refresh-button');
     const fileInput = document.getElementById('file-input');
     const statusDiv = document.getElementById('status');
+    const fileOperations = document.getElementById('file-operations');
+    const fileListElement = document.getElementById('file-list');
 
     connectButton.addEventListener('click', async () => {
       statusDiv.textContent = 'Status: Connecting...';
       const connected = await bleFileTransfer.connect();
       if (connected) {
         statusDiv.textContent = 'Status: Connected';
+        fileOperations.style.display = 'block';
+        connectButton.style.display = 'none';
+        
+        // Request list immediately after connection
+        bleFileTransfer.requestFileList();
       } else {
         statusDiv.textContent = 'Status: Connection Failed';
       }
+    });
+
+    bleFileTransfer.onFileListReceived = (files) => {
+      fileListElement.innerHTML = '';
+      if (files.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'No files found.';
+        fileListElement.appendChild(li);
+      } else {
+        files.forEach(fileName => {
+          const li = document.createElement('li');
+          li.textContent = fileName;
+          fileListElement.appendChild(li);
+        });
+      }
+    };
+
+    refreshButton.addEventListener('click', () => {
+      bleFileTransfer.requestFileList();
     });
 
     sendButton.addEventListener('click', () => {
