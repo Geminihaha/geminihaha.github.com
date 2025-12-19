@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusDiv = document.getElementById('status');
     const fileOperations = document.getElementById('file-operations');
     const fileListElement = document.getElementById('file-list');
-    const ROOT_PATH = 'a:/'; // Assumption: The main drive is 'a:/'
+    const ROOT_PATH = 'E:/'; // Assumption: The main drive is 'a:/'
 
     // Initialize protocol handler
     proto.init();
