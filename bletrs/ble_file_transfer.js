@@ -1,3 +1,5 @@
+const NUS_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+
 
 class BLEFileTransfer {
   constructor() {
@@ -11,17 +13,17 @@ class BLEFileTransfer {
     try {
       console.log('Requesting Bluetooth Device...');
       this.device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['0000180d-0000-1000-8000-00805f9b34fb'] }],
+        filters: [{ services: [NUS_SERVICE_UUID] }],
       });
 
       console.log('Connecting to GATT Server...');
       this.server = await this.device.gatt.connect();
 
       console.log('Getting Service...');
-      this.service = await this.server.getPrimaryService('0000180d-0000-1000-8000-00805f9b34fb');
+      this.service = await this.server.getPrimaryService(NUS_SERVICE_UUID);
 
       console.log('Getting Characteristic...');
-      this.characteristic = await this.service.getCharacteristic('00002a37-0000-1000-8000-00805f9b34fb');
+      this.characteristic = await this.service.getCharacteristic(NUS_SERVICE_UUID);
 
       console.log('Connected to BLE device');
     } catch (error) {
