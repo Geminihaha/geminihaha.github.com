@@ -3,114 +3,122 @@ import { sharedEventDispatcher } from './lib/event.js';
 import * as ble from './lib/pixl.ble.js';
 import * as proto from './lib/pixl.proto.js';
 
-// DOM Elements
-const connectButton = document.getElementById('connect-button');
-const sendButton = document.getElementById('send-button');
-const refreshButton = document.getElementById('refresh-button');
-const fileInput = document.getElementById('file-input');
-const statusDiv = document.getElementById('status');
-const fileOperations = document.getElementById('file-operations');
-const fileListElement = document.getElementById('file-list');
-const ROOT_PATH = 'a:/'; // Assumption: The main drive is 'a:/'
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
+    const connectButton = document.getElementById('connect-button');
+    const sendButton = document.getElementById('send-button');
+    const refreshButton = document.getElementById('refresh-button');
+    const fileInput = document.getElementById('file-input');
+    const statusDiv = document.getElementById('status');
+    const fileOperations = document.getElementById('file-operations');
+    const fileListElement = document.getElementById('file-list');
+    const ROOT_PATH = 'a:/'; // Assumption: The main drive is 'a:/'
 
-// Initialize protocol handler
-proto.init();
+    // Initialize protocol handler
+    proto.init();
 
-// --- Event Listeners from BLE library ---
+    // --- Event Listeners from BLE library ---
 
-sharedEventDispatcher().addListener('ble_connected', () => {
-  statusDiv.textContent = 'Status: Connected';
-  fileOperations.style.display = 'block';
-  connectButton.style.display = 'none';
-  // Automatically refresh file list on connect
-  refreshFileList();
-});
+    sharedEventDispatcher().addListener('ble_connected', () => {
+      statusDiv.textContent = 'Status: Connected';
+      fileOperations.style.display = 'block';
+      connectButton.style.display = 'none';
+      // Automatically refresh file list on connect
+      refreshFileList();
+    });
 
-sharedEventDispatcher().addListener('ble_disconnected', () => {
-  statusDiv.textContent = 'Status: Not Connected';
-  fileOperations.style.display = 'none';
-  connectButton.style.display = 'block';
-  fileListElement.innerHTML = ''; // Clear file list
-});
+    sharedEventDispatcher().addListener('ble_disconnected', () => {
+      statusDiv.textContent = 'Status: Not Connected';
+      fileOperations.style.display = 'none';
+      connectButton.style.display = 'block';
+      fileListElement.innerHTML = ''; // Clear file list
+    });
 
-sharedEventDispatcher().addListener('ble_connect_error', () => {
-  statusDiv.textContent = 'Status: Connection Failed';
-});
-
-// --- UI Button Click Handlers ---
-
-connectButton.addEventListener('click', () => {
-  statusDiv.textContent = 'Status: Connecting...';
-  ble.connect().catch(err => {
-      console.error("Connection error:", err);
+    sharedEventDispatcher().addListener('ble_connect_error', () => {
       statusDiv.textContent = 'Status: Connection Failed';
-  });
-});
+    });
 
-refreshButton.addEventListener('click', () => {
-  refreshFileList();
-});
+    // --- UI Button Click Handlers ---
 
-sendButton.addEventListener('click', () => {
-    const file = fileInput.files[0];
-    if (!file) {
-        alert('Please select a file to send.');
-        return;
+    if (connectButton) {
+        connectButton.addEventListener('click', () => {
+            statusDiv.textContent = 'Status: Connecting...';
+            ble.connect().catch(err => {
+                console.error("Connection error:", err);
+                statusDiv.textContent = 'Status: Connection Failed';
+            });
+        });
     }
-    const targetPath = ROOT_PATH + file.name;
 
-    statusDiv.textContent = `Status: Uploading ${file.name}...`;
-
-    proto.vfs_helper_write_file(
-        targetPath,
-        file,
-        (progress) => {
-            const percentage = Math.round((progress.written_bytes / progress.total_bytes) * 100);
-            statusDiv.textContent = `Status: Uploading ${file.name} (${percentage}%)`;
-        },
-        () => {
-            statusDiv.textContent = `Status: Upload complete: ${file.name}`;
-            // Refresh the file list to show the new file
+    if (refreshButton) {
+        refreshButton.addEventListener('click', () => {
             refreshFileList();
-        },
-        (error) => {
-            statusDiv.textContent = `Status: Upload failed.`;
-            console.error('Upload error:', error);
-            alert(`Failed to upload file: ${error}`);
-        }
-    );
-});
-
-
-// --- Helper Functions ---
-
-async function refreshFileList() {
-  fileListElement.innerHTML = `<li>Loading files from ${ROOT_PATH}...</li>`;
-  try {
-    const filesResponse = await proto.vfs_read_folder(ROOT_PATH);
-
-    if (filesResponse.status !== 0) {
-        console.error('Error reading folder:', filesResponse);
-        fileListElement.innerHTML = `<li>Error loading files from ${ROOT_PATH}. Status: ${filesResponse.status}</li>`;
-        return;
+        });
     }
-    renderFileList(filesResponse.data);
-  } catch (error) {
-    console.error('Failed to read file list:', error);
-    fileListElement.innerHTML = '<li>Error loading file list. See console for details.</li>';
-  }
-}
 
-function renderFileList(files) {
-  fileListElement.innerHTML = '';
-  if (!files || files.length === 0) {
-    fileListElement.innerHTML = '<li>No files found.</li>';
-    return;
-  }
+    if (sendButton) {
+        sendButton.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file to send.');
+                return;
+            }
+            const targetPath = ROOT_PATH + file.name;
 
-  files.forEach(file => {
-    const li = document.createElement('li');
-    li.textContent = `${file.name} (${file.size} bytes)`;
-    fileListElement.appendChild(li);
-  });
-}
+            statusDiv.textContent = `Status: Uploading ${file.name}...`;
+
+            proto.vfs_helper_write_file(
+                targetPath,
+                file,
+                (progress) => {
+                    const percentage = Math.round((progress.written_bytes / progress.total_bytes) * 100);
+                    statusDiv.textContent = `Status: Uploading ${file.name} (${percentage}%)`;
+                },
+                () => {
+                    statusDiv.textContent = `Status: Upload complete: ${file.name}`;
+                    // Refresh the file list to show the new file
+                    refreshFileList();
+                },
+                (error) => {
+                    statusDiv.textContent = `Status: Upload failed.`;
+                    console.error('Upload error:', error);
+                    alert(`Failed to upload file: ${error}`);
+                }
+            );
+        });
+    }
+
+
+    // --- Helper Functions ---
+
+    async function refreshFileList() {
+      fileListElement.innerHTML = `<li>Loading files from ${ROOT_PATH}...</li>`;
+      try {
+        const filesResponse = await proto.vfs_read_folder(ROOT_PATH);
+
+        if (filesResponse.status !== 0) {
+            console.error('Error reading folder:', filesResponse);
+            fileListElement.innerHTML = `<li>Error loading files from ${ROOT_PATH}. Status: ${filesResponse.status}</li>`;
+            return;
+        }
+        renderFileList(filesResponse.data);
+      } catch (error) {
+        console.error('Failed to read file list:', error);
+        fileListElement.innerHTML = '<li>Error loading file list. See console for details.</li>';
+      }
+    }
+
+    function renderFileList(files) {
+      fileListElement.innerHTML = '';
+      if (!files || files.length === 0) {
+        fileListElement.innerHTML = '<li>No files found.</li>';
+        return;
+      }
+
+      files.forEach(file => {
+        const li = document.createElement('li');
+        li.textContent = `${file.name} (${file.size} bytes)`;
+        fileListElement.appendChild(li);
+      });
+    }
+});

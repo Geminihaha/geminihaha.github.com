@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from '../../node_modules/events/events.js';
 
 var eventDispatcher = new EventEmitter();
 
