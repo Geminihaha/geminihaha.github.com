@@ -6,6 +6,7 @@
 </head>
 <body>
   <h1>BLE File Transfer</h1>
+  <div id="status">Status: Not Connected</div>
   <input type="file" id="file-input">
   <button id="connect-button">Connect to BLE Device</button>
   <button id="send-button">Send File</button>
@@ -17,9 +18,16 @@
     const connectButton = document.getElementById('connect-button');
     const sendButton = document.getElementById('send-button');
     const fileInput = document.getElementById('file-input');
+    const statusDiv = document.getElementById('status');
 
-    connectButton.addEventListener('click', () => {
-      bleFileTransfer.connect();
+    connectButton.addEventListener('click', async () => {
+      statusDiv.textContent = 'Status: Connecting...';
+      const connected = await bleFileTransfer.connect();
+      if (connected) {
+        statusDiv.textContent = 'Status: Connected';
+      } else {
+        statusDiv.textContent = 'Status: Connection Failed';
+      }
     });
 
     sendButton.addEventListener('click', () => {

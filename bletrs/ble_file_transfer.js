@@ -26,14 +26,19 @@ class BLEFileTransfer {
       this.characteristic = await this.service.getCharacteristic(NUS_SERVICE_UUID);
 
       console.log('Connected to BLE device');
+      return true;
     } catch (error) {
+      alert(error);
       console.error(error);
+      return false;
     }
   }
 
   async sendFile(file) {
     if (!this.characteristic) {
-      console.error('Not connected to a BLE device');
+      const message = 'Not connected to a BLE device';
+      alert(message);
+      console.error(message);
       return;
     }
 
@@ -52,6 +57,7 @@ class BLEFileTransfer {
           await this.characteristic.writeValue(chunk);
           console.log(`Sent chunk of size ${chunk.length}`);
         } catch (error) {
+          alert(error);
           console.error(error);
         }
       }
