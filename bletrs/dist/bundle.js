@@ -3420,37 +3420,87 @@ function getSupportedProperties(characteristic) {
 
 // bletrs/lib/pixl.proto.js
 var import_bytebuffer = __toESM(require_bytebuffer());
-var pixlDevice;
-var pixlRxCharacteristic;
-var pixlTxCharacteristic;
-function init(device, rx, tx) {
-  pixlDevice = device;
-  pixlRxCharacteristic = rx;
-  pixlTxCharacteristic = tx;
-  sharedEventDispatcher().addListener("ble_data", onPixlData);
+var op_queue = [];
+var op_ongoing = false;
+var op_promise;
+var rx_promise_resolve;
+var rx_promise_reject;
+var rx_promise_timeout;
+function new_rx_promise() {
+  op_promise = new Promise((resolve, reject) => {
+    rx_promise_resolve = resolve;
+    rx_promise_reject = reject;
+  });
+  rx_promise_timeout = setTimeout(() => {
+    rx_promise_reject("timeout");
+  }, 2e3);
+  return op_promise;
 }
-function onPixlData(data) {
+function process_op_queue() {
+  if (op_ongoing) {
+    return;
+  }
+  if (op_queue.length > 0) {
+    var op = op_queue.shift();
+    proocess_op(op);
+  }
 }
-function vfs_read_folder(path) {
-  return new Promise((resolve, reject) => {
-    resolve({ status: 0, data: [] });
+function proocess_op(op) {
+  new_rx_promise().then((data) => {
+    try {
+      var bb2 = import_bytebuffer.default.wrap(data, true);
+      var h = read_header(bb2);
+      h.data = op.rx_data_cb(bb2);
+      op_ongoing = false;
+      op.p_resolve(h);
+      process_op_queue();
+      return h;
+    } catch (e) {
+      op.p_reject(e);
+    }
+  }).catch((e) => {
+    op_ongoing = false;
+    op.p_reject(e);
+    process_op_queue();
+  });
+  var bb = new import_bytebuffer.default(void 0, true);
+  op.tx_data_cb(bb);
+  op_ongoing = true;
+  tx_data_frame(op.cmd, 0, 0, bb).catch((e) => {
+    op.p_reject(e);
   });
 }
-function vfs_helper_write_file(path, file, onProgress, onDone, onFail) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const buffer = e.target.result;
-      onProgress({ written_bytes: buffer.byteLength, total_bytes: buffer.byteLength });
-      onDone();
-      resolve();
-    };
-    reader.onerror = (e) => {
-      onFail(e);
-      reject(e);
-    };
-    reader.readAsArrayBuffer(file);
-  });
+function init() {
+  sharedEventDispatcher().addListener("ble_rx_data", on_rx_data);
+  sharedEventDispatcher().addListener("ble_disconnected", on_ble_disconnected);
+}
+function on_ble_disconnected() {
+  if (op_ongoing) {
+    op_ongoing = false;
+    rx_promise_reject("disconnected");
+    process_op_queue();
+  }
+}
+function on_rx_data(data) {
+  rx_promise_resolve(data);
+}
+function read_header(bb) {
+  var len = bb.readShort();
+  var flags = bb.readByte();
+  var status = bb.readByte();
+  return {
+    len,
+    flags,
+    status
+  };
+}
+async function tx_data_frame(cmd, flags, status, payload_bb) {
+  var header_bb = new import_bytebuffer.default(4, true);
+  header_bb.writeShort(payload_bb.limit);
+  header_bb.writeByte(flags);
+  header_bb.writeByte(status);
+  var bb = import_bytebuffer.default.concat([header_bb.flip(), payload_bb.flip()], true);
+  await (void 0)(cmd, bb.buffer);
 }
 
 // bletrs/main.js
@@ -3502,7 +3552,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const targetPath = ROOT_PATH + file.name;
       statusDiv.textContent = `Status: Uploading ${file.name}...`;
-      vfs_helper_write_file(
+      (void 0)(
         targetPath,
         file,
         (progress) => {
@@ -3524,7 +3574,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function refreshFileList() {
     fileListElement.innerHTML = `<li>Loading files from ${ROOT_PATH}...</li>`;
     try {
-      const filesResponse = await vfs_read_folder(ROOT_PATH);
+      const filesResponse = await (void 0)(ROOT_PATH);
       if (filesResponse.status !== 0) {
         console.error("Error reading folder:", filesResponse);
         fileListElement.innerHTML = `<li>Error loading files from ${ROOT_PATH}. Status: ${filesResponse.status}</li>`;
