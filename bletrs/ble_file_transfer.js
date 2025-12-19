@@ -1,4 +1,6 @@
 const NUS_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const NUS_CHAR_TX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+const NUS_CHAR_RX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 
 
 class BLEFileTransfer {
@@ -23,8 +25,8 @@ class BLEFileTransfer {
       this.service = await this.server.getPrimaryService(NUS_SERVICE_UUID);
 
       console.log('Getting Characteristic...');
-      this.characteristic = await this.service.getCharacteristic(NUS_SERVICE_UUID);
-
+      this.characteristic = await this.service.getCharacteristic(NUS_CHAR_TX_UUID);
+      
       console.log('Connected to BLE device');
       return true;
     } catch (error) {
