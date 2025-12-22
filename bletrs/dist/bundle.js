@@ -3847,7 +3847,6 @@ document.addEventListener("DOMContentLoaded", () => {
     statusDiv.textContent = "Status: Connected";
     fileOperations.style.display = "block";
     connectButton.style.display = "none";
-    refreshFileList();
   });
   sharedEventDispatcher().addListener("ble_disconnected", () => {
     statusDiv.textContent = "Status: Not Connected";
