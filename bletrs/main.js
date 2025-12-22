@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fileOperations.style.display = 'block';
       connectButton.style.display = 'none';
       // Automatically refresh file list on connect
-      refreshFileList();
+      //refreshFileList();
     });
 
     sharedEventDispatcher().addListener('ble_disconnected', () => {
