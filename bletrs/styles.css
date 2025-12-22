@@ -50,6 +50,12 @@ input[type="file"] {
     padding: 8px;
     margin-bottom: 5px;
     border-radius: 3px;
+    display: flex;
+    align-items: center;
+}
+
+#file-list li input[type="checkbox"] {
+    margin-right: 10px;
 }
 
 /* Responsive styles for mobile */
