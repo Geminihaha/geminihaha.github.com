@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const connectButton = document.getElementById('connect-button');
     const sendButton = document.getElementById('send-button');
     const refreshButton = document.getElementById('refresh-button');
+    const deleteButton = document.getElementById('delete-button');
     const fileInput = document.getElementById('file-input');
     const statusDiv = document.getElementById('status');
     const fileOperations = document.getElementById('file-operations');
@@ -88,6 +89,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (deleteButton) {
+        deleteButton.addEventListener('click', async () => {
+            const selectedFiles = document.querySelectorAll('input[name="selectedFiles"]:checked');
+            if (selectedFiles.length === 0) {
+                alert('Please select files to delete.');
+                return;
+            }
+
+            const filesToDelete = Array.from(selectedFiles).map(checkbox => ROOT_PATH + checkbox.value);
+
+            statusDiv.textContent = 'Status: Deleting files...';
+
+            try {
+                for (const filePath of filesToDelete) {
+                    await proto.vfs_remove(filePath);
+                }
+                statusDiv.textContent = 'Status: Files deleted successfully.';
+                refreshFileList();
+            } catch (error) {
+                statusDiv.textContent = 'Status: Deletion failed.';
+                console.error('Deletion error:', error);
+                alert(`Failed to delete files: ${error}`);
+            }
+        });
+    }
+
 
     // --- Helper Functions ---
 
@@ -117,7 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       files.forEach(file => {
         const li = document.createElement('li');
-        li.textContent = `${file.name} (${file.size} bytes)`;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'selectedFiles';
+        checkbox.value = file.name;
+        li.appendChild(checkbox);
+        li.appendChild(document.createTextNode(` ${file.name} (${file.size} bytes)`));
         fileListElement.appendChild(li);
       });
     }
