@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize protocol handler
     proto.init();
 
+    // Initially hide the delete button
+    deleteButton.style.display = 'none';
+
     // --- Event Listeners from BLE library ---
 
     sharedEventDispatcher().addListener('ble_connected', () => {
@@ -33,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fileOperations.style.display = 'none';
       connectButton.style.display = 'block';
       fileListElement.innerHTML = ''; // Clear file list
+      deleteButton.style.display = 'none'; // Hide delete button
     });
 
     sharedEventDispatcher().addListener('ble_connect_error', () => {
@@ -93,24 +97,25 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteButton.addEventListener('click', async () => {
             const selectedFiles = document.querySelectorAll('input[name="selectedFiles"]:checked');
             if (selectedFiles.length === 0) {
-                alert('Please select files to delete.');
-                return;
+                return; // Should not happen if button is hidden
             }
 
-            const filesToDelete = Array.from(selectedFiles).map(checkbox => ROOT_PATH + checkbox.value);
+            if (window.confirm(`Are you sure you want to delete ${selectedFiles.length} file(s)?`)) {
+                const filesToDelete = Array.from(selectedFiles).map(checkbox => ROOT_PATH + checkbox.value);
 
-            statusDiv.textContent = 'Status: Deleting files...';
+                statusDiv.textContent = 'Status: Deleting files...';
 
-            try {
-                for (const filePath of filesToDelete) {
-                    await proto.vfs_remove(filePath);
+                try {
+                    for (const filePath of filesToDelete) {
+                        await proto.vfs_remove(filePath);
+                    }
+                    statusDiv.textContent = 'Status: Files deleted successfully.';
+                    refreshFileList();
+                } catch (error) {
+                    statusDiv.textContent = 'Status: Deletion failed.';
+                    console.error('Deletion error:', error);
+                    alert(`Failed to delete files: ${error}`);
                 }
-                statusDiv.textContent = 'Status: Files deleted successfully.';
-                refreshFileList();
-            } catch (error) {
-                statusDiv.textContent = 'Status: Deletion failed.';
-                console.error('Deletion error:', error);
-                alert(`Failed to delete files: ${error}`);
             }
         });
     }
@@ -120,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function refreshFileList() {
       fileListElement.innerHTML = `<li>Loading files from ${ROOT_PATH}...</li>`;
+      deleteButton.style.display = 'none';
       try {
         const filesResponse = await proto.vfs_read_folder(ROOT_PATH);
 
@@ -141,6 +147,17 @@ document.addEventListener('DOMContentLoaded', () => {
         fileListElement.innerHTML = '<li>No files found.</li>';
         return;
       }
+
+      fileListElement.addEventListener('change', (event) => {
+        if (event.target.name === 'selectedFiles') {
+            const selectedCheckboxes = document.querySelectorAll('input[name="selectedFiles"]:checked');
+            if (selectedCheckboxes.length > 0) {
+                deleteButton.style.display = 'inline-block';
+            } else {
+                deleteButton.style.display = 'none';
+            }
+        }
+      });
 
       files.forEach(file => {
         const li = document.createElement('li');
