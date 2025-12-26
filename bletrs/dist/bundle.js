@@ -7,8 +7,7 @@ var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {
-  if (typeof require !== "undefined")
-    return require.apply(this, arguments);
+  if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
 var __commonJS = (cb, mod) => function __require2() {
@@ -52,8 +51,7 @@ var require_events = __commonJS({
       };
     }
     function ProcessEmitWarning(warning) {
-      if (console && console.warn)
-        console.warn(warning);
+      if (console && console.warn) console.warn(warning);
     }
     var NumberIsNaN = Number.isNaN || function NumberIsNaN2(value) {
       return value !== value;
@@ -109,8 +107,7 @@ var require_events = __commonJS({
     };
     EventEmitter2.prototype.emit = function emit(type) {
       var args = [];
-      for (var i = 1; i < arguments.length; i++)
-        args.push(arguments[i]);
+      for (var i = 1; i < arguments.length; i++) args.push(arguments[i]);
       var doError = type === "error";
       var events = this._events;
       if (events !== void 0)
@@ -281,8 +278,7 @@ var require_events = __commonJS({
         var key;
         for (i = 0; i < keys.length; ++i) {
           key = keys[i];
-          if (key === "removeListener")
-            continue;
+          if (key === "removeListener") continue;
           this.removeAllListeners(key);
         }
         this.removeAllListeners("removeListener");
@@ -944,14 +940,14 @@ var require_bytebuffer = __commonJS({
       if (typeof define === "function" && define["amd"])
         define(["long"], factory);
       else if (typeof __require === "function" && typeof module === "object" && module && module["exports"])
-        module["exports"] = function() {
+        module["exports"] = (function() {
           var Long;
           try {
             Long = require_long();
           } catch (e) {
           }
           return factory(Long);
-        }();
+        })();
       else
         (global["dcodeIO"] = global["dcodeIO"] || {})["ByteBuffer"] = factory(global["dcodeIO"]["Long"]);
     })(exports, function(Long) {
@@ -1027,8 +1023,7 @@ var require_bytebuffer = __commonJS({
           if (!ByteBuffer3.isByteBuffer(buffers[i]))
             buffers[i] = ByteBuffer3.wrap(buffers[i], encoding);
           length = buffers[i].limit - buffers[i].offset;
-          if (length > 0)
-            capacity += length;
+          if (length > 0) capacity += length;
         }
         if (capacity === 0)
           return new ByteBuffer3(0, littleEndian, noAssert);
@@ -1037,8 +1032,7 @@ var require_bytebuffer = __commonJS({
         while (i < k) {
           bi = buffers[i++];
           length = bi.limit - bi.offset;
-          if (length <= 0)
-            continue;
+          if (length <= 0) continue;
           bb.view.set(bi.view.subarray(bi.offset, bi.limit), bb.offset);
           bb.offset += length;
         }
@@ -1111,8 +1105,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.writeBitSet = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (!(value instanceof Array))
             throw TypeError("Illegal BitSet: Not an array");
@@ -1131,8 +1124,7 @@ var require_bytebuffer = __commonJS({
         if (bit < bits) {
           var m = 0;
           k = 0;
-          while (bit < bits)
-            k = k | (!!value[bit++] & 1) << m++;
+          while (bit < bits) k = k | (!!value[bit++] & 1) << m++;
           this.writeByte(k, offset++);
         }
         if (relative) {
@@ -1143,8 +1135,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.readBitSet = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         var ret = this.readVarint32(offset), bits = ret.value, bytes = bits >> 3, bit = 0, value = [], k;
         offset += ret.length;
         while (bytes--) {
@@ -1161,8 +1152,7 @@ var require_bytebuffer = __commonJS({
         if (bit < bits) {
           var m = 0;
           k = this.readByte(offset++);
-          while (bit < bits)
-            value[bit++] = !!(k >> m++ & 1);
+          while (bit < bits) value[bit++] = !!(k >> m++ & 1);
         }
         if (relative) {
           this.offset = offset;
@@ -1171,8 +1161,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.readBytes = function(length, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1181,15 +1170,13 @@ var require_bytebuffer = __commonJS({
             throw RangeError("Illegal offset: 0 <= " + offset + " (+" + length + ") <= " + this.buffer.byteLength);
         }
         var slice = this.slice(offset, offset + length);
-        if (relative)
-          this.offset += length;
+        if (relative) this.offset += length;
         return slice;
       };
       ByteBufferPrototype.writeBytes = ByteBufferPrototype.append;
       ByteBufferPrototype.writeInt8 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -1206,15 +1193,13 @@ var require_bytebuffer = __commonJS({
           this.resize((capacity0 *= 2) > offset ? capacity0 : offset);
         offset -= 1;
         this.view[offset] = value;
-        if (relative)
-          this.offset += 1;
+        if (relative) this.offset += 1;
         return this;
       };
       ByteBufferPrototype.writeByte = ByteBufferPrototype.writeInt8;
       ByteBufferPrototype.readInt8 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1223,17 +1208,14 @@ var require_bytebuffer = __commonJS({
             throw RangeError("Illegal offset: 0 <= " + offset + " (+1) <= " + this.buffer.byteLength);
         }
         var value = this.view[offset];
-        if ((value & 128) === 128)
-          value = -(255 - value + 1);
-        if (relative)
-          this.offset += 1;
+        if ((value & 128) === 128) value = -(255 - value + 1);
+        if (relative) this.offset += 1;
         return value;
       };
       ByteBufferPrototype.readByte = ByteBufferPrototype.readInt8;
       ByteBufferPrototype.writeUint8 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -1250,15 +1232,13 @@ var require_bytebuffer = __commonJS({
           this.resize((capacity1 *= 2) > offset ? capacity1 : offset);
         offset -= 1;
         this.view[offset] = value;
-        if (relative)
-          this.offset += 1;
+        if (relative) this.offset += 1;
         return this;
       };
       ByteBufferPrototype.writeUInt8 = ByteBufferPrototype.writeUint8;
       ByteBufferPrototype.readUint8 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1267,15 +1247,13 @@ var require_bytebuffer = __commonJS({
             throw RangeError("Illegal offset: 0 <= " + offset + " (+1) <= " + this.buffer.byteLength);
         }
         var value = this.view[offset];
-        if (relative)
-          this.offset += 1;
+        if (relative) this.offset += 1;
         return value;
       };
       ByteBufferPrototype.readUInt8 = ByteBufferPrototype.readUint8;
       ByteBufferPrototype.writeInt16 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -1298,15 +1276,13 @@ var require_bytebuffer = __commonJS({
           this.view[offset] = (value & 65280) >>> 8;
           this.view[offset + 1] = value & 255;
         }
-        if (relative)
-          this.offset += 2;
+        if (relative) this.offset += 2;
         return this;
       };
       ByteBufferPrototype.writeShort = ByteBufferPrototype.writeInt16;
       ByteBufferPrototype.readInt16 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1322,17 +1298,14 @@ var require_bytebuffer = __commonJS({
           value = this.view[offset] << 8;
           value |= this.view[offset + 1];
         }
-        if ((value & 32768) === 32768)
-          value = -(65535 - value + 1);
-        if (relative)
-          this.offset += 2;
+        if ((value & 32768) === 32768) value = -(65535 - value + 1);
+        if (relative) this.offset += 2;
         return value;
       };
       ByteBufferPrototype.readShort = ByteBufferPrototype.readInt16;
       ByteBufferPrototype.writeUint16 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -1355,15 +1328,13 @@ var require_bytebuffer = __commonJS({
           this.view[offset] = (value & 65280) >>> 8;
           this.view[offset + 1] = value & 255;
         }
-        if (relative)
-          this.offset += 2;
+        if (relative) this.offset += 2;
         return this;
       };
       ByteBufferPrototype.writeUInt16 = ByteBufferPrototype.writeUint16;
       ByteBufferPrototype.readUint16 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1379,15 +1350,13 @@ var require_bytebuffer = __commonJS({
           value = this.view[offset] << 8;
           value |= this.view[offset + 1];
         }
-        if (relative)
-          this.offset += 2;
+        if (relative) this.offset += 2;
         return value;
       };
       ByteBufferPrototype.readUInt16 = ByteBufferPrototype.readUint16;
       ByteBufferPrototype.writeInt32 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -1414,15 +1383,13 @@ var require_bytebuffer = __commonJS({
           this.view[offset + 2] = value >>> 8 & 255;
           this.view[offset + 3] = value & 255;
         }
-        if (relative)
-          this.offset += 4;
+        if (relative) this.offset += 4;
         return this;
       };
       ByteBufferPrototype.writeInt = ByteBufferPrototype.writeInt32;
       ByteBufferPrototype.readInt32 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1443,15 +1410,13 @@ var require_bytebuffer = __commonJS({
           value += this.view[offset] << 24 >>> 0;
         }
         value |= 0;
-        if (relative)
-          this.offset += 4;
+        if (relative) this.offset += 4;
         return value;
       };
       ByteBufferPrototype.readInt = ByteBufferPrototype.readInt32;
       ByteBufferPrototype.writeUint32 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -1478,15 +1443,13 @@ var require_bytebuffer = __commonJS({
           this.view[offset + 2] = value >>> 8 & 255;
           this.view[offset + 3] = value & 255;
         }
-        if (relative)
-          this.offset += 4;
+        if (relative) this.offset += 4;
         return this;
       };
       ByteBufferPrototype.writeUInt32 = ByteBufferPrototype.writeUint32;
       ByteBufferPrototype.readUint32 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1506,16 +1469,14 @@ var require_bytebuffer = __commonJS({
           value |= this.view[offset + 3];
           value += this.view[offset] << 24 >>> 0;
         }
-        if (relative)
-          this.offset += 4;
+        if (relative) this.offset += 4;
         return value;
       };
       ByteBufferPrototype.readUInt32 = ByteBufferPrototype.readUint32;
       if (Long) {
         ByteBufferPrototype.writeInt64 = function(value, offset) {
           var relative = typeof offset === "undefined";
-          if (relative)
-            offset = this.offset;
+          if (relative) offset = this.offset;
           if (!this.noAssert) {
             if (typeof value === "number")
               value = Long.fromNumber(value);
@@ -1560,15 +1521,13 @@ var require_bytebuffer = __commonJS({
             this.view[offset + 2] = lo >>> 8 & 255;
             this.view[offset + 3] = lo & 255;
           }
-          if (relative)
-            this.offset += 8;
+          if (relative) this.offset += 8;
           return this;
         };
         ByteBufferPrototype.writeLong = ByteBufferPrototype.writeInt64;
         ByteBufferPrototype.readInt64 = function(offset) {
           var relative = typeof offset === "undefined";
-          if (relative)
-            offset = this.offset;
+          if (relative) offset = this.offset;
           if (!this.noAssert) {
             if (typeof offset !== "number" || offset % 1 !== 0)
               throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1599,15 +1558,13 @@ var require_bytebuffer = __commonJS({
             lo += this.view[offset] << 24 >>> 0;
           }
           var value = new Long(lo, hi, false);
-          if (relative)
-            this.offset += 8;
+          if (relative) this.offset += 8;
           return value;
         };
         ByteBufferPrototype.readLong = ByteBufferPrototype.readInt64;
         ByteBufferPrototype.writeUint64 = function(value, offset) {
           var relative = typeof offset === "undefined";
-          if (relative)
-            offset = this.offset;
+          if (relative) offset = this.offset;
           if (!this.noAssert) {
             if (typeof value === "number")
               value = Long.fromNumber(value);
@@ -1652,15 +1609,13 @@ var require_bytebuffer = __commonJS({
             this.view[offset + 2] = lo >>> 8 & 255;
             this.view[offset + 3] = lo & 255;
           }
-          if (relative)
-            this.offset += 8;
+          if (relative) this.offset += 8;
           return this;
         };
         ByteBufferPrototype.writeUInt64 = ByteBufferPrototype.writeUint64;
         ByteBufferPrototype.readUint64 = function(offset) {
           var relative = typeof offset === "undefined";
-          if (relative)
-            offset = this.offset;
+          if (relative) offset = this.offset;
           if (!this.noAssert) {
             if (typeof offset !== "number" || offset % 1 !== 0)
               throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1691,8 +1646,7 @@ var require_bytebuffer = __commonJS({
             lo += this.view[offset] << 24 >>> 0;
           }
           var value = new Long(lo, hi, true);
-          if (relative)
-            this.offset += 8;
+          if (relative) this.offset += 8;
           return value;
         };
         ByteBufferPrototype.readUInt64 = ByteBufferPrototype.readUint64;
@@ -1762,8 +1716,7 @@ var require_bytebuffer = __commonJS({
       }
       ByteBufferPrototype.writeFloat32 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number")
             throw TypeError("Illegal value: " + value + " (not a number)");
@@ -1779,15 +1732,13 @@ var require_bytebuffer = __commonJS({
           this.resize((capacity8 *= 2) > offset ? capacity8 : offset);
         offset -= 4;
         ieee754_write(this.view, value, offset, this.littleEndian, 23, 4);
-        if (relative)
-          this.offset += 4;
+        if (relative) this.offset += 4;
         return this;
       };
       ByteBufferPrototype.writeFloat = ByteBufferPrototype.writeFloat32;
       ByteBufferPrototype.readFloat32 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1796,15 +1747,13 @@ var require_bytebuffer = __commonJS({
             throw RangeError("Illegal offset: 0 <= " + offset + " (+4) <= " + this.buffer.byteLength);
         }
         var value = ieee754_read(this.view, offset, this.littleEndian, 23, 4);
-        if (relative)
-          this.offset += 4;
+        if (relative) this.offset += 4;
         return value;
       };
       ByteBufferPrototype.readFloat = ByteBufferPrototype.readFloat32;
       ByteBufferPrototype.writeFloat64 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number")
             throw TypeError("Illegal value: " + value + " (not a number)");
@@ -1820,15 +1769,13 @@ var require_bytebuffer = __commonJS({
           this.resize((capacity9 *= 2) > offset ? capacity9 : offset);
         offset -= 8;
         ieee754_write(this.view, value, offset, this.littleEndian, 52, 8);
-        if (relative)
-          this.offset += 8;
+        if (relative) this.offset += 8;
         return this;
       };
       ByteBufferPrototype.writeDouble = ByteBufferPrototype.writeFloat64;
       ByteBufferPrototype.readFloat64 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1837,24 +1784,18 @@ var require_bytebuffer = __commonJS({
             throw RangeError("Illegal offset: 0 <= " + offset + " (+8) <= " + this.buffer.byteLength);
         }
         var value = ieee754_read(this.view, offset, this.littleEndian, 52, 8);
-        if (relative)
-          this.offset += 8;
+        if (relative) this.offset += 8;
         return value;
       };
       ByteBufferPrototype.readDouble = ByteBufferPrototype.readFloat64;
       ByteBuffer3.MAX_VARINT32_BYTES = 5;
       ByteBuffer3.calculateVarint32 = function(value) {
         value = value >>> 0;
-        if (value < 1 << 7)
-          return 1;
-        else if (value < 1 << 14)
-          return 2;
-        else if (value < 1 << 21)
-          return 3;
-        else if (value < 1 << 28)
-          return 4;
-        else
-          return 5;
+        if (value < 1 << 7) return 1;
+        else if (value < 1 << 14) return 2;
+        else if (value < 1 << 21) return 3;
+        else if (value < 1 << 28) return 4;
+        else return 5;
       };
       ByteBuffer3.zigZagEncode32 = function(n) {
         return ((n |= 0) << 1 ^ n >> 31) >>> 0;
@@ -1864,8 +1805,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.writeVarint32 = function(value, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -1900,8 +1840,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.readVarint32 = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -1967,8 +1906,7 @@ var require_bytebuffer = __commonJS({
             value = Long.fromNumber(value, false);
           else if (typeof value === "string")
             value = Long.fromString(value, false);
-          else if (value.unsigned !== false)
-            value = value.toSigned();
+          else if (value.unsigned !== false) value = value.toSigned();
           return value.shiftLeft(1).xor(value.shiftRight(63)).toUnsigned();
         };
         ByteBuffer3.zigZagDecode64 = function(value) {
@@ -1976,14 +1914,12 @@ var require_bytebuffer = __commonJS({
             value = Long.fromNumber(value, false);
           else if (typeof value === "string")
             value = Long.fromString(value, false);
-          else if (value.unsigned !== false)
-            value = value.toSigned();
+          else if (value.unsigned !== false) value = value.toSigned();
           return value.shiftRightUnsigned(1).xor(value.and(Long.ONE).toSigned().negate()).toSigned();
         };
         ByteBufferPrototype.writeVarint64 = function(value, offset) {
           var relative = typeof offset === "undefined";
-          if (relative)
-            offset = this.offset;
+          if (relative) offset = this.offset;
           if (!this.noAssert) {
             if (typeof value === "number")
               value = Long.fromNumber(value);
@@ -2001,8 +1937,7 @@ var require_bytebuffer = __commonJS({
             value = Long.fromNumber(value, false);
           else if (typeof value === "string")
             value = Long.fromString(value, false);
-          else if (value.unsigned !== false)
-            value = value.toSigned();
+          else if (value.unsigned !== false) value = value.toSigned();
           var size = ByteBuffer3.calculateVarint64(value), part0 = value.toInt() >>> 0, part1 = value.shiftRightUnsigned(28).toInt() >>> 0, part2 = value.shiftRightUnsigned(56).toInt() >>> 0;
           offset += size;
           var capacity11 = this.buffer.byteLength;
@@ -2043,8 +1978,7 @@ var require_bytebuffer = __commonJS({
         };
         ByteBufferPrototype.readVarint64 = function(offset) {
           var relative = typeof offset === "undefined";
-          if (relative)
-            offset = this.offset;
+          if (relative) offset = this.offset;
           if (!this.noAssert) {
             if (typeof offset !== "number" || offset % 1 !== 0)
               throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -2116,8 +2050,7 @@ var require_bytebuffer = __commonJS({
       }
       ByteBufferPrototype.writeCString = function(str, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         var i, k = str.length;
         if (!this.noAssert) {
           if (typeof str !== "string")
@@ -2150,8 +2083,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.readCString = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -2162,8 +2094,7 @@ var require_bytebuffer = __commonJS({
         var start = offset, temp;
         var sd, b = -1;
         utfx.decodeUTF8toUTF16(function() {
-          if (b === 0)
-            return null;
+          if (b === 0) return null;
           if (offset >= this.limit)
             throw RangeError("Illegal range: Truncated data, " + offset + " < " + this.limit);
           b = this.view[offset++];
@@ -2181,8 +2112,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.writeIString = function(str, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof str !== "string")
             throw TypeError("Illegal str: Not a string");
@@ -2224,8 +2154,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.readIString = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -2251,8 +2180,7 @@ var require_bytebuffer = __commonJS({
       ByteBuffer3.METRICS_BYTES = "b";
       ByteBufferPrototype.writeUTF8String = function(str, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -2291,10 +2219,8 @@ var require_bytebuffer = __commonJS({
           metrics = void 0;
         }
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
-        if (typeof metrics === "undefined")
-          metrics = ByteBuffer3.METRICS_CHARS;
+        if (relative) offset = this.offset;
+        if (typeof metrics === "undefined") metrics = ByteBuffer3.METRICS_CHARS;
         if (!this.noAssert) {
           if (typeof length !== "number" || length % 1 !== 0)
             throw TypeError("Illegal length: " + length + " (not an integer)");
@@ -2354,8 +2280,7 @@ var require_bytebuffer = __commonJS({
       ByteBufferPrototype.readString = ByteBufferPrototype.readUTF8String;
       ByteBufferPrototype.writeVString = function(str, offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof str !== "string")
             throw TypeError("Illegal str: Not a string");
@@ -2387,8 +2312,7 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.readVString = function(offset) {
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -2416,8 +2340,7 @@ var require_bytebuffer = __commonJS({
           encoding = void 0;
         }
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -2428,8 +2351,7 @@ var require_bytebuffer = __commonJS({
         if (!(source instanceof ByteBuffer3))
           source = ByteBuffer3.wrap(source, encoding);
         var length = source.limit - source.offset;
-        if (length <= 0)
-          return this;
+        if (length <= 0) return this;
         offset += length;
         var capacity16 = this.buffer.byteLength;
         if (offset > capacity16)
@@ -2437,8 +2359,7 @@ var require_bytebuffer = __commonJS({
         offset -= length;
         this.view.set(source.view.subarray(source.offset, source.limit), offset);
         source.offset += length;
-        if (relative)
-          this.offset += length;
+        if (relative) this.offset += length;
         return this;
       };
       ByteBufferPrototype.appendTo = function(target, offset) {
@@ -2473,10 +2394,8 @@ var require_bytebuffer = __commonJS({
         return bb;
       };
       ByteBufferPrototype.compact = function(begin, end) {
-        if (typeof begin === "undefined")
-          begin = this.offset;
-        if (typeof end === "undefined")
-          end = this.limit;
+        if (typeof begin === "undefined") begin = this.offset;
+        if (typeof end === "undefined") end = this.limit;
         if (!this.noAssert) {
           if (typeof begin !== "number" || begin % 1 !== 0)
             throw TypeError("Illegal begin: Not an integer");
@@ -2493,8 +2412,7 @@ var require_bytebuffer = __commonJS({
         if (len === 0) {
           this.buffer = EMPTY_BUFFER;
           this.view = null;
-          if (this.markedOffset >= 0)
-            this.markedOffset -= begin;
+          if (this.markedOffset >= 0) this.markedOffset -= begin;
           this.offset = 0;
           this.limit = 0;
           return this;
@@ -2504,17 +2422,14 @@ var require_bytebuffer = __commonJS({
         view.set(this.view.subarray(begin, end));
         this.buffer = buffer;
         this.view = view;
-        if (this.markedOffset >= 0)
-          this.markedOffset -= begin;
+        if (this.markedOffset >= 0) this.markedOffset -= begin;
         this.offset = 0;
         this.limit = len;
         return this;
       };
       ByteBufferPrototype.copy = function(begin, end) {
-        if (typeof begin === "undefined")
-          begin = this.offset;
-        if (typeof end === "undefined")
-          end = this.limit;
+        if (typeof begin === "undefined") begin = this.offset;
+        if (typeof end === "undefined") end = this.limit;
         if (!this.noAssert) {
           if (typeof begin !== "number" || begin % 1 !== 0)
             throw TypeError("Illegal begin: Not an integer");
@@ -2530,8 +2445,7 @@ var require_bytebuffer = __commonJS({
         var capacity = end - begin, bb = new ByteBuffer3(capacity, this.littleEndian, this.noAssert);
         bb.offset = 0;
         bb.limit = capacity;
-        if (bb.markedOffset >= 0)
-          bb.markedOffset -= begin;
+        if (bb.markedOffset >= 0) bb.markedOffset -= begin;
         this.copyTo(bb, 0, begin, end);
         return bb;
       };
@@ -2553,10 +2467,8 @@ var require_bytebuffer = __commonJS({
           return target;
         target.ensureCapacity(targetOffset + len);
         target.view.set(this.view.subarray(sourceOffset, sourceLimit), targetOffset);
-        if (relative)
-          this.offset += len;
-        if (targetRelative)
-          target.offset += len;
+        if (relative) this.offset += len;
+        if (targetRelative) target.offset += len;
         return this;
       };
       ByteBufferPrototype.ensureCapacity = function(capacity) {
@@ -2567,14 +2479,11 @@ var require_bytebuffer = __commonJS({
       };
       ByteBufferPrototype.fill = function(value, begin, end) {
         var relative = typeof begin === "undefined";
-        if (relative)
-          begin = this.offset;
+        if (relative) begin = this.offset;
         if (typeof value === "string" && value.length > 0)
           value = value.charCodeAt(0);
-        if (typeof begin === "undefined")
-          begin = this.offset;
-        if (typeof end === "undefined")
-          end = this.limit;
+        if (typeof begin === "undefined") begin = this.offset;
+        if (typeof end === "undefined") end = this.limit;
         if (!this.noAssert) {
           if (typeof value !== "number" || value % 1 !== 0)
             throw TypeError("Illegal value: " + value + " (not an integer)");
@@ -2590,10 +2499,8 @@ var require_bytebuffer = __commonJS({
         }
         if (begin >= end)
           return this;
-        while (begin < end)
-          this.view[begin++] = value;
-        if (relative)
-          this.offset = begin;
+        while (begin < end) this.view[begin++] = value;
+        if (relative) this.offset = begin;
         return this;
       };
       ByteBufferPrototype.flip = function() {
@@ -2635,8 +2542,7 @@ var require_bytebuffer = __commonJS({
           encoding = void 0;
         }
         var relative = typeof offset === "undefined";
-        if (relative)
-          offset = this.offset;
+        if (relative) offset = this.offset;
         if (!this.noAssert) {
           if (typeof offset !== "number" || offset % 1 !== 0)
             throw TypeError("Illegal offset: " + offset + " (not an integer)");
@@ -2647,8 +2553,7 @@ var require_bytebuffer = __commonJS({
         if (!(source instanceof ByteBuffer3))
           source = ByteBuffer3.wrap(source, encoding);
         var len = source.limit - source.offset;
-        if (len <= 0)
-          return this;
+        if (len <= 0) return this;
         var diff = len - offset;
         if (diff > 0) {
           var buffer = new ArrayBuffer(this.buffer.byteLength + diff);
@@ -2657,8 +2562,7 @@ var require_bytebuffer = __commonJS({
           this.buffer = buffer;
           this.view = view;
           this.offset += diff;
-          if (this.markedOffset >= 0)
-            this.markedOffset += diff;
+          if (this.markedOffset >= 0) this.markedOffset += diff;
           this.limit += diff;
           offset += diff;
         } else {
@@ -2675,8 +2579,7 @@ var require_bytebuffer = __commonJS({
         return this;
       };
       ByteBufferPrototype.printDebug = function(out) {
-        if (typeof out !== "function")
-          out = console.log.bind(console);
+        if (typeof out !== "function") out = console.log.bind(console);
         out(
           this.toString() + "\n-------------------------------------------------------------------\n" + this.toDebug(
             /* columns */
@@ -2714,10 +2617,8 @@ var require_bytebuffer = __commonJS({
         return this;
       };
       ByteBufferPrototype.reverse = function(begin, end) {
-        if (typeof begin === "undefined")
-          begin = this.offset;
-        if (typeof end === "undefined")
-          end = this.limit;
+        if (typeof begin === "undefined") begin = this.offset;
+        if (typeof end === "undefined") end = this.limit;
         if (!this.noAssert) {
           if (typeof begin !== "number" || begin % 1 !== 0)
             throw TypeError("Illegal begin: Not an integer");
@@ -2748,10 +2649,8 @@ var require_bytebuffer = __commonJS({
         return this;
       };
       ByteBufferPrototype.slice = function(begin, end) {
-        if (typeof begin === "undefined")
-          begin = this.offset;
-        if (typeof end === "undefined")
-          end = this.limit;
+        if (typeof begin === "undefined") begin = this.offset;
+        if (typeof end === "undefined") end = this.limit;
         if (!this.noAssert) {
           if (typeof begin !== "number" || begin % 1 !== 0)
             throw TypeError("Illegal begin: Not an integer");
@@ -2810,7 +2709,7 @@ var require_bytebuffer = __commonJS({
             throw Error("Unsupported encoding: " + encoding);
         }
       };
-      var lxiv = function() {
+      var lxiv = (function() {
         "use strict";
         var lxiv2 = {};
         var aout = [
@@ -2906,28 +2805,22 @@ var require_bytebuffer = __commonJS({
           }
           while ((c = src()) !== null) {
             t1 = ain[c];
-            if (typeof t1 === "undefined")
-              fail(c);
+            if (typeof t1 === "undefined") fail(c);
             if ((c = src()) !== null) {
               t2 = ain[c];
-              if (typeof t2 === "undefined")
-                fail(c);
+              if (typeof t2 === "undefined") fail(c);
               dst(t1 << 2 >>> 0 | (t2 & 48) >> 4);
               if ((c = src()) !== null) {
                 t1 = ain[c];
                 if (typeof t1 === "undefined")
-                  if (c === 61)
-                    break;
-                  else
-                    fail(c);
+                  if (c === 61) break;
+                  else fail(c);
                 dst((t2 & 15) << 4 >>> 0 | (t1 & 60) >> 2);
                 if ((c = src()) !== null) {
                   t2 = ain[c];
                   if (typeof t2 === "undefined")
-                    if (c === 61)
-                      break;
-                    else
-                      fail(c);
+                    if (c === 61) break;
+                    else fail(c);
                   dst((t1 & 3) << 6 >>> 0 | t2);
                 }
               }
@@ -2938,7 +2831,7 @@ var require_bytebuffer = __commonJS({
           return /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(str);
         };
         return lxiv2;
-      }();
+      })();
       ByteBufferPrototype.toBase64 = function(begin, end) {
         if (typeof begin === "undefined")
           begin = this.offset;
@@ -3007,18 +2900,15 @@ var require_bytebuffer = __commonJS({
         while (i < k) {
           if (i !== -1) {
             b = this.view[i];
-            if (b < 16)
-              hex += "0" + b.toString(16).toUpperCase();
-            else
-              hex += b.toString(16).toUpperCase();
+            if (b < 16) hex += "0" + b.toString(16).toUpperCase();
+            else hex += b.toString(16).toUpperCase();
             if (columns)
               asc += b > 32 && b < 127 ? String.fromCharCode(b) : ".";
           }
           ++i;
           if (columns) {
             if (i > 0 && i % 16 === 0 && i !== k) {
-              while (hex.length < 3 * 16 + 3)
-                hex += " ";
+              while (hex.length < 3 * 16 + 3) hex += " ";
               out += hex + asc + "\n";
               hex = asc = "";
             }
@@ -3168,8 +3058,7 @@ var require_bytebuffer = __commonJS({
           b = this.view[begin++];
           if (b < 16)
             out.push("0", b.toString(16));
-          else
-            out.push(b.toString(16));
+          else out.push(b.toString(16));
         }
         return out.join("");
       };
@@ -3192,7 +3081,7 @@ var require_bytebuffer = __commonJS({
         bb.limit = j;
         return bb;
       };
-      var utfx = function() {
+      var utfx = (function() {
         "use strict";
         var utfx2 = {};
         utfx2.MAX_CODEPOINT = 1114111;
@@ -3231,8 +3120,7 @@ var require_bytebuffer = __commonJS({
               ((b = src()) === null || (c = src()) === null) && fail([a, b, c]), dst((a & 15) << 12 | (b & 63) << 6 | c & 63);
             else if ((a & 248) === 240)
               ((b = src()) === null || (c = src()) === null || (d = src()) === null) && fail([a, b, c, d]), dst((a & 7) << 18 | (b & 63) << 12 | (c & 63) << 6 | d & 63);
-            else
-              throw RangeError("Illegal starting byte: " + a);
+            else throw RangeError("Illegal starting byte: " + a);
           }
         };
         utfx2.UTF16toUTF8 = function(src, dst) {
@@ -3251,8 +3139,7 @@ var require_bytebuffer = __commonJS({
             }
             dst(c1);
           }
-          if (c2 !== null)
-            dst(c2);
+          if (c2 !== null) dst(c2);
         };
         utfx2.UTF8toUTF16 = function(src, dst) {
           var cp = null;
@@ -3296,12 +3183,10 @@ var require_bytebuffer = __commonJS({
           return [n, l];
         };
         return utfx2;
-      }();
+      })();
       ByteBufferPrototype.toUTF8 = function(begin, end) {
-        if (typeof begin === "undefined")
-          begin = this.offset;
-        if (typeof end === "undefined")
-          end = this.limit;
+        if (typeof begin === "undefined") begin = this.offset;
+        if (typeof end === "undefined") end = this.limit;
         if (!this.noAssert) {
           if (typeof begin !== "number" || begin % 1 !== 0)
             throw TypeError("Illegal begin: Not an integer");
@@ -3750,8 +3635,7 @@ function encode_utf8(text) {
       const hexVal = parseInt(hex, 16);
       bytes.push(hexVal);
       i += 2;
-    } else
-      bytes.push(c.charCodeAt(0));
+    } else bytes.push(c.charCodeAt(0));
   }
   return bytes;
 }

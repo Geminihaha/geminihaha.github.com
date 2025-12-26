@@ -4,9 +4,11 @@
     "events": "^3.3.0"
   },
   "devDependencies": {
-    "esbuild": "^0.20.2"
+    "esbuild": "^0.27.2",
+    "http-server": "^14.1.1"
   },
   "scripts": {
-    "build": "esbuild bletrs/main.js --bundle --outfile=bletrs/dist/bundle.js --format=esm"
+    "build": "esbuild bletrs/main.js --bundle --outfile=bletrs/dist/bundle.js --format=esm",
+    "start": "http-server bletrs"
   }
 }
