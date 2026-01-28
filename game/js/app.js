@@ -5,18 +5,24 @@ const baseWidth = 500;
 const baseHeight = 200;
 let scaleX = 1;
 let scaleY = 1;
+let gameInitialized = false;
 
 function resizeCanvas() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     scaleX = canvas.width / baseWidth;
     scaleY = canvas.height / baseHeight;
+
+    if (!gameInitialized) {
+        initializeGame();
+        gameInitialized = true;
+    }
     // Redraw the scene after resizing
     callFrames(); // Or a dedicated redraw function
 }
 
 window.addEventListener('resize', resizeCanvas, false);
-resizeCanvas();
+
 
 function scaleValue(value) {
     // Using scaleX as the primary scaling factor for simplicity
@@ -29,20 +35,26 @@ var cloudArr = [];
 var timer = 0.0;
 var isJump = false;
 var animId = 0;
+var dino;
 
 const countElId = document.getElementById("countNumber");
 
-var dino = {
-    x: scaleValue(100),
-    y: scaleValue(150),
-    width: scaleValue(10),
-    height: scaleValue(50),
-    draw() {
-        const Img = new Image(this.width, this.height);
-        Img.src = "./img/main_airplane.png";
-        ctx.drawImage(Img, this.x, this.y, this.width, this.height);
-    }
+function initializeGame() {
+    dino = {
+        x: scaleValue(100),
+        y: scaleValue(150),
+        width: scaleValue(10),
+        height: scaleValue(50),
+        draw() {
+            const Img = new Image(this.width, this.height);
+            Img.src = "./img/main_airplane.png";
+            ctx.drawImage(Img, this.x, this.y, this.width, this.height);
+        }
+    };
+    // Restart ticker, etc.
+    restartCallFrame();
 }
+
 
 class Airplane {
     constructor() {
@@ -86,9 +98,6 @@ class Cloud {
     }
 }
 
-createjs.Ticker.addEventListener("tick", handleTick);
-createjs.Ticker.framerate = 60;
-
 function handleTick(event) {
     if (!event.paused) {
         callFrames();
@@ -96,6 +105,7 @@ function handleTick(event) {
 }
 
 function callFrames() {
+    if (!gameInitialized) return; // Don't draw until initialized
     timer++;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -162,6 +172,7 @@ function callFrames() {
 }
 
 function isCollision(rect1, rect2) {
+    if (!rect1 || !rect2) return false;
     return rect1.x < rect2.x + rect2.width &&
            rect1.x + rect1.width > rect2.x &&
            rect1.y < rect2.y + rect2.height &&
@@ -175,7 +186,7 @@ function crashEvent() {
 }
 
 function eventJump() {
-    if (dino.y >= scaleValue(140)) { // Allow jumping only from the ground
+    if (dino && dino.y >= scaleValue(140)) { // Allow jumping only from the ground
         isJump = true;
     }
 }
@@ -189,8 +200,11 @@ function restartCallFrame() {
     airplaneArr = [];
     cloudArr = [];
     timer = 0;
-    dino.y = scaleValue(150);
+    if (dino) {
+      dino.y = scaleValue(150);
+    }
     countElId.value = 0;
+    createjs.Ticker.removeAllEventListeners(); // remove existing ticker
     createjs.Ticker.addEventListener("tick", handleTick);
     createjs.Ticker.framerate = 60;
 }
@@ -204,3 +218,6 @@ window.addEventListener('keydown', (event) => {
         restartCallFrame();
     }
 });
+
+// Finally, call resizeCanvas to start everything
+resizeCanvas();
