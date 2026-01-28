@@ -72,8 +72,10 @@ function draw() {
         }
 
         // Collision detection
-        if ((birdX + bird.width >= pipe[i].x && birdX <= pipe[i].x + pipeNorth.width &&
-            (birdY <= pipe[i].y + pipeNorth.height || birdY + bird.height >= pipe[i].y + pipeNorth.height + 80)) ||
+        // Add padding to make hitbox smaller for more precise collision
+        const padding = 5;
+        if ((birdX + bird.width - padding >= pipe[i].x && birdX + padding <= pipe[i].x + pipeNorth.width &&
+            (birdY + padding <= pipe[i].y + pipeNorth.height || birdY + bird.height - padding >= pipe[i].y + pipeNorth.height + 80)) ||
             birdY + bird.height >= canvas.height) {
             collisionDetected = true;
         }
