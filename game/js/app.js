@@ -10,8 +10,10 @@ let gameInitialized = false;
 function resizeCanvas() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    scaleX = canvas.width / baseWidth;
-    scaleY = canvas.height / baseHeight;
+    // scaleX = canvas.width / baseWidth;
+    // scaleY = canvas.height / baseHeight;
+    scaleX = 1;
+    scaleY = 1;
 
     if (!gameInitialized) {
         initializeGame();
