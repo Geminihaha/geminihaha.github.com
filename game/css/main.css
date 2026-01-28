@@ -1,8 +1,20 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
 .canvas {
     background-color: #eeeeee;
     color: darkblue;
     height: 200px;
-    width: 500px;
+    width: 100%;
+    max-width: 500px;
     border-radius: 5px;
     border-width: 5px;
     border-color: #333333;
@@ -22,8 +34,6 @@
     height: 80px;
     width: 80px;
     border-radius: 80px;
-    position: relative;
-    top: -90px;
 }
 
 .creditBtn {
@@ -40,4 +50,21 @@
     height: 30px;
     width: 80px;
     border-radius: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 520px) {
+    body {
+        padding: 5px;
+    }
+
+    .eventJumpBtn {
+        position: static;
+        margin-top: 10px;
+    }
+
+    p {
+        width: 100% !important;
+        max-width: 500px;
+    }
 }
