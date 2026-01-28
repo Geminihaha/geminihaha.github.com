@@ -23,10 +23,12 @@ function resizeCanvas() {
 
 window.addEventListener('resize', resizeCanvas, false);
 
-
-function scaleValue(value) {
-    // Using scaleX as the primary scaling factor for simplicity
+function scaleXValue(value) {
     return value * scaleX;
+}
+
+function scaleYValue(value) {
+    return value * scaleY;
 }
 
 var cactusArr = [];
@@ -41,10 +43,10 @@ const countElId = document.getElementById("countNumber");
 
 function initializeGame() {
     dino = {
-        x: scaleValue(100),
-        y: scaleValue(150),
-        width: scaleValue(10),
-        height: scaleValue(50),
+        x: scaleXValue(100),
+        y: scaleYValue(150),
+        width: scaleXValue(10),
+        height: scaleYValue(50),
         draw() {
             const Img = new Image(this.width, this.height);
             Img.src = "./img/main_airplane.png";
@@ -59,9 +61,9 @@ function initializeGame() {
 class Airplane {
     constructor() {
         this.x = canvas.width;
-        this.y = scaleValue(10);
-        this.width = scaleValue(10);
-        this.height = scaleValue(5);
+        this.y = scaleYValue(10);
+        this.width = scaleXValue(10);
+        this.height = scaleYValue(5);
     }
     draw() {
         const Img = new Image(this.width, this.height);
@@ -73,9 +75,9 @@ class Airplane {
 class Cactus {
     constructor() {
         this.x = canvas.width;
-        this.y = scaleValue(150);
-        this.width = scaleValue(10);
-        this.height = scaleValue(10);
+        this.y = scaleYValue(150);
+        this.width = scaleXValue(10);
+        this.height = scaleYValue(10);
     }
     draw() {
         const Img = new Image(this.width, this.height);
@@ -87,9 +89,9 @@ class Cactus {
 class Cloud {
     constructor() {
         this.x = canvas.width;
-        this.y = scaleValue(10);
-        this.width = scaleValue(10);
-        this.height = scaleValue(50);
+        this.y = scaleYValue(10);
+        this.width = scaleXValue(10);
+        this.height = scaleYValue(50);
     }
     draw() {
         const Img = new Image(this.width, this.height);
@@ -112,7 +114,7 @@ function callFrames() {
     if (timer === 1 || timer % 480 === 0) {
         for (let t = 0; t < 2; t++) {
             let cloud = new Cloud();
-            cloud.x = scaleValue(-100 + (t * 280));
+            cloud.x = scaleXValue(-100 + (t * 280));
             cloudArr.push(cloud);
         }
     }
@@ -126,7 +128,7 @@ function callFrames() {
     let countNum = Number(countElId.value);
 
     cloudArr.forEach((cloud, index) => {
-        cloud.x -= scaleValue(0.5);
+        cloud.x -= scaleXValue(0.5);
         cloud.draw();
         if (cloud.x < -cloud.width) {
             cloudArr.splice(index, 1);
@@ -136,7 +138,7 @@ function callFrames() {
     dino.draw();
 
     airplaneArr.forEach((airplane, index) => {
-        airplane.x -= scaleValue(1);
+        airplane.x -= scaleXValue(1);
         airplane.draw();
         if (airplane.x < -airplane.width) {
             airplaneArr.splice(index, 1);
@@ -148,7 +150,7 @@ function callFrames() {
     });
 
     cactusArr.forEach((cactus, index) => {
-        cactus.x -= scaleValue(2);
+        cactus.x -= scaleXValue(2);
         cactus.draw();
         if (cactus.x < -cactus.width) {
             cactusArr.splice(index, 1);
@@ -160,13 +162,13 @@ function callFrames() {
     });
 
     if (isJump && dino.y > 0) {
-        dino.y -= scaleValue(3);
+        dino.y -= scaleYValue(3);
         if (dino.y <= 0) {
             isJump = false;
         }
     } else {
-        if (dino.y < scaleValue(150)) {
-            dino.y += scaleValue(3);
+        if (dino.y < scaleYValue(150)) {
+            dino.y += scaleYValue(3);
         }
     }
 }
@@ -186,7 +188,7 @@ function crashEvent() {
 }
 
 function eventJump() {
-    if (dino && dino.y >= scaleValue(140)) { // Allow jumping only from the ground
+    if (dino && dino.y >= scaleYValue(140)) { // Allow jumping only from the ground
         isJump = true;
     }
 }
@@ -201,7 +203,7 @@ function restartCallFrame() {
     cloudArr = [];
     timer = 0;
     if (dino) {
-      dino.y = scaleValue(150);
+      dino.y = scaleYValue(150);
     }
     countElId.value = 0;
     createjs.Ticker.removeAllEventListeners(); // remove existing ticker
