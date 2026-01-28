@@ -45,8 +45,8 @@ function initializeGame() {
     dino = {
         x: scaleXValue(100),
         y: scaleYValue(150),
-        width: scaleXValue(50),
-        height: scaleYValue(50),
+        width: scaleXValue(30),
+        height: scaleYValue(30),
         draw() {
             const Img = new Image(this.width, this.height);
             Img.src = "./img/main_airplane.png";
@@ -76,8 +76,8 @@ class Cactus {
     constructor() {
         this.x = canvas.width;
         this.y = scaleYValue(150);
-        this.width = scaleXValue(20);
-        this.height = scaleYValue(20);
+        this.width = scaleXValue(30);
+        this.height = scaleYValue(30);
     }
     draw() {
         const Img = new Image(this.width, this.height);
