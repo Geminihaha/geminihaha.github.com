@@ -10,11 +10,9 @@ let gameInitialized = false;
 function resizeCanvas() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    // scaleX = canvas.width / baseWidth;
-    // scaleY = canvas.height / baseHeight;
-    scaleX = 1;
-    scaleY = 1;
-
+    scaleX = canvas.width / baseWidth;
+    scaleY = canvas.height / baseHeight;
+    
     if (!gameInitialized) {
         initializeGame();
         gameInitialized = true;
@@ -47,7 +45,7 @@ function initializeGame() {
     dino = {
         x: scaleXValue(100),
         y: scaleYValue(150),
-        width: scaleXValue(10),
+        width: scaleXValue(50),
         height: scaleYValue(50),
         draw() {
             const Img = new Image(this.width, this.height);
@@ -78,8 +76,8 @@ class Cactus {
     constructor() {
         this.x = canvas.width;
         this.y = scaleYValue(150);
-        this.width = scaleXValue(10);
-        this.height = scaleYValue(10);
+        this.width = scaleXValue(20);
+        this.height = scaleYValue(20);
     }
     draw() {
         const Img = new Image(this.width, this.height);
@@ -92,7 +90,7 @@ class Cloud {
     constructor() {
         this.x = canvas.width;
         this.y = scaleYValue(10);
-        this.width = scaleXValue(10);
+        this.width = scaleXValue(100);
         this.height = scaleYValue(50);
     }
     draw() {
