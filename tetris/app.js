@@ -4,6 +4,26 @@ const context = canvas.getContext('2d');
 
 context.scale(20, 20);
 
+function drawGrid() {
+    context.strokeStyle = '#333'; // Dark gray color
+    context.lineWidth = 0.05; // Thin line relative to scale
+    context.beginPath();
+
+    // Vertical lines
+    for (let x = 1; x < 12; x++) {
+        context.moveTo(x, 0);
+        context.lineTo(x, 20);
+    }
+
+    // Horizontal lines
+    for (let y = 1; y < 20; y++) {
+        context.moveTo(0, y);
+        context.lineTo(12, y);
+    }
+
+    context.stroke();
+}
+
 function arenaSweep() {
     let rowCount = 1;
     outer: for (let y = arena.length - 1; y > 0; --y) {
@@ -18,7 +38,16 @@ function arenaSweep() {
         ++y;
 
         player.score += rowCount * 10;
+        player.lines++; // Track lines
         rowCount *= 2;
+    }
+    
+    // Level Up Logic: Every 20 lines
+    const newLevel = Math.floor(player.lines / 20) + 1;
+    if (newLevel > player.level) {
+        player.level = newLevel;
+        // Increase speed: decrease interval by 100ms per level, min 100ms
+        dropInterval = Math.max(100, 1000 - (player.level - 1) * 100);
     }
 }
 
@@ -36,6 +65,7 @@ function collide(arena, player) {
     }
     return false;
 }
+
 
 function createMatrix(w, h) {
     const matrix = [];
@@ -109,6 +139,7 @@ function draw() {
     context.fillStyle = '#000';
     context.fillRect(0, 0, canvas.width, canvas.height);
 
+    drawGrid();
     drawMatrix(arena, {x: 0, y: 0});
     drawMatrix(player.matrix, player.pos);
 }
@@ -155,6 +186,19 @@ function playerDrop() {
     dropCounter = 0;
 }
 
+function playerHardDrop() {
+    if (isGameOver) return;
+    while (!collide(arena, player)) {
+        player.pos.y++;
+    }
+    player.pos.y--; // Back up one step
+    merge(arena, player);
+    playerReset();
+    arenaSweep();
+    updateScore();
+    dropCounter = 0;
+}
+
 function playerMove(offset) {
     player.pos.x += offset;
     if (collide(arena, player)) {
@@ -162,16 +206,50 @@ function playerMove(offset) {
     }
 }
 
-function playerReset() {
-    const pieces = 'TJLOSZI';
-    player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
-    player.pos.y = 0;
-    player.pos.x = (arena[0].length / 2 | 0) -
-                   (player.matrix[0].length / 2 | 0);
-    if (collide(arena, player)) {
-        arena.forEach(row => row.fill(0));
-        player.score = 0;
-        updateScore();
+// High Score Logic
+function saveHighScore(score) {
+    const now = new Date();
+    const dateString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    const newScore = { score: score, date: dateString };
+    
+    let highScores = JSON.parse(localStorage.getItem('tetrisHighScores')) || [];
+    highScores.push(newScore);
+    
+    // Sort descending by score
+    highScores.sort((a, b) => b.score - a.score);
+    
+    // Keep top 10
+    highScores.splice(10);
+    
+    localStorage.setItem('tetrisHighScores', JSON.stringify(highScores));
+    updateHighScoresList();
+}
+
+function updateHighScoresList() {
+    const highScores = JSON.parse(localStorage.getItem('tetrisHighScores')) || [];
+    const list = document.getElementById('highScoreList');
+    
+    list.innerHTML = highScores.map(score => {
+        return `<li><span>${score.score}</span><span class="date">${score.date}</span></li>`;
+    }).join('');
+}
+
+function toggleHighScores() {
+    const modal = document.getElementById('highScoreModal');
+    if (modal.style.display === "block") {
+        modal.style.display = "none";
+    } else {
+        updateHighScoresList(); // Ensure list is up to date when opening
+        modal.style.display = "block";
+    }
+}
+
+// Close modal if clicked outside content
+window.onclick = function(event) {
+    const modal = document.getElementById('highScoreModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
     }
 }
 
@@ -192,24 +270,63 @@ function playerRotate(dir) {
 
 let dropCounter = 0;
 let dropInterval = 1000;
-
 let lastTime = 0;
-function update(time = 0) {
-    const deltaTime = time - lastTime;
+let isGameOver = false;
 
+function update(time = 0) {
+    if (isGameOver) return; // Stop update loop logic if game over
+
+    const deltaTime = time - lastTime;
     dropCounter += deltaTime;
     if (dropCounter > dropInterval) {
         playerDrop();
     }
-
     lastTime = time;
 
     draw();
     requestAnimationFrame(update);
 }
 
+
+function playerReset() {
+    const pieces = 'TJLOSZI';
+    player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+    player.pos.y = 0;
+    player.pos.x = (arena[0].length / 2 | 0) -
+                   (player.matrix[0].length / 2 | 0);
+    
+    if (collide(arena, player)) {
+        isGameOver = true;
+        if (player.score > 0) {
+             saveHighScore(player.score);
+        }
+        // Show Game Over Overlay
+        document.getElementById('finalScore').innerText = player.score;
+        document.getElementById('gameOverOverlay').style.display = 'flex';
+    }
+}
+
+function resetGame() {
+    arena.forEach(row => row.fill(0));
+    player.score = 0;
+    player.lines = 0;
+    player.level = 1;
+    dropInterval = 1000;
+    
+    isGameOver = false;
+    document.getElementById('gameOverOverlay').style.display = 'none';
+    
+    playerReset();
+    updateScore();
+    lastTime = performance.now();
+    update(); 
+}
+
+// ... saveHighScore and updateHighScoresList ...
+
 function updateScore() {
-    document.getElementById('score').innerText = player.score;
+    document.getElementById('score').innerText = 'Score: ' + player.score;
+    document.getElementById('level').innerText = 'Level: ' + player.level;
 }
 
 // Button controls
@@ -225,19 +342,16 @@ function drop() {
     playerDrop();
 }
 
+function hardDrop() {
+    playerHardDrop();
+}
+
 function rotateClockwise() {
     playerRotate(1);
 }
 
 function rotateCounterClockwise() {
     playerRotate(-1);
-}
-
-function resetGame() {
-    arena.forEach(row => row.fill(0));
-    player.score = 0;
-    playerReset();
-    updateScore();
 }
 
 document.addEventListener('keydown', event => {
@@ -251,6 +365,8 @@ document.addEventListener('keydown', event => {
         playerRotate(-1);
     } else if (event.keyCode === 87) {
         playerRotate(1);
+    } else if (event.keyCode === 38) { // Up Arrow
+        playerHardDrop();
     }
 });
 
@@ -271,6 +387,8 @@ const player = {
     pos: {x: 0, y: 0},
     matrix: null,
     score: 0,
+    lines: 0,
+    level: 1,
 };
 
 playerReset();

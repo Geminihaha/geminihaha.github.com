@@ -9,10 +9,12 @@
 <body>
     <div class="game-container">
         <div class="header">
+            <button id="rank-button" class="btn btn-rank" onclick="toggleHighScores()">🏆</button>
             <div class="header-right-group">
                 <div class="title-score">
                     <h1>Tetris</h1>
                     <div id="score">Score: 0</div>
+                    <div id="level">Level: 1</div>
                 </div>
                 <button id="start-button" class="btn btn-reset" onclick="resetGame()">Reset</button>
             </div>
@@ -25,6 +27,7 @@
         <div class="controls">
             <div class="row">
                 <button id="rotate-counter-clockwise-button" class="btn btn-rotate" onclick="rotateCounterClockwise()">↺</button>
+                <button id="hard-drop-button" class="btn btn-hard-drop" onclick="hardDrop()">⇊</button>
                 <button id="rotate-clockwise-button" class="btn btn-rotate" onclick="rotateClockwise()">↻</button>
             </div>
             <div class="row">
@@ -32,6 +35,24 @@
                 <button id="down-button" class="btn btn-move" onclick="drop()">↓</button>
                 <button id="right-button" class="btn btn-move" onclick="moveRight()">→</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="gameOverOverlay" class="overlay">
+        <div class="overlay-content">
+            <h2>GAME OVER</h2>
+            <p>Score: <span id="finalScore">0</span></p>
+            <button class="btn btn-restart-overlay" onclick="resetGame()">Try Again</button>
+        </div>
+    </div>
+
+    <!-- High Score Modal -->
+    <div id="highScoreModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="toggleHighScores()">&times;</span>
+            <h2>High Scores</h2>
+            <ul id="highScoreList"></ul>
         </div>
     </div>
     <script src="app.js"></script>

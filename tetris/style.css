@@ -24,7 +24,7 @@ html, body {
     box-sizing: border-box;
     flex-shrink: 0;
     display: flex;
-    justify-content: flex-end; /* Push everything to the right */
+    justify-content: space-between; /* Space between Rank button and Info group */
     align-items: center;
     background: #2a2a35;
     border-bottom: 1px solid #444;
@@ -37,7 +37,7 @@ html, body {
 }
 
 .title-score {
-    text-align: right; /* Text aligned to the right */
+    text-align: right;
 }
 
 h1 {
@@ -49,6 +49,12 @@ h1 {
     font-size: 0.9rem;
     margin-top: 2px;
     color: #ccc;
+}
+
+#level {
+    font-size: 0.9rem;
+    color: #4db8ff; /* Light blue for level */
+    margin-top: 2px;
 }
 
 .canvas-wrapper {
@@ -115,6 +121,11 @@ canvas {
     box-shadow: 0 3px 0 #a81eb0;
 }
 
+.btn-hard-drop {
+    background: #FF8E0D; /* Orange for fast action */
+    box-shadow: 0 3px 0 #b36309;
+}
+
 /* New Reset Button Style for Header */
 .btn-reset {
     background: #FF0D72;
@@ -123,4 +134,128 @@ canvas {
     padding: 8px 16px;
     min-width: auto;
     margin: 0;
+}
+
+.btn-rank {
+    background: #FFD700; /* Gold color */
+    box-shadow: 0 3px 0 #b39700;
+    color: #333;
+    font-size: 1.2rem;
+    padding: 5px 12px;
+    min-width: auto;
+    margin: 0;
+}
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #2a2a35;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#highScoreList {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#highScoreList li {
+    background: #333;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+#highScoreList li span.date {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+/* Overlay Styles */
+.overlay {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 50; /* Above canvas but below modal if needed */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.overlay-content {
+    text-align: center;
+    color: white;
+}
+
+.overlay-content h2 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #FF0D72;
+    text-shadow: 2px 2px #000;
+}
+
+.overlay-content p {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+}
+
+.btn-restart-overlay {
+    background: #0DC2FF;
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #008ab8;
+    transition: transform 0.1s;
+}
+
+.btn-restart-overlay:active {
+    transform: translateY(4px);
+    box-shadow: none;
 }
