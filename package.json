@@ -9,6 +9,6 @@
   },
   "scripts": {
     "build": "esbuild bletrs/main.js --bundle --outfile=bletrs/dist/bundle.js --format=esm",
-    "start": "http-server bletrs"
+    "start": "http-server bletrs -p 3000"
   }
 }
