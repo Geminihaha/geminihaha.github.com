@@ -2,23 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tetris</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Tetris</h1>
-    <div id="score">Score: 0</div>
-    <canvas id="tetris" width="240" height="400"></canvas>
-    <div>
-        <button id="start-button" onclick="startGame()">Start Game</button>
-    </div>
-    <div>
-        <button id="left-button" onclick="moveLeft()">Left</button>
-        <button id="right-button" onclick="moveRight()">Right</button>
-        <button id="down-button" onclick="drop()">Down</button>
-        <button id="rotate-clockwise-button" onclick="rotateClockwise()">Rotate Clockwise</button>
-        <button id="rotate-counter-clockwise-button" onclick="rotateCounterClockwise()">Rotate Counter-Clockwise</button>
+    <div class="game-container">
+        <div class="header">
+            <div class="header-right-group">
+                <div class="title-score">
+                    <h1>Tetris</h1>
+                    <div id="score">Score: 0</div>
+                </div>
+                <button id="start-button" class="btn btn-reset" onclick="resetGame()">Reset</button>
+            </div>
+        </div>
+        
+        <div class="canvas-wrapper">
+            <canvas id="tetris" width="240" height="400"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="row">
+                <button id="rotate-counter-clockwise-button" class="btn btn-rotate" onclick="rotateCounterClockwise()">↺</button>
+                <button id="rotate-clockwise-button" class="btn btn-rotate" onclick="rotateClockwise()">↻</button>
+            </div>
+            <div class="row">
+                <button id="left-button" class="btn btn-move" onclick="moveLeft()">←</button>
+                <button id="down-button" class="btn btn-move" onclick="drop()">↓</button>
+                <button id="right-button" class="btn btn-move" onclick="moveRight()">→</button>
+            </div>
+        </div>
     </div>
     <script src="app.js"></script>
 </body>

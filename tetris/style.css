@@ -1,11 +1,126 @@
-body {
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
     background: #202028;
     color: #fff;
     font-family: sans-serif;
-    font-size: 2em;
-    text-align: center;
 }
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Fallback */
+    height: 100dvh; /* Dynamic Viewport Height for mobile */
+    width: 100vw;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header {
+    width: 100%;
+    padding: 10px 15px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end; /* Push everything to the right */
+    align-items: center;
+    background: #2a2a35;
+    border-bottom: 1px solid #444;
+}
+
+.header-right-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.title-score {
+    text-align: right; /* Text aligned to the right */
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+#score {
+    font-size: 0.9rem;
+    margin-top: 2px;
+    color: #ccc;
+}
+
+.canvas-wrapper {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+    padding: 5px; /* Reduced padding */
+    box-sizing: border-box;
+    min-height: 0;
+}
+
 canvas {
-    border: solid .2em #fff;
-    height: 90vh;
+    border: 2px solid #fff;
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.controls {
+    width: 100%;
+    padding: 10px 0 20px 0; /* Reduced top padding */
+    flex-shrink: 0;
+    background: #2a2a35;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Reduced gap */
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Reduced gap */
+    width: 100%;
+}
+
+.btn {
+    background: #3877FF;
+    border: none;
+    color: white;
+    padding: 12px; /* Reduced padding */
+    font-size: 1.3rem; /* Slightly smaller icon */
+    border-radius: 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    min-width: 50px;
+    user-select: none;
+    box-shadow: 0 3px 0 #1e4bb5;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn:active {
+    transform: translateY(3px);
+    box-shadow: none;
+}
+
+.btn-rotate {
+    background: #F538FF;
+    box-shadow: 0 3px 0 #a81eb0;
+}
+
+/* New Reset Button Style for Header */
+.btn-reset {
+    background: #FF0D72;
+    box-shadow: 0 3px 0 #b50950;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    min-width: auto;
+    margin: 0;
 }

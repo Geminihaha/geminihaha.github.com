@@ -233,6 +233,13 @@ function rotateCounterClockwise() {
     playerRotate(-1);
 }
 
+function resetGame() {
+    arena.forEach(row => row.fill(0));
+    player.score = 0;
+    playerReset();
+    updateScore();
+}
+
 document.addEventListener('keydown', event => {
     if (event.keyCode === 37) {
         playerMove(-1);
