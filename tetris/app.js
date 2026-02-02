@@ -370,6 +370,51 @@ document.addEventListener('keydown', event => {
     }
 });
 
+function setupContinuousPress(buttonId, actionCallback, initialDelay = 200, repeatRate = 50) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+
+    let timeoutId = null;
+    let intervalId = null;
+
+    const start = (e) => {
+        if (e.cancelable) e.preventDefault(); // Prevent default browser behavior (ghost clicks, text selection)
+        if (intervalId) return; // Already running
+
+        actionCallback(); // Trigger immediately
+
+        timeoutId = setTimeout(() => {
+            intervalId = setInterval(actionCallback, repeatRate);
+        }, initialDelay);
+    };
+
+    const stop = (e) => {
+        if (e && e.cancelable) e.preventDefault();
+        clearTimeout(timeoutId);
+        clearInterval(intervalId);
+        timeoutId = null;
+        intervalId = null;
+    };
+
+    // Mouse events
+    button.addEventListener('mousedown', start);
+    button.addEventListener('mouseup', stop);
+    button.addEventListener('mouseleave', stop);
+
+    // Touch events
+    button.addEventListener('touchstart', start, { passive: false });
+    button.addEventListener('touchend', stop);
+    button.addEventListener('touchcancel', stop);
+}
+
+// Apply continuous press to buttons
+setupContinuousPress('left-button', moveLeft, 170, 50);
+setupContinuousPress('right-button', moveRight, 170, 50);
+setupContinuousPress('down-button', drop, 100, 50); // Faster drop
+// Rotate usually isn't auto-repeated fast, or at all, but for "continuous action" request:
+setupContinuousPress('rotate-counter-clockwise-button', rotateCounterClockwise, 250, 200); 
+setupContinuousPress('rotate-clockwise-button', rotateClockwise, 250, 200);
+
 const colors = [
     null,
     '#FF0D72',

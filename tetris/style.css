@@ -100,12 +100,12 @@ canvas {
     background: #3877FF;
     border: none;
     color: white;
-    padding: 12px; /* Reduced padding */
+    padding: 12px 22px; /* Increased horizontal padding */
     font-size: 1.3rem; /* Slightly smaller icon */
     border-radius: 8px;
     cursor: pointer;
     touch-action: manipulation;
-    min-width: 50px;
+    min-width: 70px;
     user-select: none;
     box-shadow: 0 3px 0 #1e4bb5;
     transition: transform 0.1s, box-shadow 0.1s;
