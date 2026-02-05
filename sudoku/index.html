@@ -10,7 +10,9 @@
 <body onload="init();">
     <div class="container">
         <h1>수도쿠 (Sudoku)</h1>
+        
         <canvas id="gameCanvas" width="450" height="450"></canvas>
+        
         <div class="controls">
             <div class="selection-group">
                 <select id="sizeSelect" onchange="changeConfig()">
@@ -28,16 +30,29 @@
                 </select>
                 <input type="number" id="puzzleNum" min="1" max="300" value="1" style="display:none; width: 50px;" onchange="changeConfig()">
             </div>
+            
             <button onclick="resetGame()">새 게임</button>
+            
             <div class="selection-group">
                 <label><input type="checkbox" id="hintToggle" onchange="updateHints()"> 숫자 힌트</label>
             </div>
+            
             <div id="numberKeypad" class="keypad">
                 <!-- Buttons will be generated in JS -->
             </div>
+            
             <p id="statusLabelText">숫자를 선택하고 칸을 클릭하세요.</p>
         </div>
     </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlert" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <p id="alertMessage"></p>
+            <button onclick="closeAlert()">확인</button>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

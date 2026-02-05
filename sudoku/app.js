@@ -90,13 +90,10 @@ function resetGame() {
     localStorage.removeItem("sudoku_state_v2");
     var basePuzzle = puzzles[currentSize][currentLevel];
     var mode = document.getElementById("modeSelect").value;
+    var seed = (mode === "select") ? (parseInt(document.getElementById("puzzleNum").value) || 1) : Math.random() * 1000000;
     
-    if (mode === "select") {
-        var num = parseInt(document.getElementById("puzzleNum").value) || 1;
-        initialPuzzle = shuffleSudoku(JSON.parse(JSON.stringify(basePuzzle)), num);
-    } else {
-        initialPuzzle = shuffleSudoku(JSON.parse(JSON.stringify(basePuzzle)), Math.random() * 1000000);
-    }
+    // 유효한 배열이 나올 때까지 셔플 (이론적으로는 항상 유효하지만 이중 체크)
+    initialPuzzle = shuffleSudoku(JSON.parse(JSON.stringify(basePuzzle)), seed);
     
     currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
     errors = [];
@@ -108,14 +105,31 @@ function seededRandom(seed) {
     return x - Math.floor(x);
 }
 
+// 피셔-예이츠 셔플을 시드 기반으로 구현
+function shuffleArray(array, s) {
+    var m = array.length, t, i;
+    while (m) {
+        i = Math.floor(seededRandom(s++) * m--);
+        t = array[m];
+        array[m] = array[i];
+        array[i] = t;
+    }
+    return {array: array, seed: s};
+}
+
 function shuffleSudoku(board, seed) {
     var size = board.length;
     var s = seed || 1;
     
-    var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].slice(0, size);
-    var shuffledNums = JSON.parse(JSON.stringify(nums)).sort(() => seededRandom(s++) - 0.5);
+    // 1. 숫자 치환
+    var nums = [];
+    for(var i=1; i<=size; i++) nums.push(i);
+    var shuffled = shuffleArray(nums, s);
+    var shuffledNums = shuffled.array;
+    s = shuffled.seed;
+
     var map = {};
-    nums.forEach((n, i) => map[n] = shuffledNums[i]);
+    for(var i=0; i<size; i++) map[i+1] = shuffledNums[i];
 
     for (var r = 0; r < size; r++) {
         for (var c = 0; c < size; c++) {
@@ -123,22 +137,32 @@ function shuffleSudoku(board, seed) {
         }
     }
 
+    // 2. 행 섞기 (블록 내부에서만)
     var stepY = (size === 9) ? 3 : 2;
     for (var i = 0; i < size; i += stepY) {
-        var group = board.slice(i, i + stepY);
-        group.sort(() => seededRandom(s++) - 0.5);
-        for (var j = 0; j < stepY; j++) board[i + j] = group[j];
+        var groupIndices = [];
+        for(var j=0; j<stepY; j++) groupIndices.push(i + j);
+        var shuffledIndices = shuffleArray(groupIndices, s);
+        s = shuffledIndices.seed;
+        
+        var tempGroup = groupIndices.map(idx => JSON.parse(JSON.stringify(board[idx])));
+        for(var j=0; j<stepY; j++) {
+            board[i + j] = tempGroup[shuffledIndices.array.indexOf(i + j)];
+        }
     }
 
+    // 3. 열 섞기 (블록 내부에서만)
     var stepX = 3;
     for (var i = 0; i < size; i += stepX) {
-        for (var n = 0; n < 2; n++) {
-            var c1 = i + Math.floor(seededRandom(s++) * stepX);
-            var c2 = i + Math.floor(seededRandom(s++) * stepX);
-            for (var r = 0; r < size; r++) {
-                var temp = board[r][c1];
-                board[r][c1] = board[r][c2];
-                board[r][c2] = temp;
+        var groupIndices = [];
+        for(var j=0; j<stepX; j++) groupIndices.push(i + j);
+        var shuffledIndices = shuffleArray(groupIndices, s);
+        s = shuffledIndices.seed;
+        
+        for (var r = 0; r < size; r++) {
+            var tempRow = JSON.parse(JSON.stringify(board[r]));
+            for(var j=0; j<stepX; j++) {
+                board[r][i+j] = tempRow[shuffledIndices.array[j]];
             }
         }
     }
@@ -220,6 +244,15 @@ function drawGrid() {
     stage.addChild(lines);
 }
 
+function showAlert(message) {
+    document.getElementById("alertMessage").innerText = message;
+    document.getElementById("customAlert").style.display = "flex";
+}
+
+function closeAlert() {
+    document.getElementById("customAlert").style.display = "none";
+}
+
 function checkWin() {
     var full = true;
     errors = [];
@@ -235,11 +268,8 @@ function checkWin() {
         }
     }
     if (full) {
-        if (errors.length === 0) alert("축하합니다! 정답입니다!");
-        else {
-            alert("틀린 부분이 있습니다. 빨간색 칸을 확인하세요.");
-            refreshGrid();
-        }
+        if (errors.length === 0) showAlert("축하합니다! 정답입니다!");
+        else showAlert("틀린 부분이 있습니다. 빨간색 칸을 확인하세요.");
     }
 }
 
@@ -296,8 +326,8 @@ function createCell(row, col, value) {
     if (initialPuzzle[row][col] === 0) {
         container.on("click", function() {
             currentBoard[row][col] = selectedNumber;
-            refreshGrid();
             checkWin();
+            refreshGrid();
         });
     }
     return container;
