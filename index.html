@@ -1,162 +1,73 @@
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <link rel="manifest" href="/manifest.json"/>
-    <title>geminihaha's Test page</title>
-    <script type="text/javascript">
-        var deviceType;
-        var ua = navigator.userAgent;
-
-        window.onload = function() {
-            if(ua.match(/Android/i)) deviceType = 'android';
-            else if(ua.match(/iPhone/i) || ua.match(/iPad/i) || ua.match(/iPod/i)) deviceType = 'ios';
-        };
-
-        function getAndroidVersion(ua) {
-            ua = (ua || navigator.userAgent).toLowerCase();
-            var match = ua.match(/android\s([0-9\.]*)/);
-            return match ? match[1] : undefined;
-        };
-
-        function linkgogo(){
-            if (parseFloat(getAndroidVersion()) >= 5) {
-                alert("5.0 up");
-            } else {
-                alert("5.0 down");
-            }
-        };
-
-        function getLocation(){
-            if (navigator.geolocation) { // GPS를 지원하면
-                navigator.geolocation.getCurrentPosition(function(position) {
-                  alert(position.coords.latitude + ' ' + position.coords.longitude);
-                }, function(error) {
-                  console.error(error);
-                }, {
-                  enableHighAccuracy: false,
-                  maximumAge: 0,
-                  timeout: Infinity
-                });
-            } else {
-            alert('GPS를 지원하지 않습니다');
-            }
-        };
-
-        function callmapgbc(){
-            var data = `Mbti.jsx`;
-            location.href = 'intent://data?openUrl=${data}#Intent;scheme=mapgbc;package=com.gbc.mapgbc;end';
-        }
-
-        function callmapgbc2(){
-            var data = `Mbti.jsx`;
-            location.href = `intent://data?openUrl=${data}#Intent;scheme=mapgbc;package=com.gbc.mapgbc;end`;
-        }
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Portfolio | Web & Game Developer</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>This page is geminihaha's github page</h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Description</th>
-                <th>Link</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>안드로이드 버전확인 master1</td>
-                <td><a href="#" onclick="linkgogo()">linkgogo()</a></td>
-            </tr>
-            <tr>
-                <td>gps 좌표정보</td>
-                <td><a href="#" onclick="getLocation()">getLocation()</a></td>
-            </tr>
-            <tr>
-                <td>테그 앱 실행</td>
-                <td><a href="intent://pay?srCode=1059951111#Intent;scheme=sr-nfcread-acp;package=kr.co.seeroo.rntestapp;end;">link</a></td>
-            </tr>
-            <tr>
-                <td>Instant app (hello)실행</td>
-                <td><a href="https://geminihaha.github.io/hello.html">hello.html</a></td>
-            </tr>
-            <tr>
-                <td>ios 롯데카드 앱카드</td>
-                <td><a href="lotteappcard://data?act=PTP_PAY">link</a></td>
-            </tr>
-            <tr>
-                <td>android 롯데카드 앱카드</td>
-                <td><a href="intent://lottecard/data?act=PTP&acctid=&apptid=12345678901234567890&IOS_RETURN_APP=#Intent;scheme=lotteappcard;package=com.lcacApp;end">link</a></td>
-            </tr>
-            <tr>
-                <td>android 롯데카드 앱카드 2</td>
-                <td><a href="intent://lottecard/data?act=PTP&acctid=&apptid=12345678901234567890&IOS_RETURN_APP=#Intent;scheme=lotteappcard;package=com.lcacapp;end">link</a></td>
-            </tr>
-            <tr>
-                <td>android 롯데카드 앱카드 3</td>
-                <td><a href="intent://lottecard/data?act=PTP&acctid=&apptid=12345678901234567890&IOS_RETURN_APP=#Intent;scheme=lotteappcard2;package=com.lcacApp;end">link</a></td>
-            </tr>
-            <tr>
-                <td>android 롯데카드 p2p</td>
-                <td><a href="intent://data?url=pps%2FPPPPSHA_V100#Intent;scheme=lottep2p;package=com.lottecard.p2p.p2pmerchant;end">link</a></td>
-            </tr>
-            <tr>
-                <td>ios 롯데카드 p2p</td>
-                <td><a href="lottep2p://data?url=pps%2FPPPPSHA_V100">link</a></td>
-            </tr>
-            <tr>
-                <td>404 에러</td>
-                <td><a href="https://geminihaha.github.io/he.html">he.html</a></td>
-            </tr>
-            <tr>
-                <td>android 스마트저축은행 (건강보험화면)</td>
-                <td><a href="intent://startApp?pageUrl=MCS0053#Intent;scheme=smartsavings;package=com.smartbank.android;end">link</a></td>
-            </tr>
-            <tr>
-                <td>android 스마트저축은행 (대출화면)</td>
-                <td><a href="intent://startApp?pageUrl=MCS0006#Intent;scheme=smartsavings;package=com.smartbank.android;end">link</a></td>
-            </tr>
-            <tr>
-                <td>ios 스마트저축은행</td>
-                <td><a href="smartsavings://startApp?pageUrl=MCS0053">link</a></td>
-            </tr>
-            <tr>
-                <td>ios 모든페이 앱포스 스토어</td>
-                <td><a href="https://apps.apple.com/us/app/%EB%AA%A8%EB%93%A0%ED%8E%98%EC%9D%B4-%EC%95%B1%ED%8F%AC%EC%8A%A4/id1502055462">link</a></td>
-            </tr>
-            <tr>
-                <td>SB톡톡플러스 실행</td>
-                <td><a href="sbtokplus://link">link</a></td>
-            </tr>
-            <tr>
-                <td>SB톡톡플러스 실행 ios</td>
-                <td><a href="sbtokplus://link?returnURL=https://smb.fsb.or.kr/NomSign1700.act?linkSbcd=566">link</a></td>
-            </tr>
-            <tr>
-                <td>NH앱캐시 뱅크패이</td>
-                <td><a href="intent://pay#Intent;scheme=nhb-bankpay;package=com.nh.cashcardapp;end">link</a></td>
-            </tr>
-            <tr>
-                <td>NH앱캐시 뱅크머니</td>
-                <td><a href="intent://open#Intent;scheme=nhb-bankmoney;package=com.nh.cashcardapp;end">link</a></td>
-            </tr>
-            <tr>
-                <td>mapgbc 앱 호출</td>
-                <td><a href="intent://data?openUrl=Mbti.jsx#Intent;scheme=mapgbc;package=com.gbc.mapgbc;end">link</a></td>
-            </tr>
-            <tr>
-                <td>mapgbc 앱 호출 js방식</td>
-                <td><a href="javascript:callmapgbc()">callmapgbc()</a></td>
-            </tr>
-            <tr>
-                <td>mapgbc 앱 호출 js방식 역따</td>
-                <td><a href="javascript:callmapgbc2()">callmapgbc2()</a></td>
-            </tr>
-            <tr>
-                <td>e.kbcard.com/a1 호출</td>
-                <td><a href="https://e.kbcard.com/a1">link</a></td>
-            </tr>
-        </tbody>
-    </table>
+    <section id="intruduce">
+        <header>
+            <h1 class="hero-title">Beyond the Canvas.</h1>
+            <p class="hero-subtitle">취미로 안드로이드 앱 개발과 전통적인 게임 메커니즘, 최신 웹 기술의 융합을 탐구합니다.</p>
+    
+            <h2>Innovation through Code.</h2>
+            <p style="font-size: 1.25rem; color: var(--secondary-text); max-width: 800px; margin-bottom: 40px;">
+                현업에서는 **Android Native** 앱 개발을 전문적으로 수행하며, 견고하고 성능 최적화된 모바일 아키텍처를 구축합니다. 
+                동시에 취미로 자바스크립트, 파이썬, C++ 등 다양한 언어와 기술을 탐구하며 브라우저와 하드웨어의 한계를 넓히는 실험적인 프로젝트를 진행하고 있습니다.
+            </p>
+    
+            <div class="cta-container">
+                <a href="#projects" class="cta-button">View Projects</a>
+            </div>
+        </header>
+    </section>    
+
+    <section id="projects">
+        <h2>Selected Work</h2>
+        <div class="project-grid">
+            <a href="sudoku/index.html" class="project-card">
+                <h3>Sudoku Pro</h3>
+                <p>EaselJS 기반의 고성능 수도쿠 엔진. 300개의 시드 기반 퍼즐과 실시간 오답 체크 알고리즘이 적용되어 있습니다.</p>
+            </a>
+            <a href="tetris/index.html" class="project-card">
+                <h3>Tetris Classic</h3>
+                <p>순수 자바스크립트로 구현된 정밀한 물리 엔진 기반의 테트리스 프로토타입입니다.</p>
+            </a>
+            <a href="birdgame/index.html" class="project-card">
+                <h3>Aero Bird</h3>
+                <p>심플하지만 중독성 있는 아케이드 경험을 제공하는 웹 기반 플라이트 게임입니다.</p>
+            </a>
+            <a href="bletrs/index.html" class="project-card">
+                <h3>BLE Interface</h3>
+                <p>Web Bluetooth API를 활용하여 하드웨어와 웹을 연결하는 실험적인 인터페이스입니다.</p>
+            </a>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="project-grid">
+            <div class="project-card" style="cursor: default;">
+                <h3>Core Expert</h3>
+                <p>Android (Kotlin/Java), Jetpack Compose, MVVM/MVI Architecture, Performance Tuning.</p>
+            </div>
+            <div class="project-card" style="cursor: default;">
+                <h3>Web Exploration</h3>
+                <p>JavaScript (ES6+), EaselJS, CSS Canvas, Web Bluetooth API, GitHub Pages.</p>
+            </div>
+            <div class="project-card" style="cursor: default;">
+                <h3>Hobbies & Interests</h3>
+                <p>Game Physics, BLE Communication, UI/UX Interaction, Cross-platform prototyping.</p>
+            </div>
+        </div>
+
+        <a href="linktest.html" class="link-test">기존 테스트 링크 목록 보기</a>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2026 Developer Portfolio. Built with passion for the web.</p>
+    </footer>
+
 </body>
 </html>
