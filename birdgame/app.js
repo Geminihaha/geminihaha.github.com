@@ -30,7 +30,7 @@ function resize() {
     canvas.width = width;
     canvas.height = height;
     scale = width / 180;
-    birdScale = Math.min(Math.max(scale, 0.8), 1.2);
+    birdScale = Math.min(Math.max(scale, 0.8), 1.8);
     
     gravity = 0.20 * scale;
     jump = -3.5 * scale;
