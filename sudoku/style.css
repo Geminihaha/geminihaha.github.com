@@ -1,0 +1,106 @@
+body {
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* 상단 정렬 */
+    min-height: 100vh;
+    margin: 0;
+    padding-top: 20px; /* 상단 여백 추가 */
+}
+
+.container {
+    text-align: center;
+    background-color: white;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 95%;
+    max-width: 500px;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+canvas {
+    border: 2px solid #333;
+    background-color: #fff;
+    cursor: pointer;
+    max-width: 100%;
+    height: auto !important;
+}
+
+.controls {
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.selection-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.keypad {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.key-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #333; /* 텍스트 색상 추가 */
+    cursor: pointer;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.key-btn.selected {
+    background-color: #007bff;
+    color: white; /* 선택된 경우만 하얀색 */
+    border-color: #0056b3;
+}
+
+.key-btn.eraser {
+    background-color: #f8d7da;
+    width: auto; /* 너비를 자동으로 */
+    min-width: 60px;
+    padding: 0 5px;
+    font-size: 14px; /* 글자가 버튼 안에 맞게 조정 */
+}
+
+#statusLabelText {
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+}
+
+label {
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #45a049;
+}

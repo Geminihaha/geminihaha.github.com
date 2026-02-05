@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EaselJS 수도쿠</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="../lib/easeljs-0.8.2.min.js"></script>
+</head>
+<body onload="init();">
+    <div class="container">
+        <h1>수도쿠 (Sudoku)</h1>
+        <canvas id="gameCanvas" width="450" height="450"></canvas>
+        <div class="controls">
+            <div class="selection-group">
+                <select id="sizeSelect" onchange="changeConfig()">
+                    <option value="9">9x9</option>
+                    <option value="6">6x6</option>
+                </select>
+                <select id="levelSelect" onchange="changeConfig()">
+                    <option value="easy">초급</option>
+                    <option value="medium">중급</option>
+                    <option value="hard">고수</option>
+                </select>
+                <select id="modeSelect" onchange="toggleMode()">
+                    <option value="random">랜덤</option>
+                    <option value="select">번호선택</option>
+                </select>
+                <input type="number" id="puzzleNum" min="1" max="300" value="1" style="display:none; width: 50px;" onchange="changeConfig()">
+            </div>
+            <button onclick="resetGame()">새 게임</button>
+            <div class="selection-group">
+                <label><input type="checkbox" id="hintToggle" onchange="updateHints()"> 숫자 힌트</label>
+            </div>
+            <div id="numberKeypad" class="keypad">
+                <!-- Buttons will be generated in JS -->
+            </div>
+            <p id="statusLabelText">숫자를 선택하고 칸을 클릭하세요.</p>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
