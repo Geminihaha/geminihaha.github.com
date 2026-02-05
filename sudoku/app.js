@@ -8,7 +8,11 @@ var initialPuzzle = [];
 var selectedNumber = 1; 
 var errors = []; 
 
-// 완벽하게 풀린 기본 정답판 (3x2 및 3x3 규격 준수)
+// 타이머 변수
+var seconds = 0;
+var timerInterval = null;
+var isPaused = false;
+
 var solvedBases = {
     "9": [
         [1, 2, 3, 4, 5, 6, 7, 8, 9], [4, 5, 6, 7, 8, 9, 1, 2, 3], [7, 8, 9, 1, 2, 3, 4, 5, 6],
@@ -34,6 +38,7 @@ function init() {
         currentLevel = data.level || "easy";
         currentBoard = data.board;
         initialPuzzle = data.initialBoard;
+        seconds = data.seconds || 0;
         
         if (data.mode) document.getElementById("modeSelect").value = data.mode;
         if (data.puzzleNum) document.getElementById("puzzleNum").value = data.puzzleNum;
@@ -41,44 +46,88 @@ function init() {
         document.getElementById("sizeSelect").value = currentSize;
         document.getElementById("levelSelect").value = currentLevel;
         
-        toggleModeUI();
+        updateTimerDisplay();
         createKeypad();
         refreshGrid();
+        startTimer();
     } else {
-        changeConfig();
+        openNewGameModal();
     }
 }
 
-function changeConfig() {
-    currentSize = parseInt(document.getElementById("sizeSelect").value);
-    currentLevel = document.getElementById("levelSelect").value;
-    createKeypad();
-    resetGame();
+// 새 게임 모달 관련 함수
+function openNewGameModal() {
+    isPaused = true;
+    document.getElementById("newGameModal").style.display = "flex";
+    toggleModeUIInModal();
 }
 
-function toggleModeUI() {
+function closeNewGameModal() {
+    document.getElementById("newGameModal").style.display = "none";
+    if (currentBoard.length > 0) isPaused = false;
+}
+
+function toggleModeUIInModal() {
     var mode = document.getElementById("modeSelect").value;
     document.getElementById("puzzleNum").style.display = (mode === "select") ? "inline-block" : "none";
 }
 
-function toggleMode() {
-    toggleModeUI();
-    changeConfig();
+function confirmNewGame() {
+    currentSize = parseInt(document.getElementById("sizeSelect").value);
+    currentLevel = document.getElementById("levelSelect").value;
+    closeNewGameModal();
+    resetGame();
 }
 
 function resetGame() {
+    stopTimer();
+    seconds = 0;
+    updateTimerDisplay();
     localStorage.removeItem("sudoku_state_v2");
+    
     var mode = document.getElementById("modeSelect").value;
     var seed = (mode === "select") ? (parseInt(document.getElementById("puzzleNum").value) || 1) : Math.random() * 1000000;
     
-    // 1. 정답판 생성 및 셔플
     var fullBoard = shuffleSudoku(JSON.parse(JSON.stringify(solvedBases[currentSize])), seed);
-    
-    // 2. 난이도에 따라 숫자 가리기
     initialPuzzle = createPuzzle(fullBoard, currentLevel, seed);
     currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
     errors = [];
+    isPaused = false;
+    createKeypad();
     refreshGrid();
+    startTimer();
+}
+
+// 타이머 로직
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(function() {
+        if (!isPaused) {
+            seconds++;
+            updateTimerDisplay();
+            if (seconds % 5 === 0) saveState();
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+}
+
+function updateTimerDisplay() {
+    var mins = Math.floor(seconds / 60);
+    var secs = seconds % 60;
+    document.getElementById("timerDisplay").innerText = 
+        (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
+}
+
+function togglePause() {
+    if (currentBoard.length === 0) return;
+    isPaused = !isPaused;
+    document.getElementById("pauseModal").style.display = isPaused ? "flex" : "none";
+    document.getElementById("pauseBtn").innerText = isPaused ? "Resume" : "Pause";
+    if (!isPaused) refreshGrid(); // 다시 그리기
 }
 
 function seededRandom(seed) {
@@ -101,7 +150,6 @@ function shuffleSudoku(board, seed) {
     var stepX = 3; 
     var stepY = (size === 9) ? 3 : 2;
 
-    // 숫자 치환
     var nums = [];
     for(var i=1; i<=size; i++) nums.push(i);
     var shuffled = shuffleArray(nums, s);
@@ -112,8 +160,6 @@ function shuffleSudoku(board, seed) {
     for (var r = 0; r < size; r++) {
         for (var c = 0; c < size; c++) board[r][c] = map[board[r][c]];
     }
-
-    // 행/열 블록 내 셔플 및 블록 그룹 셔플 생략 (정답판 무결성 유지를 위해 최소화)
     return board;
 }
 
@@ -136,7 +182,6 @@ function createPuzzle(fullBoard, level, seed) {
     var positions = [];
     for(var r=0; r<size; r++) for(var c=0; c<size; c++) positions.push({r:r, c:c});
     
-    // 위치 섞기
     for (var i = positions.length - 1; i > 0; i--) {
         var j = Math.floor(seededRandom(s++) * (i + 1));
         var temp = positions[i];
@@ -145,7 +190,7 @@ function createPuzzle(fullBoard, level, seed) {
     }
 
     for(var i=0; i<hideCount; i++) {
-        puzzle[positions[i].r][positions[positions[i].c].c] = 0;
+        puzzle[positions[i].r][positions[i].c] = 0;
     }
     return puzzle;
 }
@@ -164,7 +209,8 @@ function saveState() {
         size: currentSize, level: currentLevel, 
         mode: document.getElementById("modeSelect").value,
         puzzleNum: document.getElementById("puzzleNum").value,
-        initialBoard: initialPuzzle, board: currentBoard 
+        initialBoard: initialPuzzle, board: currentBoard,
+        seconds: seconds
     };
     localStorage.setItem("sudoku_state_v2", JSON.stringify(data));
 }
@@ -187,6 +233,7 @@ function createKeypad() {
 }
 
 function selectNumber(num) {
+    if (isPaused) return;
     selectedNumber = num;
     var btns = document.querySelectorAll(".key-btn");
     btns.forEach(function(btn) {
@@ -198,6 +245,15 @@ function selectNumber(num) {
 function updateHints() { refreshGrid(); }
 
 function drawGrid() {
+    if (isPaused) {
+        var bg = new createjs.Shape();
+        bg.graphics.beginFill("#eee").drawRect(0, 0, 450, 450);
+        stage.addChild(bg);
+        var t = new createjs.Text("PAUSED", "30px Arial", "#999");
+        t.textAlign = "center"; t.x = 225; t.y = 210;
+        stage.addChild(t);
+        return;
+    }
     for (var row = 0; row < currentSize; row++) {
         grid[row] = [];
         for (var col = 0; col < currentSize; col++) {
@@ -230,10 +286,48 @@ function checkWin() {
             else if (!isCellValid(r, c, currentBoard[r][c])) errors.push({r: r, c: c});
         }
     }
-    if (full) {
-        if (errors.length === 0) showAlert("축하합니다! 정답입니다!");
-        else showAlert("틀린 부분이 있습니다. 빨간색 칸을 확인하세요.");
+    if (full && errors.length === 0) {
+        stopTimer();
+        saveRecord();
+        showAlert("🏆 정답입니다! 기록: " + document.getElementById("timerDisplay").innerText);
+    } else if (full && errors.length > 0) {
+        showAlert("틀린 부분이 있습니다. 빨간색 칸을 확인하세요.");
     }
+}
+
+function saveRecord() {
+    var records = JSON.parse(localStorage.getItem("sudoku_records") || "[]");
+    var newRecord = {
+        date: new Date().toLocaleString(),
+        size: currentSize + "x" + currentSize,
+        level: currentLevel,
+        time: document.getElementById("timerDisplay").innerText,
+        seconds: seconds
+    };
+    records.push(newRecord);
+    records.sort((a, b) => a.seconds - b.seconds);
+    localStorage.setItem("sudoku_records", JSON.stringify(records.slice(0, 10)));
+}
+
+function showRecords() {
+    var records = JSON.parse(localStorage.getItem("sudoku_records") || "[]");
+    var list = document.getElementById("recordsList");
+    list.innerHTML = "";
+    if (records.length === 0) {
+        list.innerHTML = "<p>기록이 없습니다.</p>";
+    } else {
+        records.forEach(r => {
+            var div = document.createElement("div");
+            div.className = "record-item";
+            div.innerHTML = `<span>${r.date} (${r.size}/${r.level})</span> <strong>${r.time}</strong>`;
+            list.appendChild(div);
+        });
+    }
+    document.getElementById("recordsModal").style.display = "flex";
+}
+
+function closeRecords() {
+    document.getElementById("recordsModal").style.display = "none";
 }
 
 function isCellValid(row, col, num) {
@@ -281,6 +375,7 @@ function createCell(row, col, value) {
     }
     if (initialPuzzle[row][col] === 0) {
         container.on("click", function() {
+            if (isPaused) return;
             currentBoard[row][col] = selectedNumber;
             checkWin(); refreshGrid();
         });
