@@ -1,5 +1,179 @@
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+}
+
+.game-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #111;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.mini-title {
+    font-size: 18px;
+    margin: 0;
+}
+
+#scoreDisplay {
+    font-family: monospace;
+    font-size: 18px;
+    color: #0f0;
+}
+
+#canvasWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background: #000;
+    border: 2px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
 canvas {
-    border: 1px solid #000;
-    background-image: url('assets/background.png');
-    background-size: cover;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.overlay-content {
+    text-align: center;
+}
+
+.start-btn {
+    padding: 12px 30px;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 18px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #1a1a1a;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    border: 1px solid #333;
+    width: 280px;
+}
+
+.score-result {
+    margin: 20px 0;
+}
+
+.score-result p {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.score-result h1 {
+    font-size: 48px;
+    color: #fff;
+    margin: 0;
+}
+
+.score-result h3 {
+    font-size: 24px;
+    color: #0f0;
+    margin: 0;
+}
+
+.records-list {
+    text-align: left;
+    margin: 15px 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #444;
+    font-size: 14px;
+}
+
+.record-item:last-child {
+    border-bottom: none;
+}
+
+.header-btns {
+    display: flex;
+    gap: 5px;
+}
+
+.controls {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.jump-btn {
+    width: 100%;
+    padding: 20px;
+    background: #222;
+    color: #fff;
+    border: 2px solid #444;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.jump-btn:active {
+    background: #333;
 }

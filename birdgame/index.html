@@ -1,17 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aero Bird | Web Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Flappy Bird</h1>
-    <canvas id="gameCanvas" width="256" height="256"></canvas>
-    <br>
-    <button id="jumpButton" onclick="jumpBird()">Jump</button>
-    <button id="restartButton" onclick="restartGame()">다시 시작</button>
+    <div class="game-container">
+        <header class="game-header">
+            <h1 class="mini-title">Aero Bird</h1>
+            <div id="scoreDisplay">Score: 0</div>
+            <div class="header-btns">
+                <button class="small-btn" onclick="showHighScores()">🏆Best</button>
+                <button class="small-btn" onclick="restartGame()">Reset</button>
+            </div>
+        </header>
+        
+        <div id="canvasWrapper">
+            <canvas id="gameCanvas" width="320" height="480"></canvas>
+            <div id="startScreen" class="overlay">
+                <div class="overlay-content">
+                    <h2>Ready?</h2>
+                    <p>탭하거나 스페이스바를 누르세요</p>
+                    <button class="start-btn" onclick="startGame()">Start</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="jumpButton" class="jump-btn">JUMP</button>
+        </div>
+    </div>
+
+    <!-- Game Over Popup (Modal) -->
+    <div id="gameOverModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <h2 style="color: #ff4444;">GAME OVER</h2>
+            <div class="score-result">
+                <p>Current Score</p>
+                <h1 id="finalScore">0</h1>
+            </div>
+            <div class="score-result">
+                <p>Personal Best</p>
+                <h3 id="bestScore">0</h3>
+            </div>
+            <button class="start-btn" onclick="restartGame()">Try Again</button>
+        </div>
+    </div>
+
+    <!-- High Scores Modal -->
+    <div id="highScoresModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <h2>🏆 High Scores</h2>
+            <div id="highScoresList" class="records-list"></div>
+            <button class="start-btn" onclick="closeHighScores()">Close</button>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
