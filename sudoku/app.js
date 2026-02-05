@@ -5,41 +5,21 @@ var currentSize = 9;
 var currentLevel = "easy";
 var currentBoard = [];
 var initialPuzzle = [];
-var selectedNumber = 1; // 기본 선택 숫자
-var errors = []; // 틀린 칸 좌표 저장 [{r, c}, ...]
+var selectedNumber = 1; 
+var errors = []; 
 
-var puzzles = {
-    "9": {
-        "easy": [
-            [5, 3, 0, 0, 7, 0, 0, 0, 0], [6, 0, 0, 1, 9, 5, 0, 0, 0], [0, 9, 8, 0, 0, 0, 0, 6, 0],
-            [8, 0, 0, 0, 6, 0, 0, 0, 3], [4, 0, 0, 8, 0, 3, 0, 0, 1], [7, 0, 0, 0, 2, 0, 0, 0, 6],
-            [0, 6, 0, 0, 0, 0, 2, 8, 0], [0, 0, 0, 4, 1, 9, 0, 0, 5], [0, 0, 0, 0, 8, 0, 0, 7, 9]
-        ],
-        "medium": [
-            [0, 0, 0, 6, 0, 0, 4, 0, 0], [7, 0, 0, 0, 0, 3, 6, 0, 0], [0, 0, 0, 0, 9, 1, 0, 8, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 1, 8, 0, 0, 0, 3], [0, 0, 0, 3, 0, 6, 0, 4, 5],
-            [0, 4, 0, 2, 0, 0, 0, 6, 0], [9, 0, 3, 0, 0, 0, 0, 0, 0], [0, 2, 0, 0, 0, 0, 1, 0, 0]
-        ],
-        "hard": [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 3, 0, 8, 5], [0, 0, 1, 0, 2, 0, 0, 0, 0],
-            [0, 0, 0, 5, 0, 7, 0, 0, 0], [0, 0, 4, 0, 0, 0, 1, 0, 0], [0, 9, 0, 0, 0, 0, 0, 0, 0],
-            [5, 0, 0, 0, 0, 0, 0, 7, 3], [0, 0, 2, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 4, 0, 0, 0, 9]
-        ]
-    },
-    "6": {
-        "easy": [
-            [0, 4, 0, 0, 2, 0], [2, 0, 0, 0, 0, 1], [0, 0, 4, 1, 0, 0],
-            [0, 0, 3, 2, 0, 0], [1, 0, 0, 0, 0, 5], [0, 5, 0, 0, 4, 0]
-        ],
-        "medium": [
-            [0, 0, 0, 4, 0, 0], [0, 1, 0, 0, 6, 0], [0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 5, 0, 0], [0, 2, 0, 0, 4, 0], [0, 0, 3, 0, 0, 0]
-        ],
-        "hard": [
-            [0, 0, 0, 0, 0, 0], [0, 0, 2, 0, 1, 0], [3, 0, 0, 0, 0, 5],
-            [6, 0, 0, 0, 0, 4], [0, 5, 0, 4, 0, 0], [0, 0, 0, 0, 0, 0]
-        ]
-    }
+// 완벽하게 풀린 기본 정답판 (3x2 및 3x3 규격 준수)
+var solvedBases = {
+    "9": [
+        [1, 2, 3, 4, 5, 6, 7, 8, 9], [4, 5, 6, 7, 8, 9, 1, 2, 3], [7, 8, 9, 1, 2, 3, 4, 5, 6],
+        [2, 3, 1, 5, 6, 4, 8, 9, 7], [5, 6, 4, 8, 9, 7, 2, 3, 1], [8, 9, 7, 2, 3, 1, 5, 6, 4],
+        [3, 1, 2, 6, 4, 5, 9, 7, 8], [6, 4, 5, 9, 7, 8, 3, 1, 2], [9, 7, 8, 3, 1, 2, 6, 4, 5]
+    ],
+    "6": [
+        [1, 2, 3, 4, 5, 6], [4, 5, 6, 1, 2, 3],
+        [2, 3, 1, 5, 6, 4], [5, 6, 4, 2, 3, 1],
+        [3, 1, 2, 6, 4, 5], [6, 4, 5, 3, 1, 2]
+    ]
 };
 
 function init() {
@@ -53,7 +33,7 @@ function init() {
         currentSize = data.size || 9;
         currentLevel = data.level || "easy";
         currentBoard = data.board;
-        initialPuzzle = data.initialBoard || JSON.parse(JSON.stringify(currentBoard));
+        initialPuzzle = data.initialBoard;
         
         if (data.mode) document.getElementById("modeSelect").value = data.mode;
         if (data.puzzleNum) document.getElementById("puzzleNum").value = data.puzzleNum;
@@ -88,13 +68,14 @@ function toggleMode() {
 
 function resetGame() {
     localStorage.removeItem("sudoku_state_v2");
-    var basePuzzle = puzzles[currentSize][currentLevel];
     var mode = document.getElementById("modeSelect").value;
     var seed = (mode === "select") ? (parseInt(document.getElementById("puzzleNum").value) || 1) : Math.random() * 1000000;
     
-    // 유효한 배열이 나올 때까지 셔플 (이론적으로는 항상 유효하지만 이중 체크)
-    initialPuzzle = shuffleSudoku(JSON.parse(JSON.stringify(basePuzzle)), seed);
+    // 1. 정답판 생성 및 셔플
+    var fullBoard = shuffleSudoku(JSON.parse(JSON.stringify(solvedBases[currentSize])), seed);
     
+    // 2. 난이도에 따라 숫자 가리기
+    initialPuzzle = createPuzzle(fullBoard, currentLevel, seed);
     currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
     errors = [];
     refreshGrid();
@@ -105,14 +86,11 @@ function seededRandom(seed) {
     return x - Math.floor(x);
 }
 
-// 피셔-예이츠 셔플을 시드 기반으로 구현
 function shuffleArray(array, s) {
     var m = array.length, t, i;
     while (m) {
         i = Math.floor(seededRandom(s++) * m--);
-        t = array[m];
-        array[m] = array[i];
-        array[i] = t;
+        t = array[m]; array[m] = array[i]; array[i] = t;
     }
     return {array: array, seed: s};
 }
@@ -120,53 +98,56 @@ function shuffleArray(array, s) {
 function shuffleSudoku(board, seed) {
     var size = board.length;
     var s = seed || 1;
-    
-    // 1. 숫자 치환
+    var stepX = 3; 
+    var stepY = (size === 9) ? 3 : 2;
+
+    // 숫자 치환
     var nums = [];
     for(var i=1; i<=size; i++) nums.push(i);
     var shuffled = shuffleArray(nums, s);
-    var shuffledNums = shuffled.array;
+    var map = {};
+    for(var i=0; i<size; i++) map[i+1] = shuffled.array[i];
     s = shuffled.seed;
 
-    var map = {};
-    for(var i=0; i<size; i++) map[i+1] = shuffledNums[i];
-
     for (var r = 0; r < size; r++) {
-        for (var c = 0; c < size; c++) {
-            if (board[r][c] !== 0) board[r][c] = map[board[r][c]];
-        }
+        for (var c = 0; c < size; c++) board[r][c] = map[board[r][c]];
     }
 
-    // 2. 행 섞기 (블록 내부에서만)
-    var stepY = (size === 9) ? 3 : 2;
-    for (var i = 0; i < size; i += stepY) {
-        var groupIndices = [];
-        for(var j=0; j<stepY; j++) groupIndices.push(i + j);
-        var shuffledIndices = shuffleArray(groupIndices, s);
-        s = shuffledIndices.seed;
-        
-        var tempGroup = groupIndices.map(idx => JSON.parse(JSON.stringify(board[idx])));
-        for(var j=0; j<stepY; j++) {
-            board[i + j] = tempGroup[shuffledIndices.array.indexOf(i + j)];
-        }
-    }
-
-    // 3. 열 섞기 (블록 내부에서만)
-    var stepX = 3;
-    for (var i = 0; i < size; i += stepX) {
-        var groupIndices = [];
-        for(var j=0; j<stepX; j++) groupIndices.push(i + j);
-        var shuffledIndices = shuffleArray(groupIndices, s);
-        s = shuffledIndices.seed;
-        
-        for (var r = 0; r < size; r++) {
-            var tempRow = JSON.parse(JSON.stringify(board[r]));
-            for(var j=0; j<stepX; j++) {
-                board[r][i+j] = tempRow[shuffledIndices.array[j]];
-            }
-        }
-    }
+    // 행/열 블록 내 셔플 및 블록 그룹 셔플 생략 (정답판 무결성 유지를 위해 최소화)
     return board;
+}
+
+function createPuzzle(fullBoard, level, seed) {
+    var size = fullBoard.length;
+    var s = seed;
+    var puzzle = JSON.parse(JSON.stringify(fullBoard));
+    
+    var hideCount = 0;
+    if (size === 9) {
+        if (level === "easy") hideCount = 40;
+        else if (level === "medium") hideCount = 50;
+        else hideCount = 60;
+    } else {
+        if (level === "easy") hideCount = 15;
+        else if (level === "medium") hideCount = 20;
+        else hideCount = 25;
+    }
+
+    var positions = [];
+    for(var r=0; r<size; r++) for(var c=0; c<size; c++) positions.push({r:r, c:c});
+    
+    // 위치 섞기
+    for (var i = positions.length - 1; i > 0; i--) {
+        var j = Math.floor(seededRandom(s++) * (i + 1));
+        var temp = positions[i];
+        positions[i] = positions[j];
+        positions[j] = temp;
+    }
+
+    for(var i=0; i<hideCount; i++) {
+        puzzle[positions[i].r][positions[positions[i].c].c] = 0;
+    }
+    return puzzle;
 }
 
 function refreshGrid() {
@@ -180,12 +161,10 @@ function refreshGrid() {
 
 function saveState() {
     var data = { 
-        size: currentSize, 
-        level: currentLevel, 
+        size: currentSize, level: currentLevel, 
         mode: document.getElementById("modeSelect").value,
         puzzleNum: document.getElementById("puzzleNum").value,
-        initialBoard: initialPuzzle,
-        board: currentBoard 
+        initialBoard: initialPuzzle, board: currentBoard 
     };
     localStorage.setItem("sudoku_state_v2", JSON.stringify(data));
 }
@@ -212,15 +191,11 @@ function selectNumber(num) {
     var btns = document.querySelectorAll(".key-btn");
     btns.forEach(function(btn) {
         btn.classList.remove("selected");
-        if (btn.innerText == num || (num === 0 && btn.innerText === "clear")) {
-            btn.classList.add("selected");
-        }
+        if (btn.innerText == num || (num === 0 && btn.innerText === "clear")) btn.classList.add("selected");
     });
 }
 
-function updateHints() {
-    refreshGrid();
-}
+function updateHints() { refreshGrid(); }
 
 function drawGrid() {
     for (var row = 0; row < currentSize; row++) {
@@ -233,14 +208,9 @@ function drawGrid() {
     }
     var lines = new createjs.Shape();
     lines.graphics.setStrokeStyle(3).beginStroke("#000");
-    var stepX = 3;
-    var stepY = (currentSize === 9) ? 3 : 2;
-    for (var i = 0; i <= currentSize; i += stepX) {
-        lines.graphics.moveTo(i * cellSize, 0).lineTo(i * cellSize, 450);
-    }
-    for (var j = 0; j <= currentSize; j += stepY) {
-        lines.graphics.moveTo(0, j * cellSize).lineTo(450, j * cellSize);
-    }
+    var stepX = 3; var stepY = (currentSize === 9) ? 3 : 2;
+    for (var i = 0; i <= currentSize; i += stepX) lines.graphics.moveTo(i * cellSize, 0).lineTo(i * cellSize, 450);
+    for (var j = 0; j <= currentSize; j += stepY) lines.graphics.moveTo(0, j * cellSize).lineTo(450, j * cellSize);
     stage.addChild(lines);
 }
 
@@ -249,22 +219,15 @@ function showAlert(message) {
     document.getElementById("customAlert").style.display = "flex";
 }
 
-function closeAlert() {
-    document.getElementById("customAlert").style.display = "none";
-}
+function closeAlert() { document.getElementById("customAlert").style.display = "none"; }
 
 function checkWin() {
     var full = true;
     errors = [];
     for (var r = 0; r < currentSize; r++) {
         for (var c = 0; c < currentSize; c++) {
-            if (currentBoard[r][c] === 0) {
-                full = false;
-            } else {
-                if (!isCellValid(r, c, currentBoard[r][c])) {
-                    errors.push({r: r, c: c});
-                }
-            }
+            if (currentBoard[r][c] === 0) full = false;
+            else if (!isCellValid(r, c, currentBoard[r][c])) errors.push({r: r, c: c});
         }
     }
     if (full) {
@@ -278,14 +241,12 @@ function isCellValid(row, col, num) {
         if (i !== col && currentBoard[row][i] === num) return false;
         if (i !== row && currentBoard[i][col] === num) return false;
     }
-    var stepX = 3;
-    var stepY = (currentSize === 9) ? 3 : 2;
+    var stepX = 3; var stepY = (currentSize === 9) ? 3 : 2;
     var startRow = Math.floor(row / stepY) * stepY;
     var startCol = Math.floor(col / stepX) * stepX;
     for (var r = 0; r < stepY; r++) {
         for (var c = 0; c < stepX; c++) {
-            var currR = startRow + r;
-            var currC = startCol + c;
+            var currR = startRow + r; var currC = startCol + c;
             if ((currR !== row || currC !== col) && currentBoard[currR][currC] === num) return false;
         }
     }
@@ -294,40 +255,34 @@ function isCellValid(row, col, num) {
 
 function createCell(row, col, value) {
     var container = new createjs.Container();
-    container.x = col * cellSize;
-    container.y = row * cellSize;
+    container.x = col * cellSize; container.y = row * cellSize;
     var isError = errors.some(e => e.r === row && e.c === col);
-    var bgColor = isError ? "#f8d7da" : "#fff";
     var bg = new createjs.Shape();
-    bg.graphics.beginStroke("#ccc").beginFill(bgColor).drawRect(0, 0, cellSize, cellSize);
+    bg.graphics.beginStroke("#ccc").beginFill(isError ? "#f8d7da" : "#fff").drawRect(0, 0, cellSize, cellSize);
     container.addChild(bg);
     if (value !== 0) {
         var fontSize = Math.floor(cellSize * 0.6);
         var textColor = isError ? "#dc3545" : (initialPuzzle[row][col] !== 0 ? "#000" : "#007bff");
         var text = new createjs.Text(value, "bold " + fontSize + "px Arial", textColor);
-        text.textAlign = "center";
-        text.textBaseline = "middle";
-        text.x = cellSize / 2;
-        text.y = cellSize / 2;
+        text.textAlign = "center"; text.textBaseline = "middle"; text.x = text.y = cellSize / 2;
         container.addChild(text);
     } else if (document.getElementById("hintToggle").checked) {
         var possible = getPossibleNumbers(row, col);
         var hintFontSize = Math.floor(cellSize * 0.2);
-        var cols = 3;
+        var hintCols = 3;
         possible.forEach(function(num) {
             var hText = new createjs.Text(num, hintFontSize + "px Arial", "#999");
-            var r = Math.floor((num - 1) / cols);
-            var c = (num - 1) % cols;
-            hText.x = (c + 0.5) * (cellSize / cols);
-            hText.y = (r + 0.5) * (cellSize / (currentSize/cols + 1));
+            var r = Math.floor((num - 1) / hintCols);
+            var c = (num - 1) % hintCols;
+            hText.x = (c + 0.5) * (cellSize / hintCols);
+            hText.y = (r + 0.5) * (cellSize / (currentSize / (9/hintCols) + 1));
             container.addChild(hText);
         });
     }
     if (initialPuzzle[row][col] === 0) {
         container.on("click", function() {
             currentBoard[row][col] = selectedNumber;
-            checkWin();
-            refreshGrid();
+            checkWin(); refreshGrid();
         });
     }
     return container;
@@ -335,24 +290,15 @@ function createCell(row, col, value) {
 
 function getPossibleNumbers(row, col) {
     var possible = [];
-    for (var n = 1; n <= currentSize; n++) {
-        if (isSafe(row, col, n)) possible.push(n);
-    }
+    for (var n = 1; n <= currentSize; n++) if (isSafe(row, col, n)) possible.push(n);
     return possible;
 }
 
 function isSafe(row, col, num) {
-    for (var i = 0; i < currentSize; i++) {
-        if (currentBoard[row][i] === num || currentBoard[i][col] === num) return false;
-    }
-    var stepX = 3;
-    var stepY = (currentSize === 9) ? 3 : 2;
+    for (var i = 0; i < currentSize; i++) if (currentBoard[row][i] === num || currentBoard[i][col] === num) return false;
+    var stepX = 3; var stepY = (currentSize === 9) ? 3 : 2;
     var startRow = Math.floor(row / stepY) * stepY;
     var startCol = Math.floor(col / stepX) * stepX;
-    for (var r = 0; r < stepY; r++) {
-        for (var c = 0; c < stepX; c++) {
-            if (currentBoard[startRow + r][startCol + c] === num) return false;
-        }
-    }
+    for (var r = 0; r < stepY; r++) for (var c = 0; c < stepX; c++) if (currentBoard[startRow + r][startCol + c] === num) return false;
     return true;
 }
