@@ -1,0 +1,118 @@
+:root {
+    --board-size: 450px;
+    --cell-size: 30px;
+    --stone-size: 24px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+.container {
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    max-width: 500px;
+    box-sizing: border-box;
+}
+
+.controls {
+    margin-bottom: 10px;
+}
+
+#mode-select {
+    padding: 5px;
+    font-size: 0.9rem;
+}
+
+h1 {
+    margin: 5px 0;
+    font-size: 1.5rem;
+}
+
+#status {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(15, var(--cell-size));
+    grid-template-rows: repeat(15, var(--cell-size));
+    gap: 0;
+    background-color: #deb887;
+    border: 1px solid #8b4513;
+    margin: 0 auto;
+    width: fit-content;
+    height: fit-content;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border: 0.5px solid #8b4513;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.stone {
+    width: var(--stone-size);
+    height: var(--stone-size);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+@media (max-width: 500px) {
+    :root {
+        --cell-size: 6.2vw;
+        --stone-size: 5.2vw;
+    }
+    
+    .container {
+        padding: 5px;
+    }
+
+    h1 {
+        font-size: 1.2rem;
+    }
+
+    #status {
+        font-size: 1rem;
+    }
+}
+
+.black {
+    background-color: #000;
+}
+
+.white {
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+
+#reset-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#reset-btn:hover {
+    background-color: #45a049;
+}

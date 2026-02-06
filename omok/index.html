@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omok Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Omok (Gomoku)</h1>
+        <div class="controls">
+            <label for="mode-select">Game Mode:</label>
+            <select id="mode-select">
+                <option value="pvp">Player vs Player</option>
+                <option value="pvb">Player vs Bot</option>
+            </select>
+        </div>
+        <div id="status">Black's Turn</div>
+        <div id="board" class="board"></div>
+        <button id="reset-btn">Reset Game</button>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
