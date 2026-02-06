@@ -1,4 +1,4 @@
-const BOARD_SIZE = 15;
+const BOARD_SIZE = 11;
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
 const resetBtn = document.getElementById('reset-btn');
