@@ -47,7 +47,6 @@ function init() {
         document.getElementById("levelSelect").value = currentLevel;
         
         updateTimerDisplay();
-        createKeypad();
         refreshGrid();
         startTimer();
     } else {
@@ -93,7 +92,6 @@ function resetGame() {
     currentBoard = JSON.parse(JSON.stringify(initialPuzzle));
     errors = [];
     isPaused = false;
-    createKeypad();
     refreshGrid();
     startTimer();
 }
@@ -200,6 +198,7 @@ function refreshGrid() {
     grid = [];
     cellSize = 450 / currentSize;
     drawGrid();
+    createKeypad();
     saveState();
     stage.update();
 }
@@ -218,10 +217,21 @@ function saveState() {
 function createKeypad() {
     var keypad = document.getElementById("numberKeypad");
     keypad.innerHTML = "";
+    
+    var counts = {};
+    for (var i = 1; i <= currentSize; i++) counts[i] = 0;
+    for (var r = 0; r < currentSize; r++) {
+        for (var c = 0; c < currentSize; c++) {
+            var val = currentBoard[r][c];
+            if (val > 0) counts[val]++;
+        }
+    }
+
     for (var i = 1; i <= currentSize; i++) {
         var btn = document.createElement("button");
         btn.className = "key-btn" + (selectedNumber === i ? " selected" : "");
-        btn.innerText = i;
+        var remaining = currentSize - counts[i];
+        btn.innerHTML = "<div style='font-size:0.7em; line-height:1; margin-bottom:2px; color:#888;'>" + remaining + "</div>" + i;
         btn.onclick = (function(num) { return function() { selectNumber(num); }; })(i);
         keypad.appendChild(btn);
     }
@@ -235,11 +245,7 @@ function createKeypad() {
 function selectNumber(num) {
     if (isPaused) return;
     selectedNumber = num;
-    var btns = document.querySelectorAll(".key-btn");
-    btns.forEach(function(btn) {
-        btn.classList.remove("selected");
-        if (btn.innerText == num || (num === 0 && btn.innerText === "clear")) btn.classList.add("selected");
-    });
+    refreshGrid();
 }
 
 function updateHints() { refreshGrid(); }
@@ -351,8 +357,9 @@ function createCell(row, col, value) {
     var container = new createjs.Container();
     container.x = col * cellSize; container.y = row * cellSize;
     var isError = errors.some(e => e.r === row && e.c === col);
+    var isSelected = (selectedNumber !== 0 && value === selectedNumber);
     var bg = new createjs.Shape();
-    bg.graphics.beginStroke("#ccc").beginFill(isError ? "#f8d7da" : "#fff").drawRect(0, 0, cellSize, cellSize);
+    bg.graphics.beginStroke("#ccc").beginFill(isError ? "#f8d7da" : (isSelected ? "#fff3cd" : "#fff")).drawRect(0, 0, cellSize, cellSize);
     container.addChild(bg);
     if (value !== 0) {
         var fontSize = Math.floor(cellSize * 0.6);
@@ -378,6 +385,11 @@ function createCell(row, col, value) {
             if (isPaused) return;
             currentBoard[row][col] = selectedNumber;
             checkWin(); refreshGrid();
+        });
+    } else {
+        container.on("click", function() {
+            if (isPaused) return;
+            selectNumber(value);
         });
     }
     return container;
