@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Defense Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui">
+            <div id="score">Score: 0</div>
+            <div id="lives">Lives: 10</div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="overlay">
+            <div id="message"></div>
+            <div id="instructions" style="color: #bdc3c7; margin-bottom: 20px; font-size: 16px;">
+                성벽을 향해 오는 적을 미사일로 공격하세요!<br>
+                (마우스 클릭으로 미사일 발사)
+            </div>
+            <button id="start-btn">Start Game</button>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
