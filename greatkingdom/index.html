@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Great Kingdom - 이세돌 보드게임</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>Great Kingdom</h1>
+            <div id="turn-indicator">모드를 선택해주세요</div>
+        </header>
+
+        <div id="board-wrapper">
+            <canvas id="boardCanvas"></canvas>
+            <!-- 초기 모드 선택 오버레이 -->
+            <div id="mode-overlay" class="overlay-screen">
+                <h2>게임 모드 선택</h2>
+                <div class="mode-btns">
+                    <button class="mode-btn" data-mode="pvp">사람과 대결 (2인)</button>
+                    <button class="mode-btn" data-mode="ai">컴퓨터와 대결 (AI)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ui">
+            <div class="score-box black">
+                <span class="label">Blue (First)</span>
+                <span id="black-score">0</span>
+            </div>
+            <div class="score-box white">
+                <span class="label">Orange (Second)</span>
+                <span id="white-score">0</span>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button id="pass-btn">Pass</button>
+            <button id="reset-btn">Main Menu</button>
+        </div>
+
+        <div id="overlay" class="overlay-screen" style="display: none;">
+            <div id="result-message"></div>
+            <button id="restart-btn">다시 하기</button>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
