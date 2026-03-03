@@ -15,7 +15,6 @@
 
         <div id="board-wrapper">
             <canvas id="boardCanvas"></canvas>
-            <!-- 초기 모드 선택 오버레이 -->
             <div id="mode-overlay" class="overlay-screen">
                 <h2>게임 모드 선택</h2>
                 <div class="mode-btns">
@@ -25,20 +24,22 @@
             </div>
         </div>
 
-        <div id="ui">
-            <div class="score-box black">
-                <span class="label">Blue (First)</span>
-                <span id="black-score">0</span>
+        <div id="bottom-section">
+            <div id="ui">
+                <div class="score-box black">
+                    <span class="label">Blue (First)</span>
+                    <span id="black-score">0</span>
+                </div>
+                <div class="score-box white">
+                    <span class="label">Orange (Second)</span>
+                    <span id="white-score">0</span>
+                </div>
             </div>
-            <div class="score-box white">
-                <span class="label">Orange (Second)</span>
-                <span id="white-score">0</span>
-            </div>
-        </div>
 
-        <div id="controls">
-            <button id="pass-btn">Pass</button>
-            <button id="reset-btn">Main Menu</button>
+            <div id="controls">
+                <button id="pass-btn">Pass</button>
+                <button id="reset-btn">Main Menu</button>
+            </div>
         </div>
 
         <div id="overlay" class="overlay-screen" style="display: none;">
