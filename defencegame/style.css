@@ -8,19 +8,31 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    width: 100vw;
     overflow: hidden;
     user-select: none;
+    touch-action: none; /* 브라우저 기본 터치 동작 방지 */
 }
 
 #game-container {
     position: relative;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     background-color: #000;
+    width: 100%;
+    height: 100%;
+    max-width: 1000px;
+    max-height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #gameCanvas {
     display: block;
     background-color: #1a1a1a;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 #ui {
@@ -30,10 +42,71 @@ body {
     right: 10px;
     display: flex;
     justify-content: space-between;
-    font-size: 20px;
+    font-size: 14px; /* 모바일 대응 크기 축소 */
     font-weight: bold;
     pointer-events: none;
-    text-shadow: 2px 2px 2px rgba(0,0,0,0.7);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    z-index: 5;
+    gap: 5px;
+}
+
+#ui > div {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    white-space: nowrap;
+}
+
+#score { color: #3498db; }
+#lives { color: #e74c3c; }
+#missile-info { color: #f1c40f; }
+
+#upgrade-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(44, 62, 80, 0.98);
+    padding: 15px;
+    border-radius: 15px;
+    border: 3px solid #f1c40f;
+    text-align: center;
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    color: white;
+}
+
+#upgrade-modal h2 {
+    margin-top: 0;
+    color: #f1c40f;
+    font-size: 20px;
+}
+
+.upgrade-options {
+    display: flex;
+    flex-direction: column; /* 모바일에서 세로로 배열 */
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.upgrade-btn {
+    padding: 12px;
+    background: #34495e;
+    color: #ffffff;
+    border: 2px solid #7f8c8d;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.upgrade-btn strong {
+    display: block;
+    font-size: 16px;
+    color: #f1c40f;
+    margin-bottom: 3px;
 }
 
 #overlay {
@@ -42,32 +115,41 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 10;
+    z-index: 100;
 }
 
 #message {
-    font-size: 40px;
+    font-size: 32px;
     margin-bottom: 20px;
     color: #f1c40f;
     text-align: center;
 }
 
-#start-btn {
-    padding: 15px 30px;
-    font-size: 20px;
-    background-color: #27ae60;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+#instructions {
+    font-size: 14px !important;
+    padding: 0 20px;
+    text-align: center;
 }
 
-#start-btn:hover {
-    background-color: #2ecc71;
+#start-btn {
+    padding: 12px 25px;
+    font-size: 18px;
+    background-color: #27ae60;
+    border-radius: 5px;
+}
+
+/* 가로 화면이 충분할 때 버튼을 가로로 배치 */
+@media (min-height: 400px) and (min-width: 600px) {
+    .upgrade-options {
+        flex-direction: row;
+    }
+    #ui {
+        font-size: 18px;
+        top: 15px;
+    }
 }

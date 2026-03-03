@@ -11,6 +11,7 @@
         <div id="ui">
             <div id="score">Score: 0</div>
             <div id="lives">Lives: 10</div>
+            <div id="missile-info">Level: 1 | Damage: 1</div>
         </div>
         <canvas id="gameCanvas"></canvas>
         <div id="overlay">
@@ -20,6 +21,23 @@
                 (마우스 클릭으로 미사일 발사)
             </div>
             <button id="start-btn">Start Game</button>
+        </div>
+        <div id="upgrade-modal" style="display: none;">
+            <h2>무기 업그레이드 선택!</h2>
+            <div class="upgrade-options">
+                <button class="upgrade-btn" data-type="rapid">
+                    <strong>속사형 (Rapid)</strong><br>
+                    위력 약함 | 발사 속도 매우 빠름
+                </button>
+                <button class="upgrade-btn" data-type="power">
+                    <strong>강력형 (Power)</strong><br>
+                    위력 강함 | 발사 속도 느림
+                </button>
+                <button class="upgrade-btn" data-type="multi">
+                    <strong>확산형 (Multi)</strong><br>
+                    위력 약함 | 한 번에 3발 발사
+                </button>
+            </div>
         </div>
     </div>
     <script src="app.js"></script>
