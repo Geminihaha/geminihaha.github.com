@@ -283,6 +283,7 @@ function handleEvent(e) {
 // AI 로직
 function aiMove() {
     if (!isGameActive) return;
+    
     const validMoves = [];
     for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
@@ -292,43 +293,103 @@ function aiMove() {
 
     if (validMoves.length === 0) { pass(); return; }
 
-    // 1순위: 즉시 승리하는 수 찾기
-    for (const move of validMoves) {
-        board[move.y][move.x] = WHITE;
-        const canWin = checkCaptures(move.x, move.y, WHITE);
-        board[move.y][move.x] = EMPTY; // 복구 (checkCaptures가 실제로 보드를 바꾸므로 주의)
-        // 실제 보드를 건드리지 않고 시뮬레이션하기 위해 canPlace와 비슷한 로직 사용
-    }
-    
-    // 단순화된 AI: 따낼 수 있는 수 우선, 아니면 중앙 부근 무작위
-    const winningMove = validMoves.find(m => {
-        board[m.y][m.x] = WHITE;
-        const opponent = BLACK;
-        let canCap = false;
-        const neighbors = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-        for (const [dx, dy] of neighbors) {
-            const nx = m.x + dx, ny = m.y + dy;
-            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && board[ny][nx] === opponent) {
-                if (getGroup(nx, ny, opponent).libertyCount === 0) canCap = true;
+    let bestMove = null;
+    let maxScore = -Infinity;
+
+    // 현재 단수(Atari)인 백돌 그룹 찾기
+    const whiteGroupsInAtari = [];
+    const visited = new Set();
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            if (board[y][x] === WHITE && !visited.has(`${x},${y}`)) {
+                const g = getGroup(x, y, WHITE);
+                g.group.forEach(([gx, gy]) => visited.add(`${gx},${gy}`));
+                if (g.libertyCount === 1) whiteGroupsInAtari.push(g);
             }
         }
-        board[m.y][m.x] = EMPTY;
-        return canCap;
-    });
+    }
 
-    if (winningMove) { processMove(winningMove.x, winningMove.y); return; }
+    for (const move of validMoves) {
+        let score = Math.random() * 5; // 점수 동점 시 무작위성 부여
 
-    // 방어적인 수 (자신의 활로가 1개인 그룹 지키기)
-    const savingMove = validMoves.find(m => {
-        board[m.y][m.x] = WHITE;
-        const lib = getGroup(m.x, m.y, WHITE).libertyCount;
-        board[m.y][m.x] = EMPTY;
-        return lib > 1; // 최소 2개 이상의 활로 확보
-    });
+        // 가상으로 돌을 놓아봄
+        board[move.y][move.x] = WHITE;
+        
+        // 1순위: 즉시 승리 (상대 돌 따내기)
+        let canCapture = false;
+        const neighbors = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+        for (const [dx, dy] of neighbors) {
+            const nx = move.x + dx, ny = move.y + dy;
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && board[ny][nx] === BLACK) {
+                if (getGroup(nx, ny, BLACK).libertyCount === 0) {
+                    canCapture = true;
+                    break;
+                }
+            }
+        }
+        if (canCapture) score += 10000;
 
-    // 영토 확장형 수 (가장 넓은 빈 공간 탐색) - 여기서는 무작위 중 하나 선택
-    const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-    processMove(randomMove.x, randomMove.y);
+        // 2순위: 내 돌 살리기 (단수인 그룹의 활로 늘리기)
+        const info = getGroup(move.x, move.y, WHITE);
+        const newLiberties = info.libertyCount;
+        
+        let savesGroup = false;
+        for (const atariGroup of whiteGroupsInAtari) {
+            // 이 수로 인해 기존 단수였던 그룹과 연결되거나 활로가 늘어나는지 확인
+            const isConnected = atariGroup.group.some(([gx, gy]) => 
+                Math.abs(gx - move.x) + Math.abs(gy - move.y) === 1
+            );
+            if (isConnected && newLiberties > 1) {
+                savesGroup = true;
+                break;
+            }
+        }
+        if (savesGroup) score += 500;
+
+        // 3순위: 상대방 돌을 단수로 만들기
+        let putsInAtari = false;
+        for (const [dx, dy] of neighbors) {
+            const nx = move.x + dx, ny = move.y + dy;
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && board[ny][nx] === BLACK) {
+                if (getGroup(nx, ny, BLACK).libertyCount === 1) {
+                    putsInAtari = true;
+                    break;
+                }
+            }
+        }
+        if (putsInAtari) score += 100;
+
+        // 4순위: 자살수 방지 및 활로 확보
+        if (newLiberties === 1) score -= 200; // 스스로 단수가 되는 수는 피함
+        else score += newLiberties * 10;
+
+        // 5순위: 중앙 및 요충지 점수
+        const distToCenter = Math.abs(move.x - 4) + Math.abs(move.y - 4);
+        score += (10 - distToCenter) * 2;
+
+        // 주변에 돌이 있는 경우 가중치 (연결성)
+        for (const [dx, dy] of neighbors) {
+            const nx = move.x + dx, ny = move.y + dy;
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                if (board[ny][nx] === WHITE) score += 20;
+                if (board[ny][nx] === BLACK) score += 15;
+            }
+        }
+
+        board[move.y][move.x] = EMPTY; // 복구
+
+        if (score > maxScore) {
+            maxScore = score;
+            bestMove = move;
+        }
+    }
+
+    if (bestMove) {
+        processMove(bestMove.x, bestMove.y);
+    } else {
+        const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+        processMove(randomMove.x, randomMove.y);
+    }
 }
 
 function pass() {
