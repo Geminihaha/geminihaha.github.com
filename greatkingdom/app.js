@@ -138,7 +138,7 @@ function getGroup(x, y, color) {
                 const key = `${nx},${ny}`;
                 if (nVal === color && !visited.has(key)) {
                     visited.add(key); stack.push([nx, ny]);
-                } else if (nVal === EMPTY) {
+                } else if (nVal === EMPTY || nVal === BLACK_TERRITORY || nVal === WHITE_TERRITORY) {
                     liberties.add(key);
                 }
             }
@@ -148,7 +148,9 @@ function getGroup(x, y, color) {
 }
 
 function canPlace(x, y, color) {
-    if (board[y][x] !== EMPTY) return false;
+    const originalVal = board[y][x];
+    if (originalVal !== EMPTY && originalVal !== BLACK_TERRITORY && originalVal !== WHITE_TERRITORY) return false;
+    
     board[y][x] = color;
     const { libertyCount } = getGroup(x, y, color);
     let canCapture = false;
@@ -162,7 +164,7 @@ function canPlace(x, y, color) {
             }
         }
     }
-    board[y][x] = EMPTY;
+    board[y][x] = originalVal;
     return libertyCount > 0 || canCapture;
 }
 
@@ -187,6 +189,15 @@ function checkCaptures(x, y, color) {
 }
 
 function updateTerritories() {
+    // 기존 영역 초기화 (영역은 매 수마다 다시 계산됨)
+    for (let y = 0; y < GRID_SIZE; y++) {
+        for (let x = 0; x < GRID_SIZE; x++) {
+            if (board[y][x] === BLACK_TERRITORY || board[y][x] === WHITE_TERRITORY) {
+                board[y][x] = EMPTY;
+            }
+        }
+    }
+
     let bE = false, wE = false;
     for (let y = 0; y < GRID_SIZE; y++) {
         for (let x = 0; x < GRID_SIZE; x++) {
@@ -313,6 +324,7 @@ function aiMove() {
         let score = Math.random() * 5; // 점수 동점 시 무작위성 부여
 
         // 가상으로 돌을 놓아봄
+        const originalVal = board[move.y][move.x];
         board[move.y][move.x] = WHITE;
         
         // 1순위: 즉시 승리 (상대 돌 따내기)
@@ -376,7 +388,7 @@ function aiMove() {
             }
         }
 
-        board[move.y][move.x] = EMPTY; // 복구
+        board[move.y][move.x] = originalVal; // 복구 (기존 EMPTY 또는 TERRITORY)
 
         if (score > maxScore) {
             maxScore = score;
