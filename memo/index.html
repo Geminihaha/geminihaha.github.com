@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>임시 메모</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; }
+        textarea { width: 100%; height: 300px; padding: 10px; box-sizing: border-box; resize: vertical; margin-bottom: 10px; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        #status { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>📝 임시 메모장</h1>
+    <textarea id="memo-input" placeholder="여기에 메모를 작성하세요. 브라우저에 자동 저장됩니다."></textarea>
+    <div>
+        <button id="save-btn">수동 저장</button>
+        <span id="status"></span>
+    </div>
+
+    <script>
+        const memoInput = document.getElementById('memo-input');
+        const saveBtn = document.getElementById('save-btn');
+        const status = document.getElementById('status');
+
+        // 페이지 로드 시 기존 메모 불러오기
+        memoInput.value = localStorage.getItem('temp_memo') || '';
+
+        // 저장 함수
+        function saveMemo() {
+            localStorage.setItem('temp_memo', memoInput.value);
+            status.textContent = '✅ 저장되었습니다! (' + new Date().toLocaleTimeString() + ')';
+            setTimeout(() => { status.textContent = ''; }, 3000);
+        }
+
+        // 버튼 클릭 시 저장
+        saveBtn.addEventListener('click', saveMemo);
+
+        // 입력 중 자동 저장 (디바운스 적용)
+        let timeout = null;
+        memoInput.addEventListener('input', () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(saveMemo, 1000);
+        });
+    </script>
+</body>
+</html>
