@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Epic Sovereign - Royal Decree Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Manrope:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#a38c7f",
+                    "on-secondary": "#002f67",
+                    "secondary-fixed-dim": "#acc7ff",
+                    "on-tertiary": "#2c303a",
+                    "on-primary-container": "#4a1f00",
+                    "primary-fixed-dim": "#ffb68a",
+                    "surface": "#11131e",
+                    "on-primary-fixed": "#321300",
+                    "on-primary": "#522300",
+                    "on-tertiary-fixed": "#171c25",
+                    "surface-container-lowest": "#0c0d18",
+                    "on-secondary-fixed-variant": "#004491",
+                    "on-background": "#e2e1f2",
+                    "inverse-primary": "#984700",
+                    "surface-container-low": "#1a1b26",
+                    "surface-container": "#1e1f2b",
+                    "primary-fixed": "#ffdbc8",
+                    "background": "#11131e",
+                    "inverse-on-surface": "#2f2f3c",
+                    "on-secondary-fixed": "#001a40",
+                    "tertiary-container": "#8e929e",
+                    "on-secondary-container": "#a0bfff",
+                    "primary-container": "#dc7830",
+                    "error": "#ffb4ab",
+                    "surface-bright": "#373845",
+                    "secondary-fixed": "#d7e2ff",
+                    "on-surface-variant": "#dcc1b3",
+                    "primary": "#ffb68a",
+                    "tertiary": "#c2c6d3",
+                    "error-container": "#93000a",
+                    "surface-container-high": "#282935",
+                    "secondary-container": "#004b9e",
+                    "tertiary-fixed-dim": "#c2c6d3",
+                    "secondary": "#acc7ff",
+                    "on-error": "#690005",
+                    "surface-container-highest": "#333440",
+                    "inverse-surface": "#e2e1f2",
+                    "on-tertiary-fixed-variant": "#424751",
+                    "on-tertiary-container": "#272b35",
+                    "on-surface": "#e2e1f2",
+                    "surface-dim": "#11131e",
+                    "outline-variant": "#554338",
+                    "on-primary-fixed-variant": "#743500",
+                    "tertiary-fixed": "#dfe2ef",
+                    "surface-tint": "#ffb68a",
+                    "surface-variant": "#333440",
+                    "on-error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Serif"],
+                    "body": ["Manrope"],
+                    "label": ["Space Grotesk"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .stone-relic {
+            background-image: radial-gradient(circle at 50% 50%, rgba(255, 182, 138, 0.05) 0%, transparent 80%);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+        .atmosphere-smoke {
+            background: linear-gradient(to top, #11131e 0%, transparent 100%);
+            pointer-events: none;
+        }
+        /* Custom Stone Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: #333440;
+            border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 12px;
+            background: linear-gradient(135deg, #ffb68a 0%, #dc7830 100%);
+            border: 1px solid #4a1f00;
+            border-radius: 2px;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(220, 120, 48, 0.4);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-white overflow-x-hidden">
+<!-- ATMOSPHERIC BACKGROUND -->
+<div class="fixed inset-0 z-0 stone-relic">
+<div class="absolute inset-0 atmosphere-smoke opacity-40"></div>
+</div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl shadow-2xl shadow-black/60">
+<div class="flex items-center px-6 h-16 w-full max-w-none">
+<button class="text-orange-500 dark:text-orange-400 active:scale-95 duration-150 mr-4">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-serif tracking-tight text-xl font-bold uppercase tracking-widest text-orange-500">Royal Decree Settings</h1>
+</div>
+<div class="bg-gradient-to-b from-orange-500/10 to-transparent h-px w-full"></div>
+</header>
+<main class="relative z-10 pt-24 pb-32 px-4 md:px-8 max-w-2xl mx-auto space-y-10">
+<!-- Audio Sanctuaries -->
+<section class="space-y-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="music_note">music_note</span>
+<h2 class="font-headline text-2xl font-bold text-on-background tracking-tight">Audio Sanctuaries</h2>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 shadow-inner space-y-8">
+<!-- Music Volume -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="font-label text-sm uppercase tracking-wider text-on-surface-variant">Music Volume</label>
+<span class="font-label text-primary font-bold">80</span>
+</div>
+<input class="w-full cursor-pointer" max="100" min="0" type="range" value="80"/>
+</div>
+<!-- Sound Effects -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="font-label text-sm uppercase tracking-wider text-on-surface-variant">Sound Effects</label>
+<span class="font-label text-primary font-bold">65</span>
+</div>
+<input class="w-full cursor-pointer" max="100" min="0" type="range" value="65"/>
+</div>
+<!-- Voice Over -->
+<div class="flex justify-between items-center py-2">
+<div class="flex flex-col">
+<label class="font-label text-sm uppercase tracking-wider text-on-surface-variant">Voice Over</label>
+<p class="text-xs text-tertiary opacity-60">Narrator and character dialogue</p>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary-container">
+<span class="inline-block h-4 w-4 translate-x-6 transform rounded-full bg-white transition shadow-lg shadow-orange-950"></span>
+</button>
+</div>
+</div>
+</section>
+<!-- Visual Enchantments -->
+<section class="space-y-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="visibility">visibility</span>
+<h2 class="font-headline text-2xl font-bold text-on-background tracking-tight">Visual Enchantments</h2>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 shadow-inner space-y-8">
+<!-- Graphics Quality -->
+<div class="space-y-4">
+<label class="font-label text-sm uppercase tracking-wider text-on-surface-variant">Graphics Quality</label>
+<div class="grid grid-cols-4 gap-1 p-1 bg-surface-container-lowest rounded-lg border border-outline-variant/10">
+<button class="py-2 text-[10px] font-label uppercase text-slate-500 hover:text-white transition">Low</button>
+<button class="py-2 text-[10px] font-label uppercase text-slate-500 hover:text-white transition">Med</button>
+<button class="py-2 text-[10px] font-label uppercase bg-secondary-container text-on-secondary-container rounded-md shadow-lg">High</button>
+<button class="py-2 text-[10px] font-label uppercase text-slate-500 hover:text-white transition">Ultra</button>
+</div>
+</div>
+<!-- Frame Rate -->
+<div class="flex justify-between items-center py-2">
+<div class="flex flex-col">
+<label class="font-label text-sm uppercase tracking-wider text-on-surface-variant">Limit Frame Rate</label>
+<p class="text-xs text-tertiary opacity-60">Optimizes battery for long voyages</p>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-surface-container-highest">
+<span class="inline-block h-4 w-4 translate-x-1 transform rounded-full bg-outline transition"></span>
+</button>
+</div>
+</div>
+</section>
+<!-- Mortal Account -->
+<section class="space-y-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="account_circle">account_circle</span>
+<h2 class="font-headline text-2xl font-bold text-on-background tracking-tight">Mortal Account</h2>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 shadow-inner flex flex-col gap-6">
+<button class="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-primary-container to-primary text-on-primary-container font-label uppercase tracking-widest font-bold rounded-xl shadow-[0_4px_20px_rgba(220,120,48,0.3)] border-t border-white/20 active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">shield</span>
+                    Link Account
+                </button>
+<button class="text-center font-label text-sm uppercase tracking-widest text-slate-500 hover:text-error transition duration-300">
+                    Sign Out of the Citadel
+                </button>
+</div>
+</section>
+<!-- General Decrees -->
+<section class="space-y-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="scroll">scrollable_header</span>
+<h2 class="font-headline text-2xl font-bold text-on-background tracking-tight">General Decrees</h2>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 shadow-inner space-y-6">
+<!-- Language Selection -->
+<div class="flex justify-between items-center">
+<label class="font-label text-sm uppercase tracking-wider text-on-surface-variant">Tongue of Choice</label>
+<div class="relative">
+<select class="appearance-none bg-surface-container-highest border border-outline-variant/20 px-4 py-2 pr-10 rounded-lg text-sm font-label focus:outline-none focus:ring-2 focus:ring-primary/40">
+<option>English</option>
+<option>Korean</option>
+<option>Old Norse</option>
+<option>Latin</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-primary text-sm pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Notifications -->
+<div class="flex justify-between items-center py-2">
+<div class="flex flex-col">
+<label class="font-label text-sm uppercase tracking-wider text-on-surface-variant">Royal Notifications</label>
+<p class="text-xs text-tertiary opacity-60">Alerts for raids and events</p>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary-container">
+<span class="inline-block h-4 w-4 translate-x-6 transform rounded-full bg-white transition"></span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-slate-950/90 backdrop-blur-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+<div class="flex justify-around items-center w-full px-4 h-20 pb-safe">
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-70 hover:opacity-100 hover:text-orange-200 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">fort</span>
+<span class="font-mono text-[10px] uppercase tracking-tighter">Citadel</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-70 hover:opacity-100 hover:text-orange-200 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">swords</span>
+<span class="font-mono text-[10px] uppercase tracking-tighter">War Room</span>
+</a>
+<a class="flex flex-col items-center justify-center text-orange-500 drop-shadow-[0_0_8px_rgba(220,120,48,0.6)] scale-110 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-mono text-[10px] uppercase tracking-tighter">Settings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-70 hover:opacity-100 hover:text-orange-200 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-mono text-[10px] uppercase tracking-tighter">Treasury</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-70 hover:opacity-100 hover:text-orange-200 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-mono text-[10px] uppercase tracking-tighter">Lore</span>
+</a>
+</div>
+</nav>
+</body></html>

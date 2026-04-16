@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Manrope:wght@400;600&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#e2e1f2",
+                      "on-tertiary-container": "#272b35",
+                      "secondary-fixed": "#d7e2ff",
+                      "surface-dim": "#11131e",
+                      "primary": "#ffb68a",
+                      "on-background": "#e2e1f2",
+                      "inverse-primary": "#984700",
+                      "on-primary": "#522300",
+                      "on-tertiary": "#2c303a",
+                      "surface-variant": "#333440",
+                      "on-secondary-container": "#a0bfff",
+                      "on-surface": "#e2e1f2",
+                      "outline-variant": "#554338",
+                      "primary-fixed": "#ffdbc8",
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#171c25",
+                      "surface-container-high": "#282935",
+                      "secondary-fixed-dim": "#acc7ff",
+                      "secondary-container": "#004b9e",
+                      "on-error": "#690005",
+                      "on-secondary": "#002f67",
+                      "tertiary": "#c2c6d3",
+                      "surface-container-lowest": "#0c0d18",
+                      "surface-container": "#1e1f2b",
+                      "primary-container": "#dc7830",
+                      "on-tertiary-fixed-variant": "#424751",
+                      "outline": "#a38c7f",
+                      "error-container": "#93000a",
+                      "on-surface-variant": "#dcc1b3",
+                      "on-secondary-fixed": "#001a40",
+                      "primary-fixed-dim": "#ffb68a",
+                      "secondary": "#acc7ff",
+                      "on-secondary-fixed-variant": "#004491",
+                      "on-primary-fixed-variant": "#743500",
+                      "tertiary-fixed-dim": "#c2c6d3",
+                      "tertiary-container": "#8e929e",
+                      "surface-tint": "#ffb68a",
+                      "inverse-on-surface": "#2f2f3c",
+                      "surface-container-highest": "#333440",
+                      "on-primary-fixed": "#321300",
+                      "tertiary-fixed": "#dfe2ef",
+                      "background": "#11131e",
+                      "error": "#ffb4ab",
+                      "on-primary-container": "#4a1f00",
+                      "surface-bright": "#373845",
+                      "surface-container-low": "#1a1b26",
+                      "surface": "#11131e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline": ["Noto Serif"],
+                      "body": ["Manrope"],
+                      "label": ["Space Grotesk"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+        }
+        .hero-vignette {
+            background: radial-gradient(circle, transparent 20%, #11131e 100%);
+        }
+        .metallic-glow {
+            background: linear-gradient(45deg, #ffb68a 0%, #dc7830 50%, #ffb68a 100%);
+        }
+        .text-glow {
+            text-shadow: 0 0 15px rgba(220, 120, 48, 0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body selection:bg-primary-container/30 overflow-hidden h-screen">
+<!-- Hero Cinematic Background -->
+<div class="fixed inset-0 z-0">
+<img alt="Cinematic background" class="w-full h-full object-cover opacity-40 grayscale-[0.3]" data-alt="cinematic wide shot of a crumbling ancient castle throne room at twilight with volumetric orange torchlight and swirling dust particles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQ_8Ey9NWi1iNRDkIeZF1F2DcHKuvmnIHaPYXZ8gh-FZpmeX6Ht6KYVoKcxywrp50R7Ac7rxewcuJyz0xJDVUokBVJMERK8q_KdUc54GlEl06MiDZxvQS0wMto1WE6927iy8H_fjPFzcu6GmTq4bu6H4vDkEoDr7SnJpMNzV5HMrzYKD3ILvXiV1HaXKndTbJ9YCvsbUQMXEJBMpPNTIaR0-h3JnpcxgzLgqwN2yNvwL4M1aNkR0jPd42PUjdGRDewBSFqHJ1fp1Y"/>
+<div class="absolute inset-0 hero-vignette"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50"></div>
+</div>
+<!-- Top App Bar (Shared Component Logic) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 bg-[#11131e]/80 backdrop-blur-md shadow-2xl">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-orange-500 dark:text-[#DC7830] text-2xl" data-icon="shield">shield</span>
+<h1 class="text-xl font-bold text-[#DC7830] drop-shadow-[0_0_8px_rgba(220,120,48,0.4)] font-serif tracking-widest uppercase">The Epic Sovereign</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-400 hover:text-orange-400 transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="relative z-10 h-full flex flex-col items-center justify-center pt-20 pb-24 px-6 overflow-y-auto">
+<!-- Game Title Section -->
+<div class="text-center mb-12 animate-fade-in">
+<h2 class="font-headline text-5xl md:text-8xl font-bold tracking-tight text-primary metallic-glow bg-clip-text text-transparent uppercase text-glow leading-none">
+                The Epic<br/>Sovereign
+            </h2>
+<div class="mt-4 flex items-center justify-center gap-4">
+<div class="h-[1px] w-12 md:w-24 bg-gradient-to-r from-transparent to-primary/50"></div>
+<span class="font-label text-primary/70 tracking-[0.3em] text-xs md:text-sm uppercase">Kingdoms will rise and fall</span>
+<div class="h-[1px] w-12 md:w-24 bg-gradient-to-l from-transparent to-primary/50"></div>
+</div>
+</div>
+<!-- Menu Action Grid -->
+<div class="w-full max-w-md space-y-4">
+<!-- Primary CTA -->
+<button class="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary-container p-[1px] shadow-[0_0_20px_rgba(220,120,48,0.3)] hover:scale-[1.02] transition-transform duration-300">
+<div class="relative flex items-center justify-between bg-surface-container-highest px-8 py-5 rounded-[calc(0.5rem-1px)] group-hover:bg-transparent transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary group-hover:text-on-primary" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span class="font-headline text-xl tracking-wide group-hover:text-on-primary">CONTINUE JOURNEY</span>
+</div>
+<span class="font-label text-xs text-primary/60 group-hover:text-on-primary/80">ACT III: THE IRON GATE</span>
+</div>
+</button>
+<!-- Secondary Actions -->
+<div class="space-y-3">
+<button class="group w-full flex items-center gap-4 px-8 py-4 bg-surface-container-low/60 backdrop-blur-md border border-outline-variant/20 rounded-xl hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-colors" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-headline text-lg tracking-wider text-on-surface">NEW CAMPAIGN</span>
+</button>
+<button class="group w-full flex items-center gap-4 px-8 py-4 bg-surface-container-low/60 backdrop-blur-md border border-outline-variant/20 rounded-xl hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-colors" data-icon="groups">groups</span>
+<span class="font-headline text-lg tracking-wider text-on-surface">MULTIPLAYER</span>
+</button>
+<button class="group w-full flex items-center gap-4 px-8 py-4 bg-surface-container-low/60 backdrop-blur-md border border-outline-variant/20 rounded-xl hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-colors" data-icon="account_balance">account_balance</span>
+<span class="font-headline text-lg tracking-wider text-on-surface uppercase">Treasury (Collection)</span>
+</button>
+<button class="group w-full flex items-center gap-4 px-8 py-4 bg-surface-container-low/60 backdrop-blur-md border border-outline-variant/20 rounded-xl hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-tertiary group-hover:text-primary transition-colors" data-icon="settings">settings</span>
+<span class="font-headline text-lg tracking-wider text-on-surface">OPTIONS</span>
+</button>
+</div>
+</div>
+<!-- Subtle World Info Card (Asymmetric Layout) -->
+<div class="absolute bottom-28 right-8 hidden lg:block max-w-xs">
+<div class="bg-surface-container-lowest/40 backdrop-blur-md p-6 rounded-xl border-l-2 border-primary/30">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="info">info</span>
+<span class="font-label text-[10px] uppercase tracking-widest text-primary/80">World Update</span>
+</div>
+<h3 class="font-headline text-lg mb-1">Season of the Ember</h3>
+<p class="font-body text-xs text-on-surface/60 leading-relaxed">The celestial forge has awakened. Brave the volcanic vents of the Scorchlands for legendary dragon-scale artifacts.</p>
+<div class="mt-4 flex items-center gap-3">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-surface bg-surface-variant flex items-center justify-center text-[8px] font-bold">A</div>
+<div class="w-6 h-6 rounded-full border border-surface bg-surface-variant flex items-center justify-center text-[8px] font-bold">B</div>
+<div class="w-6 h-6 rounded-full border border-surface bg-surface-variant flex items-center justify-center text-[8px] font-bold">C</div>
+</div>
+<span class="font-label text-[10px] text-primary">124k Online</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Shared Component Logic) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-[#11131e]/90 backdrop-blur-xl border-t border-[#DC7830]/10 shadow-[0_-10px_40px_rgba(0,0,0,0.7)]">
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:opacity-100 hover:text-orange-300 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-serif text-[10px] uppercase tracking-tighter mt-1">Campaign</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:opacity-100 hover:text-orange-300 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-serif text-[10px] uppercase tracking-tighter mt-1">Multiplayer</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:opacity-100 hover:text-orange-300 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="font-serif text-[10px] uppercase tracking-tighter mt-1">Treasury</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 opacity-60 hover:opacity-100 hover:text-orange-300 transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-serif text-[10px] uppercase tracking-tighter mt-1">Settings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#DC7830] drop-shadow-[0_0_5px_rgba(220,120,48,0.6)] transition-transform active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-serif text-[10px] uppercase tracking-tighter mt-1">Lore</span>
+</a>
+</nav>
+<!-- Version Overlay -->
+<div class="fixed bottom-6 left-6 z-20 pointer-events-none opacity-40 hidden md:block">
+<span class="font-label text-[10px] tracking-widest uppercase">Version 1.4.2-GOLDEN_ERA</span>
+</div>
+</body></html>

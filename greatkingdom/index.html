@@ -1,51 +1,147 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html class="dark" lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Great Kingdom - 이세돌 보드게임</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <title>The Epic Sovereign - Great Kingdom</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Manrope:wght@400;500;700&amp;family=Space_Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="style.css">
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#11131e",
+                      "surface": "#11131e",
+                      "surface-container": "#1e1f2b",
+                      "surface-container-low": "#1a1b26",
+                      "surface-container-high": "#282935",
+                      "surface-container-lowest": "#0c0d18",
+                      "primary": "#ffb68a",
+                      "primary-container": "#dc7830",
+                      "on-primary-container": "#4a1f00",
+                      "secondary": "#acc7ff",
+                      "secondary-container": "#004b9e",
+                      "tertiary": "#c2c6d3",
+                      "on-surface": "#e2e1f2",
+                      "outline-variant": "#554338",
+                      "primary-fixed": "#ffdbc8",
+                      "dc7830": "#dc7830"
+              },
+              "fontFamily": {
+                      "headline": ["Noto Serif"],
+                      "body": ["Manrope"],
+                      "label": ["Space Grotesk"]
+              }
+            },
+          }
+        }
+    </script>
 </head>
-<body>
-    <div id="game-container">
-        <header>
-            <h1>Great Kingdom</h1>
-            <div id="turn-indicator">모드를 선택해주세요</div>
-        </header>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col overflow-hidden">
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 w-full z-50 bg-[#11131e]/80 backdrop-blur-xl shadow-2xl flex justify-between items-center px-6 py-4 border-b border-orange-500/10">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-orange-400">menu</span>
+        </div>
+        <h1 class="font-headline text-xl tracking-wider uppercase text-orange-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] font-bold">The Epic Sovereign</h1>
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-orange-400">settings</span>
+        </div>
+    </header>
 
-        <div id="board-wrapper">
-            <canvas id="boardCanvas"></canvas>
-            <!-- 초기 모드 선택 오버레이 -->
-            <div id="mode-overlay" class="overlay-screen">
-                <h2>게임 모드 선택</h2>
-                <div class="mode-btns">
-                    <button class="mode-btn" data-mode="pvp">사람과 대결 (2인)</button>
-                    <button class="mode-btn" data-mode="ai">컴퓨터와 대결 (AI)</button>
+    <main class="flex-grow pt-20 pb-24 px-4 flex flex-col items-center max-w-lg mx-auto w-full relative">
+        <div class="absolute inset-0 stone-texture opacity-5 pointer-events-none"></div>
+
+        <!-- Turn Indicator Tablet -->
+        <div class="w-full mb-4 z-10">
+            <div id="turn-indicator" class="w-full py-2 px-4 bg-surface-container-high/80 backdrop-blur-md rounded-full border border-primary/20 text-center font-label text-sm tracking-widest uppercase shadow-lg">
+                모드를 선택해주세요
+            </div>
+        </div>
+
+        <!-- Game Board Container -->
+        <section id="board-wrapper" class="w-full aspect-square bg-surface-container-lowest rounded-xl p-2 shadow-2xl relative border border-outline-variant/20 overflow-hidden">
+            <canvas id="boardCanvas" class="w-full h-full rounded-lg"></canvas>
+            
+            <!-- Mode Selection Overlay -->
+            <div id="mode-overlay" class="overlay-screen absolute inset-0 z-40 bg-background/95 backdrop-blur-md flex flex-col justify-center items-center p-8 text-center">
+                <h2 class="font-headline text-2xl text-primary-fixed mb-8 tracking-tight">영지 쟁탈전 시작</h2>
+                <div class="flex flex-col gap-4 w-full">
+                    <button class="mode-btn w-full py-4 rounded-xl bg-surface-container-high border border-primary/30 text-primary font-label tracking-widest uppercase hover:bg-surface-bright transition-all" data-mode="pvp">사람과 대결 (2인)</button>
+                    <button class="mode-btn w-full py-4 rounded-xl bg-gradient-to-r from-primary-container to-dc7830 text-on-primary-container font-label font-bold tracking-widest uppercase shadow-lg active:scale-95 transition-all" data-mode="ai">컴퓨터와 대결 (AI)</button>
                 </div>
             </div>
-        </div>
 
-        <div id="ui">
-            <div class="score-box black">
-                <span class="label">Blue (First)</span>
-                <span id="black-score">0</span>
+            <!-- Game Result Overlay -->
+            <div id="overlay" class="overlay-screen absolute inset-0 z-40 bg-background/95 backdrop-blur-md flex flex-col justify-center items-center p-8 text-center" style="display: none;">
+                <div id="result-message" class="font-headline text-2xl text-on-surface mb-8 leading-relaxed whitespace-pre-line"></div>
+                <button id="restart-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-primary-container to-dc7830 text-on-primary-container font-label font-bold tracking-widest uppercase shadow-lg active:scale-95 transition-all">다시 하기</button>
             </div>
-            <div class="score-box white">
-                <span class="label">Orange (Second)</span>
-                <span id="white-score">0</span>
+        </section>
+
+        <!-- Player Stat Tablets -->
+        <section class="w-full mt-6 grid grid-cols-2 gap-4 z-10">
+            <!-- Player One (Blue) -->
+            <div class="bg-surface-container-low p-4 rounded-xl border-l-4 border-secondary shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-2 opacity-10">
+                    <span class="material-symbols-outlined text-4xl">shield</span>
+                </div>
+                <h3 class="font-label text-[10px] text-secondary tracking-[0.2em] uppercase mb-1">Blue (First)</h3>
+                <div class="flex items-baseline gap-2">
+                    <span id="black-score" class="font-headline text-4xl text-on-surface">0</span>
+                    <span class="font-label text-xs text-tertiary/60">Points</span>
+                </div>
             </div>
-        </div>
+            <!-- Player Two (Orange) -->
+            <div class="bg-surface-container-low p-4 rounded-xl border-r-4 border-primary shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 left-0 p-2 opacity-10">
+                    <span class="material-symbols-outlined text-4xl">swords</span>
+                </div>
+                <h3 class="font-label text-[10px] text-primary tracking-[0.2em] uppercase mb-1 text-right">Orange (Second)</h3>
+                <div class="flex items-baseline gap-2 justify-end">
+                    <span class="font-label text-xs text-tertiary/60">Points</span>
+                    <span id="white-score" class="font-headline text-4xl text-on-surface">0</span>
+                </div>
+            </div>
+        </section>
 
-        <div id="controls">
-            <button id="pass-btn">Pass</button>
-            <button id="reset-btn">Main Menu</button>
-        </div>
+        <!-- Action Controls -->
+        <section id="controls" class="w-full mt-6 flex flex-col gap-3 z-10">
+            <button id="pass-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-surface-container-high to-dc7830/10 text-tertiary font-label font-bold text-sm tracking-widest uppercase border border-outline-variant/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-lg">timer</span>
+                Pass Turn
+            </button>
+            <button id="reset-btn" class="w-full py-3 rounded-xl bg-surface-container-lowest text-tertiary/60 font-label text-[10px] tracking-[0.2em] uppercase hover:text-primary transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">grid_view</span>
+                Main Menu
+            </button>
+        </section>
+    </main>
 
-        <div id="overlay" class="overlay-screen" style="display: none;">
-            <div id="result-message"></div>
-            <button id="restart-btn">다시 하기</button>
+    <!-- Bottom Navigation Bar (Decorative) -->
+    <nav class="fixed bottom-0 w-full z-50 bg-[#11131e]/90 backdrop-blur-2xl rounded-t-2xl border-t border-orange-500/10 shadow-2xl flex justify-around items-center h-20 px-4">
+        <div class="flex flex-col items-center justify-center text-orange-400 scale-110 drop-shadow-[0_0_8px_rgba(220,120,48,0.4)]">
+            <span class="material-symbols-outlined">fort</span>
+            <span class="font-label text-[10px] uppercase tracking-widest mt-1">Kingdom</span>
         </div>
-    </div>
+        <div class="flex flex-col items-center justify-center text-slate-500 opacity-50">
+            <span class="material-symbols-outlined">swords</span>
+            <span class="font-label text-[10px] uppercase tracking-widest mt-1">Legion</span>
+        </div>
+        <div class="flex flex-col items-center justify-center text-slate-500 opacity-50">
+            <span class="material-symbols-outlined">database</span>
+            <span class="font-label text-[10px] uppercase tracking-widest mt-1">Treasury</span>
+        </div>
+        <div class="flex flex-col items-center justify-center text-slate-500 opacity-50">
+            <span class="material-symbols-outlined">book_5</span>
+            <span class="font-label text-[10px] uppercase tracking-widest mt-1">Lore</span>
+        </div>
+    </nav>
+
     <script src="app.js"></script>
 </body>
 </html>
