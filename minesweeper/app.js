@@ -345,6 +345,11 @@ function initGame(rows, cols, mines) {
     }
     
     buildBoardDOM();
+    
+    // Auto-fit zoom to screensize on game start
+    setTimeout(() => {
+        autoFitZoom();
+    }, 80);
 }
 
 // Build empty/unrevealed board HTML elements
@@ -730,9 +735,46 @@ function closeModal() {
 
 // Utility zoom manager
 function updateZoom(factor) {
-    zoomFactor = Math.max(0.4, Math.min(2.5, factor));
+    // Clamped between 0.15 for extremely large boards on mobile and 2.5 for accessibility
+    zoomFactor = Math.max(0.15, Math.min(2.5, factor));
     boardElement.style.setProperty('--zoom-factor', zoomFactor);
     zoomTextElement.textContent = `${Math.round(zoomFactor * 100)}%`;
+}
+
+// Automatically calculate and set zoom factor to fit the grid perfectly inside the viewport
+function autoFitZoom() {
+    const viewportWidth = viewportElement.clientWidth;
+    const viewportHeight = viewportElement.clientHeight;
+    
+    if (viewportWidth === 0 || viewportHeight === 0) return;
+    
+    // Pad slightly to give breathing room on edges
+    const isMobile = window.innerWidth <= 768;
+    const padding = isMobile ? 12 : 32; 
+    const availableWidth = viewportWidth - padding;
+    const availableHeight = viewportHeight - padding;
+    
+    // Base cell and grid configuration
+    const baseCellSize = 38;
+    const baseGap = 3;
+    const basePadding = 12 + 3; // padding (6px*2) + border (1.5px*2)
+    
+    // Calculate total board dimensions at zoom = 1.0
+    const boardWidthAtZoom1 = currentCols * baseCellSize + (currentCols - 1) * baseGap + basePadding;
+    const boardHeightAtZoom1 = currentRows * baseCellSize + (currentRows - 1) * baseGap + basePadding;
+    
+    // Compute target zoom to fit either dimension
+    const targetZoomX = availableWidth / boardWidthAtZoom1;
+    const targetZoomY = availableHeight / boardHeightAtZoom1;
+    
+    let optimalZoom = Math.min(targetZoomX, targetZoomY);
+    
+    // Clamping values:
+    // Minimum 0.15 to prevent huge boards (100x100) from overflowing
+    // Maximum 1.3 to keep easy/medium modes looking sharp and readable
+    optimalZoom = Math.max(0.15, Math.min(1.3, optimalZoom));
+    
+    updateZoom(optimalZoom);
 }
 
 // Difficulty switch click events
@@ -799,7 +841,7 @@ function bindEvents() {
     
     zoomResetBtn.addEventListener('click', () => {
         playSound('click');
-        updateZoom(1.0);
+        autoFitZoom();
     });
     
     // Sound control switch toggle
@@ -841,4 +883,9 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Default load: Easy Difficulty
     initGame(CONFIG.easy.rows, CONFIG.easy.cols, CONFIG.easy.mines);
+    
+    // Auto-fit board on screen orientation change or resize
+    window.addEventListener('resize', () => {
+        autoFitZoom();
+    });
 });
