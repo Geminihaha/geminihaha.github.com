@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&amp;family=Manrope:wght@400;600;800&amp;family=Space+Grotesk:wght@300;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#ffb68a",
+                        "primary-fixed-dim": "#ffb68a",
+                        "inverse-primary": "#984700",
+                        "inverse-surface": "#e2e1f2",
+                        "error-container": "#93000a",
+                        "surface-dim": "#11131e",
+                        "surface": "#11131e",
+                        "surface-container": "#1e1f2b",
+                        "on-primary-fixed": "#321300",
+                        "surface-container-highest": "#333440",
+                        "on-secondary": "#002f67",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#d7e2ff",
+                        "surface-container-high": "#282935",
+                        "on-primary-fixed-variant": "#743500",
+                        "on-surface-variant": "#dcc1b3",
+                        "surface-container-lowest": "#0c0d18",
+                        "secondary": "#acc7ff",
+                        "on-primary-container": "#4a1f00",
+                        "tertiary-container": "#8e929e",
+                        "on-surface": "#e2e1f2",
+                        "on-tertiary": "#2c303a",
+                        "primary-container": "#dc7830",
+                        "secondary-fixed-dim": "#acc7ff",
+                        "on-tertiary-fixed-variant": "#424751",
+                        "on-error-container": "#ffdad6",
+                        "background": "#11131e",
+                        "surface-bright": "#373845",
+                        "on-secondary-fixed": "#001a40",
+                        "outline-variant": "#554338",
+                        "on-tertiary-container": "#272b35",
+                        "on-secondary-container": "#a0bfff",
+                        "tertiary-fixed-dim": "#c2c6d3",
+                        "secondary-container": "#004b9e",
+                        "primary": "#ffb68a",
+                        "tertiary-fixed": "#dfe2ef",
+                        "outline": "#a38c7f",
+                        "on-tertiary-fixed": "#171c25",
+                        "on-primary": "#522300",
+                        "on-background": "#e2e1f2",
+                        "surface-variant": "#333440",
+                        "primary-fixed": "#ffdbc8",
+                        "surface-container-low": "#1a1b26",
+                        "on-secondary-fixed-variant": "#004491",
+                        "inverse-on-surface": "#2f2f3c",
+                        "error": "#ffb4ab",
+                        "tertiary": "#c2c6d3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Noto Serif"],
+                        "body": ["Manrope"],
+                        "label": ["Space Grotesk"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .relic-glow {
+            box-shadow: 0 0 40px rgba(220, 120, 48, 0.2);
+        }
+        .stone-texture {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-dim text-on-surface font-body overflow-hidden">
+<!-- Treasury Screen Background (Blurred/Dimmed) -->
+<main class="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center p-6 blur-md brightness-[0.3] pointer-events-none">
+<!-- Mock TopAppBar for Context -->
+<header class="fixed top-0 w-full flex justify-between items-center px-6 py-4 bg-stone-950/80 backdrop-blur-xl z-10">
+<div class="text-amber-600 font-headline font-bold tracking-tighter text-xl">Royal Armory</div>
+<div class="flex items-center gap-4 text-amber-500">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label text-sm">42,000 GOLD</span>
+</div>
+</header>
+<!-- Treasury Content Mockup -->
+<div class="grid grid-cols-2 gap-4 w-full max-w-4xl mt-20">
+<div class="aspect-[3/4] bg-surface-container-high rounded-xl"></div>
+<div class="aspect-[3/4] bg-surface-container-high rounded-xl"></div>
+<div class="aspect-[3/4] bg-surface-container-high rounded-xl"></div>
+<div class="aspect-[3/4] bg-surface-container-high rounded-xl"></div>
+</div>
+<!-- Mock BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 bg-stone-900/90 backdrop-blur-2xl border-t border-amber-900/15">
+<div class="flex flex-col items-center justify-center text-stone-500">
+<span class="material-symbols-outlined">fort</span>
+<span class="font-label text-[10px] uppercase">Sanctum</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-500">
+<span class="material-symbols-outlined">swords</span>
+<span class="font-label text-[10px] uppercase">Armory</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-500">
+<span class="material-symbols-outlined">scrollable_header</span>
+<span class="font-label text-[10px] uppercase">Quests</span>
+</div>
+<div class="flex flex-col items-center justify-center text-amber-500 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label text-[10px] uppercase">Treasury</span>
+</div>
+</nav>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+<!-- Relic Modal: Ancient Stone Tablet Aesthetic -->
+<section class="relative max-w-md w-full bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-outline-variant/20 relic-glow">
+<!-- Stone Texture Overlay -->
+<div class="absolute inset-0 stone-texture pointer-events-none"></div>
+<!-- Content Container -->
+<div class="relative z-10 flex flex-col items-center p-8 text-center">
+<!-- Rarity Label -->
+<div class="mb-6">
+<span class="font-label text-[10px] tracking-[0.2em] text-primary px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 shadow-[0_0_15px_rgba(255,182,138,0.15)] uppercase">
+                        LEGENDARY RELIC
+                    </span>
+</div>
+<!-- Main Relic Image -->
+<div class="relative w-64 h-64 mb-6 group">
+<!-- Subtle Radiant Glow behind item -->
+<div class="absolute inset-0 bg-primary-container/20 blur-[50px] rounded-full scale-75 animate-pulse"></div>
+<img alt="Crown of the Sun King" class="w-full h-full object-contain relative z-10 filter drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]" data-alt="A majestic golden crown encrusted with glowing sun-like amber gems, floating in a void of cosmic dust and divine golden light particles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE08l2VGvxJ4IgpufscW_EpWcn_DN9eakX22HOu4FREubdyEQf_uENMRCTDHc4JffrGuPZNOpgXtovZPy-pZWyHXw_yxjk47C60cUQIRZNaYloEmDt5ZnZ8pUFZQjmJOO9sl1bRROZ-eiZc-lYFZKlVsoie0OdD1tDwRO52eAunMJenLedX0GdJmhAm3VG5lJ5akeeQbM73qNnQ5T-P7K8UN0D78ThQeCdcCFsjbjenCeDaS1eVEPSd5kMEd45sxMbLRmdf2XaqZ0"/>
+</div>
+<!-- Item Info -->
+<h2 class="font-headline text-3xl font-bold text-on-surface mb-3 tracking-tight">Crown of the Sun King</h2>
+<p class="font-body text-on-surface-variant text-sm leading-relaxed mb-8 px-4">
+                    An ancient artifact forged in the heart of a dying star. Grants +50% Gold production and immense divine authority.
+                </p>
+<!-- Pricing & Actions -->
+<div class="w-full space-y-6">
+<!-- Price Display -->
+<div class="flex items-center justify-center gap-2 bg-surface-container-low py-3 rounded-xl border border-outline-variant/10">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label text-xl font-bold text-primary tracking-tighter">8,500 GOLD</span>
+</div>
+<!-- CTA Buttons -->
+<div class="flex flex-col gap-4">
+<button class="group relative w-full h-14 bg-gradient-to-r from-primary-container to-primary overflow-hidden rounded-xl shadow-lg shadow-primary-container/20 active:scale-[0.98] transition-all duration-200">
+<!-- Metallic Shine Layer -->
+<div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50"></div>
+<div class="relative flex items-center justify-center gap-3">
+<span class="font-label font-bold text-on-primary-container uppercase tracking-widest text-sm">Acquire Relic</span>
+</div>
+</button>
+<button class="font-label text-xs uppercase tracking-[0.2em] text-on-surface/40 hover:text-on-surface transition-colors py-2">
+                            Dismiss
+                        </button>
+</div>
+</div>
+</div>
+<!-- Decorative Corner Accents -->
+<div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-outline-variant/20 rounded-tl-xl"></div>
+<div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-outline-variant/20 rounded-tr-xl"></div>
+<div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-outline-variant/20 rounded-bl-xl"></div>
+<div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-outline-variant/20 rounded-br-xl"></div>
+</section>
+</div>
+</body></html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Calculator — geminihaha</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,'Noto Sans KR',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f4f6f8}
+    .calc{background:#fff;padding:20px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.08);width:320px}
+    .display{height:56px;background:#0f1724;color:#fff;border-radius:6px;padding:10px;font-size:20px;display:flex;align-items:center;justify-content:flex-end}
+    .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+    button{padding:14px;border-radius:8px;border:0;font-size:16px;background:#eef2f7;cursor:pointer}
+    button.op{background:#0ea5b7;color:#fff}
+    button.equal{grid-column:span:2;background:#06b6d4;color:#fff}
+    button.clear{background:#f97316;color:#fff}
+  </style>
+</head>
+<body>
+  <div class="calc">
+    <div id="display" class="display">0</div>
+    <div class="keys">
+      <button class="clear" data-action="clear">C</button>
+      <button data-action="back">←</button>
+      <button data-action="percent">%</button>
+      <button class="op" data-action="op">÷</button>
+
+      <button data-num>7</button>
+      <button data-num>8</button>
+      <button data-num>9</button>
+      <button class="op" data-action="op">×</button>
+
+      <button data-num>4</button>
+      <button data-num>5</button>
+      <button data-num>6</button>
+      <button class="op" data-action="op">−</button>
+
+      <button data-num>1</button>
+      <button data-num>2</button>
+      <button data-num>3</button>
+      <button class="op" data-action="op">+</button>
+
+      <button data-num>0</button>
+      <button data-num>.</button>
+      <button class="equal" data-action="equals">=</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const display = document.getElementById('display');
+  let first = null, operator = null, waiting = false;
+
+  function updateDisplay(text){ display.textContent = text; }
+
+  function inputDigit(d){
+    if(waiting){ updateDisplay(d); waiting = false; return; }
+    if(display.textContent === '0' && d !== '.') updateDisplay(d);
+    else if(d === '.' && display.textContent.includes('.')) return;
+    else updateDisplay(display.textContent + d);
+  }
+
+  function handleOperator(op){
+    const value = parseFloat(display.textContent);
+    if(first === null){ first = value; }
+    else if(operator){ first = calc(first, operator, value); updateDisplay(String(first)); }
+    operator = op; waiting = true;
+  }
+
+  function calc(a, op, b){
+    switch(op){
+      case '+': return a + b;
+      case '-': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? 'Error' : a / b;
+    }
+    return b;
+  }
+
+  function percent(){
+    let v = parseFloat(display.textContent);
+    updateDisplay(String(v / 100));
+  }
+
+  function clearAll(){ first = null; operator = null; waiting = false; updateDisplay('0'); }
+  function back(){ if(display.textContent.length === 1) updateDisplay('0'); else updateDisplay(display.textContent.slice(0,-1)); }
+  function equals(){ if(operator === null) return; const value = parseFloat(display.textContent); const result = calc(first, operator, value); updateDisplay(String(result)); first = null; operator = null; waiting = false; }
+
+  document.querySelector('.keys').addEventListener('click', e => {
+    const num = e.target.getAttribute('data-num');
+    if(num) return inputDigit(num);
+    const action = e.target.getAttribute('data-action');
+    if(!action) return;
+    if(action === 'clear') return clearAll();
+    if(action === 'back') return back();
+    if(action === 'percent') return percent();
+    if(action === 'op') return handleOperator(e.target.textContent.trim());
+    if(action === 'equals') return equals();
+  });
+})();
+</script>
+</body>
+</html>
