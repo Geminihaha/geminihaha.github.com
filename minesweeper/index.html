@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Minesweeper - 프리미엄 지뢰찾기</title>
+    
+    <!-- Google Fonts: Outfit & Inter for ultra-modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background Animated Mesh -->
+    <div class="bg-gradient-mesh"></div>
+
+    <!-- Celebration Canvas for Confetti -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="game-container">
+        <!-- Main Header -->
+        <header class="game-header">
+            <h1 class="logo">MINESWEEPER<span class="gradient-dot">.</span></h1>
+            <p class="subtitle">지뢰찾기 마스터클래스</p>
+        </header>
+
+        <!-- Controls Dashboard -->
+        <section class="controls-panel">
+            <div class="difficulty-selector">
+                <button class="btn-diff active" data-difficulty="easy">초급 (10x10)</button>
+                <button class="btn-diff" data-difficulty="medium">중급 (16x16)</button>
+                <button class="btn-diff" data-difficulty="hard">고급 (30x16)</button>
+                <button class="btn-diff" data-difficulty="custom">사용자 설정</button>
+            </div>
+
+            <!-- Custom Setup (Collapsible) -->
+            <div class="custom-settings collapsed" id="custom-settings-panel">
+                <div class="input-group">
+                    <label for="input-rows">가로(행)</label>
+                    <input type="number" id="input-rows" min="10" max="100" value="10">
+                </div>
+                <div class="input-group">
+                    <label for="input-cols">세로(열)</label>
+                    <input type="number" id="input-cols" min="10" max="100" value="10">
+                </div>
+                <div class="input-group">
+                    <label for="input-mines">지뢰 수</label>
+                    <input type="number" id="input-mines" min="1" max="90" value="10">
+                </div>
+                <button class="btn-apply" id="btn-apply-custom">적용</button>
+            </div>
+
+            <!-- Utility controls (Sound, Zoom) -->
+            <div class="utility-bar">
+                <button class="btn-util sound-toggle" id="sound-btn" aria-label="사운드 토글">
+                    <span class="icon">🔊</span> <span class="text">소리 켬</span>
+                </button>
+                
+                <div class="zoom-controls">
+                    <button class="btn-util zoom-btn" id="zoom-out-btn" title="축소">➖</button>
+                    <span class="zoom-level" id="zoom-text">100%</span>
+                    <button class="btn-util zoom-btn" id="zoom-in-btn" title="확대">➕</button>
+                    <button class="btn-util zoom-btn" id="zoom-reset-btn" title="100%">🔄</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Glassmorphism Board Card -->
+        <main class="board-card">
+            <!-- Status Info Panel (Retro-inspired but premium) -->
+            <div class="status-panel">
+                <div class="status-display mine-counter" title="남은 지뢰 수">
+                    <span class="display-label">MINES</span>
+                    <span class="digit" id="mine-count">010</span>
+                </div>
+
+                <button class="restart-btn" id="restart-btn" aria-label="재시작">
+                    <span id="face-icon">🙂</span>
+                </button>
+
+                <div class="status-display timer" title="소요 시간">
+                    <span class="display-label">TIME</span>
+                    <span class="digit" id="timer-count">000</span>
+                </div>
+            </div>
+
+            <!-- Scrollable Viewport Wrapper for the Board -->
+            <div class="board-viewport" id="board-viewport">
+                <div class="board-draggable-area" id="board-draggable">
+                    <div class="minesweeper-board" id="minesweeper-board">
+                        <!-- Dynamic Grid Cells will be rendered here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="drag-hint" id="drag-hint">
+                <span>💡 마우스 드래그 또는 스크롤로 큰 보드를 이동할 수 있습니다.</span>
+            </div>
+        </main>
+
+        <!-- Information / Shortcut Guide -->
+        <footer class="game-footer">
+            <div class="guide-item">
+                <span class="shortcut">좌클릭</span>
+                <span class="desc">셀 열기</span>
+            </div>
+            <div class="guide-item">
+                <span class="shortcut">우클릭</span>
+                <span class="desc">깃발 (지뢰 표시)</span>
+            </div>
+            <div class="guide-item">
+                <span class="shortcut">더블 클릭 / 휠 클릭</span>
+                <span class="desc">스마트 클리어 (Chording)</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Alert / Game Over Overlay Modal -->
+    <div class="modal" id="game-modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modal-title">축하합니다! 🎉</h2>
+            <p class="modal-message" id="modal-message">모든 지뢰를 성공적으로 찾았습니다!</p>
+            <div class="modal-stats">
+                <div class="stat-box">
+                    <span class="stat-lbl">소요 시간</span>
+                    <span class="stat-val" id="stat-time">0초</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-lbl">난이도</span>
+                    <span class="stat-val" id="stat-difficulty">초급</span>
+                </div>
+            </div>
+            <button class="btn-modal-close" id="btn-modal-close">다시 하기</button>
+        </div>
+    </div>
+
+    <!-- Main JavaScript File -->
+    <script src="app.js"></script>
+</body>
+</html>
