@@ -1,118 +1,378 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
 :root {
-    --board-size: 450px;
-    --cell-size: 30px;
-    --stone-size: 24px;
+    /* Color Palette from Stitch - Zenith Board */
+    --background: #121417;
+    --on-surface: #e9e1db;
+    --on-surface-variant: #d2c4b7;
+    
+    --surface: #161310;
+    --surface-container-lowest: #100e0b;
+    --surface-container-low: #1e1b18;
+    --surface-container: #221f1b;
+    --surface-container-high: #2d2926;
+    --surface-container-highest: #383430;
+    --surface-bright: #3d3834;
+    
+    --primary: #fcd4a1; /* Oak accent */
+    --primary-container: #deb887;
+    --on-primary-container: #634821;
+    --inverse-primary: #765930;
+    --primary-fixed: #ffddb4;
+    
+    --secondary: #c5c6cc;
+    --secondary-container: #47494e;
+    --on-secondary-container: #b7b8be;
+    
+    --outline: #9a8f82;
+    --outline-variant: #4e453b;
+    --tertiary: #c6dcfc;
+
+    --board-oak: #DEB887;
+    --board-walnut: #8B5A2B;
+    --stone-black: #1A1A1B;
+    --stone-white: #F8F9FA;
+
+    /* Layout Sizes */
+    --grid-cols: 11;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    background-color: #f0f0f0;
+/* Custom Wood Texture Overlay (ambient grain) */
+.stone-texture {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3F%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-.container {
-    text-align: center;
-    padding: 10px;
-    width: 100%;
-    max-width: 500px;
-    box-sizing: border-box;
-}
-
-.controls {
-    margin-bottom: 10px;
-}
-
-#mode-select {
-    padding: 5px;
-    font-size: 0.9rem;
-}
-
-h1 {
-    margin: 5px 0;
-    font-size: 1.5rem;
-}
-
-#status {
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-    font-weight: bold;
-}
-
+/* Board and Cells */
 .board {
     display: grid;
-    grid-template-columns: repeat(11, var(--cell-size));
-    grid-template-rows: repeat(11, var(--cell-size));
-    gap: 0;
-    background-color: #deb887;
-    border: 1px solid #8b4513;
+    grid-template-columns: repeat(var(--grid-cols), 1fr);
+    grid-template-rows: repeat(var(--grid-cols), 1fr);
+    width: 100%;
+    height: 100%;
     margin: 0 auto;
-    width: fit-content;
-    height: fit-content;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    position: relative;
+    box-sizing: border-box;
+
+    /* Skeuomorphic oak wood texture */
+    background-color: var(--board-oak);
+    background-image: 
+        repeating-linear-gradient(
+            180deg,
+            rgba(139, 90, 43, 0.03) 0px,
+            rgba(139, 90, 43, 0.03) 2px,
+            transparent 2px,
+            transparent 10px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            #deb887 0px,
+            #d5ae7d 120px,
+            #c29c6b 240px,
+            #deb887 360px
+        ),
+        radial-gradient(
+            ellipse at 50% 50%,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(0, 0, 0, 0.22) 100%
+        );
+    background-blend-mode: multiply, multiply, normal;
+
+    border-radius: 4px; /* Sanded wood corners */
+    border: 4px solid var(--board-walnut); /* Walnut outer frame */
+    box-shadow: 
+        inset 0 4px 6px rgba(0, 0, 0, 0.4), 
+        inset 0 -4px 6px rgba(255, 255, 255, 0.2),
+        0 24px 48px rgba(0, 0, 0, 0.5); /* Ambient shadow */
 }
 
 .cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    border: 0.5px solid #8b4513;
+    width: 100%;
+    height: 100%;
     box-sizing: border-box;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     position: relative;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
 }
 
-.stone {
-    width: var(--stone-size);
-    height: var(--stone-size);
-    border-radius: 50%;
+.cell:hover {
+    background-color: rgba(139, 90, 43, 0.15); /* Soft wood hover highlight */
+}
+
+/* Walnut Gridlines - Enhanced visibility (0.45 opacity) */
+.cell::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1.5px;
+    background-color: rgba(78, 52, 25, 0.45);
+    top: 50%;
+    left: 0;
+    pointer-events: none;
     z-index: 1;
 }
 
-@media (max-width: 500px) {
-    :root {
-        --cell-size: 8.2vw;
-        --stone-size: 7.2vw;
-    }
-    
-    .container {
-        padding: 5px;
-    }
+.cell::after {
+    content: '';
+    position: absolute;
+    width: 1.5px;
+    height: 100%;
+    background-color: rgba(78, 52, 25, 0.45);
+    left: 50%;
+    top: 0;
+    pointer-events: none;
+    z-index: 1;
+}
 
-    h1 {
-        font-size: 1.2rem;
-    }
+/* Star Points for traditional Omok layout */
+.cell.star-point {
+    background-image: radial-gradient(var(--board-walnut) 3.5px, transparent 3.5px);
+    background-position: center;
+    background-repeat: no-repeat;
+}
 
-    #status {
-        font-size: 1rem;
+/* Stones (Zenith Stone System) */
+.stone {
+    width: 85%;
+    height: 85%;
+    border-radius: 50%;
+    z-index: 5;
+    transform: scale(0.3);
+    opacity: 0;
+    animation: placeStoneAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+}
+
+@keyframes placeStoneAnim {
+    to {
+        transform: scale(1);
+        opacity: 1;
     }
 }
 
-.black {
-    background-color: #000;
+/* Black stone: 10% radial gradient from #2C2E33 to #1A1A1B with specular highlights */
+.stone.black {
+    background: radial-gradient(circle at 35% 35%, #4a4e58 0%, #202227 40%, #101012 100%);
+    box-shadow: 
+        0 2px 2px rgba(0, 0, 0, 0.8), /* Contact shadow */
+        0 8px 16px rgba(0, 0, 0, 0.5), /* Ambient shadow */
+        inset -3px -3px 6px rgba(0, 0, 0, 0.9),
+        inset 2px 2px 6px rgba(255, 255, 255, 0.15);
+    border: 1px solid #000;
 }
 
-.white {
-    background-color: #fff;
-    border: 1px solid #ccc;
+/* White stone: 5% radial gradient from #FFFFFF to #F8F9FA */
+.stone.white {
+    background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f1f2f4 50%, #e2e4e8 100%);
+    box-shadow: 
+        0 2px 2px rgba(0, 0, 0, 0.4), /* Contact shadow */
+        0 8px 16px rgba(0, 0, 0, 0.35), /* Ambient shadow */
+        inset -2px -2px 5px rgba(0, 0, 0, 0.15),
+        inset 2px 2px 5px rgba(255, 255, 255, 0.8);
+    border: 1px solid #b8bac0;
 }
 
-#reset-btn {
-    margin-top: 20px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
+/* Last Move Indicator: A subtle pulsing ring (Primary Oak) */
+.stone.last-move::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid var(--board-oak);
+    border-radius: 50%;
+    animation: pulseRing 1.8s infinite;
+    pointer-events: none;
+    z-index: 6;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.96);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.08);
+        opacity: 0.35;
+    }
+    100% {
+        transform: scale(0.96);
+        opacity: 0.8;
+    }
+}
+
+/* Winning Strike Highlight: thick walnut line */
+.cell.win-highlight::before {
+    background-color: var(--board-walnut) !important;
+    box-shadow: 0 0 8px var(--board-walnut);
+    z-index: 2;
+    height: 3px;
+    opacity: 0.85;
+}
+.cell.win-highlight::after {
+    background-color: var(--board-walnut) !important;
+    box-shadow: 0 0 8px var(--board-walnut);
+    z-index: 2;
+    width: 3px;
+    opacity: 0.85;
+}
+
+/* Player active styling states */
+.player-card {
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    opacity: 0.55;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.player-card.active.black {
+    background-color: var(--surface-container) !important;
+    border-color: rgba(26, 26, 27, 0.6) !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.45), 0 8px 16px rgba(0, 0, 0, 0.5) !important;
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+.player-card.active.white {
+    background-color: var(--surface-container) !important;
+    border-color: rgba(248, 249, 250, 0.15) !important;
+    box-shadow: 0 0 20px rgba(248, 249, 250, 0.05), 0 8px 16px rgba(0, 0, 0, 0.5) !important;
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+/* Turn Indicator Glow Animation */
+#turn-indicator.turn-change {
+    animation: turnGlow 0.6s ease-out;
+}
+
+@keyframes turnGlow {
+    0% {
+        box-shadow: 0 0 0 0px rgba(222, 184, 135, 0.4);
+        border-color: var(--primary);
+    }
+    50% {
+        box-shadow: 0 0 15px 4px rgba(222, 184, 135, 0.3);
+        border-color: var(--primary);
+    }
+    100% {
+        box-shadow: 0 0 0 0px rgba(222, 184, 135, 0);
+        border-color: rgba(78, 69, 59, 0.3);
+    }
+}
+
+/* Segmented Control styling */
+.segmented-control {
+    background-color: #27221d; /* Walnut background */
+    border: 1px solid rgba(139, 90, 43, 0.2);
+    border-radius: 9999px;
+    position: relative;
+    padding: 3px;
+    display: flex;
+    height: 44px;
+    box-sizing: border-box;
+}
+
+.mode-btn {
+    flex: 1;
+    background: transparent;
     border: none;
-    border-radius: 5px;
+    outline: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.3s ease;
+    text-align: center;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#segmented-indicator {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    background-color: var(--primary-container); /* Oak active state */
+    border-radius: 9999px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.segmented-control.pvb-active #segmented-indicator {
+    transform: translateX(100%);
+}
+
+.segmented-control:not(.pvb-active) #btn-mode-pvp {
+    color: #432c07 !important; /* Dark walnut text */
+}
+
+.segmented-control.pvb-active #btn-mode-pvb {
+    color: #432c07 !important; /* Dark walnut text */
+}
+
+/* Reset Button (Ghost-style) */
+#reset-btn {
+    background: transparent;
+    color: var(--board-oak);
+    border: 2px solid var(--board-oak);
+    font-weight: 700;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
 }
 
 #reset-btn:hover {
-    background-color: #45a049;
+    background: var(--board-oak);
+    color: #432c07; /* Dark walnut text */
+    box-shadow: 0 4px 15px rgba(222, 184, 135, 0.4);
+}
+
+/* Standard Actions: 1px top-highlight */
+.btn-standard {
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
+    border: 1px solid var(--outline-variant);
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.15), /* 1px top highlight */
+        0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-standard:hover {
+    background-color: var(--surface-bright);
+    border-color: var(--outline);
+}
+
+.btn-standard:active {
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.4),
+        0 1px 2px rgba(0, 0, 0, 0.2);
+    transform: translateY(1px);
+}
+
+/* Victory/Defeat Modal overrides */
+.modal-overlay {
+    background-color: rgba(16, 14, 11, 0.8) !important;
+    backdrop-filter: blur(20px);
+}
+
+.modal-overlay.show {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.modal-content {
+    background-color: var(--surface-container) !important;
+    border: 1px solid rgba(154, 143, 130, 0.2) !important;
+    border-radius: 1.5rem !important;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+}
+
+.modal-overlay.show .modal-content {
+    transform: scale(1) !important;
 }
