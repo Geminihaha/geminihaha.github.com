@@ -271,6 +271,237 @@ const LETTER_PATHS = {
     'ㅣ': 'M 150 100 L 150 250'
 };
 
+// ==========================================================================
+// 1.1 Stroke Order & Direction Guides Data
+// ==========================================================================
+const STROKE_DATA = {
+    // Consonants (자음 14자)
+    'ㄱ': [
+        { path: 'M 100 110 L 200 110', number: 1 },
+        { path: 'M 200 110 L 200 240', number: null }
+    ],
+    'ㄴ': [
+        { path: 'M 100 110 L 100 240', number: 1 },
+        { path: 'M 100 240 L 200 240', number: null }
+    ],
+    'ㄷ': [
+        { path: 'M 100 110 L 200 110', number: 1 },
+        { path: 'M 100 110 L 100 240', number: 2 },
+        { path: 'M 100 240 L 200 240', number: null }
+    ],
+    'ㄹ': [
+        { path: 'M 100 110 L 200 110', number: 1 },
+        { path: 'M 200 110 L 200 175', number: null },
+        { path: 'M 100 175 L 200 175', number: 2 },
+        { path: 'M 100 175 L 100 240', number: 3 },
+        { path: 'M 100 240 L 200 240', number: null }
+    ],
+    'ㅁ': [
+        { path: 'M 100 110 L 100 240', number: 1 },
+        { path: 'M 100 110 L 200 110', number: 2 },
+        { path: 'M 200 110 L 200 240', number: null },
+        { path: 'M 100 240 L 200 240', number: 3 }
+    ],
+    'ㅂ': [
+        { path: 'M 100 100 L 100 250', number: 1 },
+        { path: 'M 200 100 L 200 250', number: 2 },
+        { path: 'M 100 175 L 200 175', number: 3 },
+        { path: 'M 100 250 L 200 250', number: 4 }
+    ],
+    'ㅅ': [
+        { path: 'M 150 110 L 100 240', number: 1 },
+        { path: 'M 130 160 L 200 240', number: 2 }
+    ],
+    'ㅇ': [
+        { path: 'M 150 105 A 70 70 0 1 0 150 245 A 70 70 0 1 0 150 106', number: 1 }
+    ],
+    'ㅈ': [
+        { path: 'M 100 110 L 200 110', number: 1 },
+        { path: 'M 150 110 L 100 240', number: 2 },
+        { path: 'M 135 170 L 200 240', number: 3 }
+    ],
+    'ㅊ': [
+        { path: 'M 150 80 L 150 105', number: 1 },
+        { path: 'M 100 115 L 200 115', number: 2 },
+        { path: 'M 150 115 L 100 240', number: 3 },
+        { path: 'M 135 170 L 200 240', number: 4 }
+    ],
+    'ㅋ': [
+        { path: 'M 100 110 L 200 110', number: 1 },
+        { path: 'M 200 110 L 200 240', number: null },
+        { path: 'M 100 175 L 200 175', number: 2 }
+    ],
+    'ㅌ': [
+        { path: 'M 100 110 L 200 110', number: 1 },
+        { path: 'M 100 175 L 180 175', number: 2 },
+        { path: 'M 100 110 L 100 240', number: 3 },
+        { path: 'M 100 240 L 200 240', number: null }
+    ],
+    'ㅍ': [
+        { path: 'M 100 110 L 200 110', number: 1 },
+        { path: 'M 130 110 L 130 240', number: 2 },
+        { path: 'M 170 110 L 170 240', number: 3 },
+        { path: 'M 100 240 L 200 240', number: 4 }
+    ],
+    'ㅎ': [
+        { path: 'M 150 75 L 150 95', number: 1 },
+        { path: 'M 100 110 L 200 110', number: 2 },
+        { path: 'M 150 130 A 50 50 0 1 0 150 230 A 50 50 0 1 0 150 131', number: 3 }
+    ],
+
+    // Vowels (모음 10자)
+    'ㅏ': [
+        { path: 'M 130 100 L 130 250', number: 1 },
+        { path: 'M 130 175 L 180 175', number: 2 }
+    ],
+    'ㅑ': [
+        { path: 'M 120 100 L 120 250', number: 1 },
+        { path: 'M 120 150 L 170 150', number: 2 },
+        { path: 'M 120 200 L 170 200', number: 3 }
+    ],
+    'ㅓ': [
+        { path: 'M 120 175 L 170 175', number: 1 },
+        { path: 'M 170 100 L 170 250', number: 2 }
+    ],
+    'ㅕ': [
+        { path: 'M 120 150 L 170 150', number: 1 },
+        { path: 'M 120 200 L 170 200', number: 2 },
+        { path: 'M 170 100 L 170 250', number: 3 }
+    ],
+    'ㅗ': [
+        { path: 'M 150 120 L 150 175', number: 1 },
+        { path: 'M 100 175 L 200 175', number: 2 }
+    ],
+    'ㅛ': [
+        { path: 'M 135 120 L 135 175', number: 1 },
+        { path: 'M 165 120 L 165 175', number: 2 },
+        { path: 'M 100 175 L 200 175', number: 3 }
+    ],
+    'ㅜ': [
+        { path: 'M 100 120 L 200 120', number: 1 },
+        { path: 'M 150 120 L 150 220', number: 2 }
+    ],
+    'ㅠ': [
+        { path: 'M 100 120 L 200 120', number: 1 },
+        { path: 'M 135 120 L 135 220', number: 2 },
+        { path: 'M 165 120 L 165 220', number: 3 }
+    ],
+    'ㅡ': [
+        { path: 'M 100 175 L 200 175', number: 1 }
+    ],
+    'ㅣ': [
+        { path: 'M 150 100 L 150 250', number: 1 }
+    ]
+};
+
+// Timer memory to avoid overlaps
+let activeStrokeTimeouts = [];
+
+function clearStrokeAnimations() {
+    activeStrokeTimeouts.forEach(t => clearTimeout(t));
+    activeStrokeTimeouts = [];
+    const group = document.getElementById('stroke-guides-group');
+    if (group) group.innerHTML = '';
+}
+
+function getPathStartPoint(pathStr) {
+    const match = pathStr.match(/M\s*([\d.-]+)\s+([\d.-]+)/i);
+    if (match) {
+        return { x: parseFloat(match[1]), y: parseFloat(match[2]) };
+    }
+    return { x: 150, y: 175 };
+}
+
+function showStrokeOrder(letter, runAnimation = true) {
+    clearStrokeAnimations();
+    
+    const strokes = STROKE_DATA[letter];
+    if (!strokes) return;
+    
+    const group = document.getElementById('stroke-guides-group');
+    if (!group) return;
+    
+    // 1. Draw static guide paths & direction arrows & numbers
+    strokes.forEach((stroke) => {
+        // Background dashed path
+        const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathEl.setAttribute('d', stroke.path);
+        pathEl.setAttribute('class', 'stroke-indicator-path');
+        pathEl.setAttribute('marker-end', 'url(#guide-arrow)');
+        group.appendChild(pathEl);
+        
+        // Stroke number badge
+        if (stroke.number !== null && stroke.number !== undefined) {
+            const start = getPathStartPoint(stroke.path);
+            
+            // Offset positioning for the badge (up and left)
+            let badgeX = start.x - 18;
+            let badgeY = start.y - 18;
+            
+            // Adjust specific cases if the badge goes out of bounds
+            if (badgeX < 15) badgeX = start.x + 18;
+            if (badgeY < 15) badgeY = start.y + 18;
+            
+            const badgeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            badgeGroup.setAttribute('class', 'stroke-badge-group');
+            
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', badgeX);
+            circle.setAttribute('cy', badgeY);
+            circle.setAttribute('r', '12');
+            circle.setAttribute('class', 'stroke-number-circle');
+            
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', badgeX);
+            text.setAttribute('y', badgeY);
+            text.setAttribute('class', 'stroke-number-text');
+            text.textContent = stroke.number;
+            
+            badgeGroup.appendChild(circle);
+            badgeGroup.appendChild(text);
+            group.appendChild(badgeGroup);
+        }
+    });
+    
+    // 2. Play drawing animation sequential overlay
+    if (runAnimation) {
+        let delay = 200;
+        strokes.forEach((stroke) => {
+            const t = setTimeout(() => {
+                const animPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                animPath.setAttribute('d', stroke.path);
+                animPath.setAttribute('class', 'stroke-anim-path');
+                animPath.setAttribute('marker-end', 'url(#guide-arrow)');
+                group.appendChild(animPath);
+                
+                const length = animPath.getTotalLength();
+                animPath.style.strokeDasharray = length;
+                animPath.style.strokeDashoffset = length;
+                
+                // Trigger reflow
+                animPath.getBoundingClientRect();
+                
+                animPath.style.transition = 'stroke-dashoffset 0.6s ease-in-out';
+                animPath.style.strokeDashoffset = '0';
+                
+                // Fade out and remove anim overlay
+                const tFade = setTimeout(() => {
+                    animPath.style.transition = 'opacity 0.4s ease';
+                    animPath.style.opacity = '0';
+                    setTimeout(() => {
+                        animPath.remove();
+                    }, 400);
+                }, 800);
+                
+                activeStrokeTimeouts.push(tFade);
+            }, delay);
+            
+            activeStrokeTimeouts.push(t);
+            delay += 700;
+        });
+    }
+}
+
 const VOWEL_DATA = [
     {
         letter: 'ㅏ',
@@ -600,6 +831,7 @@ function playSound(frequency, type, duration, delay) {
 // ==========================================================================
 function showScreen(screenId) {
     DOM.audioFeedback.pop();
+    clearStrokeAnimations();
     
     // Hide all screens
     DOM.screenMenu.classList.remove('active');
@@ -746,6 +978,9 @@ function setupLearnScreen() {
     
     // Draw guide letters helper initially on canvas as very light gray dashed path
     drawCanvasInitialGuide();
+    
+    // Show stroke order direction & play initial drawing animation
+    showStrokeOrder(stage.letter, true);
 }
 
 function resetCanvas() {
@@ -758,6 +993,12 @@ function resetCanvas() {
     // Sparkle trail elements clean
     const sparkles = DOM.screenLearn.querySelectorAll('.sparkle');
     sparkles.forEach(s => s.remove());
+    
+    // Reset overlay guides (keep visible but cancel active animations)
+    const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
+    if (dataset && dataset[state.currentStageIdx]) {
+        showStrokeOrder(dataset[state.currentStageIdx].letter, false);
+    }
 }
 
 function drawCanvasInitialGuide() {
@@ -891,16 +1132,22 @@ window.addEventListener('touchend', stopDrawing);
 DOM.btnResetCanvas.addEventListener('click', resetCanvas);
 
 DOM.btnHintCanvas.addEventListener('click', () => {
-    // Highlight guidance letter by animating opacity
     DOM.audioFeedback.pop();
+    
+    // Play stroke order animation again
+    const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
+    const stage = dataset[state.currentStageIdx];
+    showStrokeOrder(stage.letter, true);
+    
+    // Highlight guidance letter by animating opacity
     DOM.guideLetterPath.style.transition = 'stroke-width 0.3s, stroke 0.3s';
-    DOM.guideLetterPath.style.stroke = '#ffe082';
+    DOM.guideLetterPath.style.stroke = 'hsla(48, 100%, 75%, 0.4)';
     DOM.guideLetterPath.style.strokeWidth = '80px';
     
     setTimeout(() => {
-        DOM.guideLetterPath.style.stroke = '#eeeeee';
-        DOM.guideLetterPath.style.strokeWidth = '60px';
-    }, 600);
+        DOM.guideLetterPath.style.stroke = 'hsl(210,20%,93%)';
+        DOM.guideLetterPath.style.strokeWidth = '58px';
+    }, 1200);
 });
 
 DOM.btnNextToQuiz.addEventListener('click', () => {

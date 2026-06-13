@@ -504,6 +504,51 @@ h1, h2, h3, h4 {
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" fill="%234fc3f7" opacity="0.55"/><circle cx="14" cy="14" r="5" fill="%234fc3f7"/></svg>') 14 14, crosshair;
 }
 
+/* Overlay for stroke guides (z-index 3 to overlay on canvas) */
+.canvas-overlay-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 3; pointer-events: none;
+}
+
+/* Background indicator path (Dashed stroke layout) */
+.stroke-indicator-path {
+    fill: none;
+    stroke: hsl(262, 50%, 82%);
+    stroke-width: 6px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.95;
+    stroke-dasharray: 3 8;
+}
+
+/* Active stroke drawing animation path */
+.stroke-anim-path {
+    fill: none;
+    stroke: hsl(262, 70%, 60%);
+    stroke-width: 10px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.85;
+}
+
+/* Round pastel badges for stroke numbers */
+.stroke-number-circle {
+    fill: hsl(340, 95%, 72%);
+    stroke: white;
+    stroke-width: 2.5px;
+    filter: drop-shadow(0 3px 6px rgba(255, 64, 129, 0.4));
+}
+
+.stroke-number-text {
+    font-family: 'Jua', sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    fill: white;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
 .canvas-footer {
     display: flex;
     justify-content: space-around;
