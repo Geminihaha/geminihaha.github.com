@@ -718,6 +718,7 @@ const DOM = {
     slotVowel: document.getElementById('slot-vowel'),
     slotBatchim: document.getElementById('slot-batchim'),
     btnClearCombine: document.getElementById('btn-clear-combine'),
+    btnSpeakCombined: document.getElementById('btn-speak-combined'),
     poolConsonants: document.getElementById('pool-consonants'),
     poolVowels: document.getElementById('pool-vowels'),
     
@@ -1508,6 +1509,14 @@ window.addEventListener('DOMContentLoaded', () => {
         state.currentMode = 'combine';
         showScreen('combine');
     });
+
+    // Speak Combined Hangeul Text on click
+    DOM.btnSpeakCombined.addEventListener('click', () => {
+        const text = DOM.combinedResultText.textContent;
+        if (text && text !== '?') {
+            speakHangeul(text);
+        }
+    });
     
     showScreen('menu');
 });
@@ -1755,6 +1764,9 @@ function updateCombinedResult() {
         DOM.combinedResultText.textContent = char;
         DOM.combinedResultText.className = 'combined-char-text success';
         
+        // Show TTS play button
+        DOM.btnSpeakCombined.style.display = 'flex';
+        
         // Celebrative jingle / mascot cheering feedback
         DOM.audioFeedback.cheer();
         triggerFireworks();
@@ -1764,6 +1776,9 @@ function updateCombinedResult() {
             DOM.combinedResultText.textContent = '?';
         }
         DOM.combinedResultText.className = 'combined-char-text';
+        
+        // Hide TTS play button
+        DOM.btnSpeakCombined.style.display = 'none';
     }
 }
 
@@ -1783,9 +1798,37 @@ function clearCombineSlots() {
     
     DOM.combinedResultText.textContent = '?';
     DOM.combinedResultText.className = 'combined-char-text';
+    
+    // Hide TTS play button
+    DOM.btnSpeakCombined.style.display = 'none';
 }
 
 DOM.btnClearCombine.addEventListener('click', () => {
     DOM.audioFeedback.pop();
     clearCombineSlots();
 });
+
+// Text-to-Speech pronunciation helper for children
+function speakHangeul(text) {
+    if (!window.speechSynthesis) {
+        console.warn('Speech synthesis not supported in this browser.');
+        return;
+    }
+    
+    // Stop ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    utterance.rate = 0.85; // Slow down slightly for kids
+    utterance.pitch = 1.35; // Cute high pitch voice for kids helper mascot
+    
+    // Attempt to match Korean system voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const koVoice = voices.find(v => v.lang.startsWith('ko') || v.lang.includes('Korean'));
+    if (koVoice) {
+        utterance.voice = koVoice;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+}
