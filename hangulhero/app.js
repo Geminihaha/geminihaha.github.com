@@ -1183,51 +1183,48 @@ const stickerStyles = document.createElement('style');
 stickerStyles.innerHTML = `
 .sticker-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    max-height: 400px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-height: 420px;
     overflow-y: auto;
-    padding: 10px 5px;
+    padding: 8px 4px;
 }
 .sticker-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 15px 10px;
-    border-radius: var(--radius-md);
-    background: var(--color-white);
-    border-color: rgba(255, 255, 255, 0.9);
-    transition: transform 0.2s;
+    padding: 14px 8px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(160deg, #fff 0%, #f5f8ff 100%);
+    border: 2.5px solid rgba(255,255,255,0.8);
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+    box-shadow: 0 6px 18px rgba(100,130,160,0.12);
 }
 .sticker-card.unlocked:hover {
-    transform: translateY(-5px);
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 12px 28px rgba(100,130,160,0.20);
 }
 .sticker-card.locked {
-    background: #f1f5f9;
-    border-color: #e2e8f0;
+    background: linear-gradient(160deg, #f5f7fa 0%, #edf0f5 100%);
+    border-color: rgba(200,210,220,0.5);
+    opacity: 0.6;
 }
 .sticker-img-wrap {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 8px;
+    width: 72px; height: 72px;
+    display: flex; justify-content: center; align-items: center;
+    margin-bottom: 7px;
 }
-.sticker-img-wrap svg {
-    width: 100%;
-    height: 100%;
-}
+.sticker-img-wrap svg { width: 100%; height: 100%; }
 .sticker-name {
     font-family: 'Jua', sans-serif;
-    font-size: 1.3rem;
-    color: var(--color-text-main);
+    font-size: 1.15rem;
+    color: var(--c-text, #2d3748);
 }
 .sticker-badge {
     margin-top: 4px;
-    font-size: 0.8rem;
-    background: var(--color-accent);
-    color: var(--color-white);
+    font-size: 0.78rem;
+    background: linear-gradient(135deg, hsl(5,100%,68%) 0%, hsl(262,58%,65%) 100%);
+    color: #fff;
     padding: 2px 8px;
     border-radius: 10px;
 }
