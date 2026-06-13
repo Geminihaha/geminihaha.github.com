@@ -725,6 +725,9 @@ function setupQuizScreen() {
     // Header label
     DOM.screenQuiz.querySelector('.quiz-title').textContent = `어떤 글자가 어울릴까요?`;
     
+    // Reset drag interaction lock
+    DOM.quizOptionsArea.style.pointerEvents = 'auto';
+    
     // 2. Setup options
     DOM.quizOptionsArea.innerHTML = '';
     
