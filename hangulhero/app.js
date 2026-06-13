@@ -1311,50 +1311,79 @@ function setupCombineDrag(el) {
     let isDragging = false;
     let clone = null;
     let clickTimeout = null;
+    let dragType = 'pending'; // 'pending', 'scroll', 'drag'
     
     const dragStart = (e) => {
-        // Quick click check fallback
-        isDragging = false;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const isTouch = !!e.touches;
+        const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+        const clientY = isTouch ? e.touches[0].clientY : e.clientY;
         startX = clientX;
         startY = clientY;
+        isDragging = false;
+        dragType = 'pending';
         
-        // Set timeout to decide if it is a drag
-        clickTimeout = setTimeout(() => {
-            isDragging = true;
-            DOM.audioFeedback.pop();
-            
-            // Create drag clone element
-            clone = el.cloneNode(true);
-            clone.style.position = 'fixed';
-            clone.style.zIndex = '9999';
-            clone.style.opacity = '0.9';
-            clone.style.pointerEvents = 'none'; // pass-through
-            clone.style.left = `${clientX - 26}px`;
-            clone.style.top = `${clientY - 26}px`;
-            
-            document.body.appendChild(clone);
-            
-            window.addEventListener('mousemove', dragMove);
+        if (isTouch) {
             window.addEventListener('touchmove', dragMove, { passive: false });
-        }, 120); // 120ms holds is drag
-        
-        window.addEventListener('mouseup', dragEnd);
-        window.addEventListener('touchend', dragEnd);
+            window.addEventListener('touchend', dragEnd);
+        } else {
+            clickTimeout = setTimeout(() => {
+                isDragging = true;
+                DOM.audioFeedback.pop();
+                createClone(clientX, clientY);
+                window.addEventListener('mousemove', dragMove);
+            }, 120);
+            window.addEventListener('mouseup', dragEnd);
+        }
+    };
+    
+    const createClone = (clientX, clientY) => {
+        clone = el.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.zIndex = '9999';
+        clone.style.opacity = '0.9';
+        clone.style.pointerEvents = 'none'; // pass-through
+        clone.style.left = `${clientX - 26}px`;
+        clone.style.top = `${clientY - 26}px`;
+        document.body.appendChild(clone);
     };
     
     const dragMove = (e) => {
-        if (!isDragging || !clone) return;
-        e.preventDefault();
+        const isTouch = !!e.touches;
+        const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+        const clientY = isTouch ? e.touches[0].clientY : e.clientY;
         
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        if (isTouch) {
+            if (dragType === 'pending') {
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // If moved more than 8px, determine if it is horizontal scroll or vertical drag
+                if (distance > 8) {
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        dragType = 'scroll';
+                    } else {
+                        dragType = 'drag';
+                        isDragging = true;
+                        DOM.audioFeedback.pop();
+                        createClone(clientX, clientY);
+                    }
+                }
+                return;
+            }
+            
+            if (dragType === 'scroll') {
+                return; // Let native horizontal scroll proceed
+            }
+            
+            e.preventDefault(); // Prevent page scroll during drag-and-drop
+        }
+        
+        if (!isDragging || !clone) return;
         
         clone.style.left = `${clientX - 26}px`;
         clone.style.top = `${clientY - 26}px`;
         
-        // Highlight active slots on overlap
         const type = el.getAttribute('data-type');
         const targetSlot = type === 'consonant' ? DOM.slotConsonant : DOM.slotVowel;
         
@@ -1368,7 +1397,6 @@ function setupCombineDrag(el) {
     const dragEnd = (e) => {
         clearTimeout(clickTimeout);
         
-        // Clean event listeners
         window.removeEventListener('mousemove', dragMove);
         window.removeEventListener('touchmove', dragMove);
         window.removeEventListener('mouseup', dragEnd);
@@ -1379,13 +1407,11 @@ function setupCombineDrag(el) {
         const targetSlot = type === 'consonant' ? DOM.slotConsonant : DOM.slotVowel;
         
         if (isDragging) {
-            // End drag process
             isDragging = false;
             targetSlot.classList.remove('drag-over');
             
             if (clone) {
                 if (checkCloneOverlap(clone, targetSlot)) {
-                    // Successful Drop
                     fillCombineSlot(type, letter);
                 } else {
                     DOM.audioFeedback.pop();
@@ -1394,9 +1420,11 @@ function setupCombineDrag(el) {
                 clone = null;
             }
         } else {
-            // It was a quick Tap/Click: auto fill the slot
-            fillCombineSlot(type, letter);
+            if (dragType === 'pending') {
+                fillCombineSlot(type, letter);
+            }
         }
+        dragType = 'pending';
     };
     
     el.addEventListener('mousedown', dragStart);

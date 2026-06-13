@@ -941,7 +941,7 @@ h1, h2, h3, h4 {
     color: var(--color-text-main);
     cursor: grab;
     box-shadow: var(--shadow-btn);
-    touch-action: none;
+    touch-action: pan-x;
 }
 .pool-card:active {
     cursor: grabbing;
