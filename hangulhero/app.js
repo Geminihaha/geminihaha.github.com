@@ -682,7 +682,8 @@ let state = {
     
     // Letter Maker State
     combineCho: null,
-    combineJung: null
+    combineJung: null,
+    combineJong: null
 };
 
 // ==========================================================================
@@ -715,6 +716,7 @@ const DOM = {
     combinedResultText: document.getElementById('combined-result-text'),
     slotConsonant: document.getElementById('slot-consonant'),
     slotVowel: document.getElementById('slot-vowel'),
+    slotBatchim: document.getElementById('slot-batchim'),
     btnClearCombine: document.getElementById('btn-clear-combine'),
     poolConsonants: document.getElementById('pool-consonants'),
     poolVowels: document.getElementById('pool-vowels'),
@@ -1515,6 +1517,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ==========================================================================
 const CHO_MAP = { 'ㄱ':0, 'ㄴ':2, 'ㄷ':3, 'ㄹ':5, 'ㅁ':6, 'ㅂ':7, 'ㅅ':9, 'ㅇ':11, 'ㅈ':12, 'ㅊ':14, 'ㅋ':15, 'ㅌ':16, 'ㅍ':17, 'ㅎ':18 };
 const JUNG_MAP = { 'ㅏ':0, 'ㅑ':2, 'ㅓ':4, 'ㅕ':6, 'ㅗ':8, 'ㅛ':12, 'ㅜ':13, 'ㅠ':17, 'ㅡ':18, 'ㅣ':20 };
+const JONG_MAP = { 'ㄱ': 1, 'ㄴ': 4, 'ㄷ': 7, 'ㄹ': 8, 'ㅁ': 16, 'ㅂ': 17, 'ㅅ': 19, 'ㅇ': 21, 'ㅈ': 22, 'ㅊ': 23, 'ㅋ': 24, 'ㅌ': 25, 'ㅍ': 26, 'ㅎ': 27 };
 
 function setupCombineScreen() {
     // 1. Reset Board
@@ -1629,12 +1632,25 @@ function setupCombineDrag(el) {
         clone.style.top = `${clientY - 26}px`;
         
         const type = el.getAttribute('data-type');
-        const targetSlot = type === 'consonant' ? DOM.slotConsonant : DOM.slotVowel;
         
-        if (checkCloneOverlap(clone, targetSlot)) {
-            targetSlot.classList.add('drag-over');
+        if (type === 'vowel') {
+            if (checkCloneOverlap(clone, DOM.slotVowel)) {
+                DOM.slotVowel.classList.add('drag-over');
+            } else {
+                DOM.slotVowel.classList.remove('drag-over');
+            }
         } else {
-            targetSlot.classList.remove('drag-over');
+            // consonant: check both consonant and batchim slots
+            if (checkCloneOverlap(clone, DOM.slotConsonant)) {
+                DOM.slotConsonant.classList.add('drag-over');
+                DOM.slotBatchim.classList.remove('drag-over');
+            } else if (checkCloneOverlap(clone, DOM.slotBatchim)) {
+                DOM.slotBatchim.classList.add('drag-over');
+                DOM.slotConsonant.classList.remove('drag-over');
+            } else {
+                DOM.slotConsonant.classList.remove('drag-over');
+                DOM.slotBatchim.classList.remove('drag-over');
+            }
         }
     };
     
@@ -1648,24 +1664,35 @@ function setupCombineDrag(el) {
         
         const type = el.getAttribute('data-type');
         const letter = el.getAttribute('data-letter');
-        const targetSlot = type === 'consonant' ? DOM.slotConsonant : DOM.slotVowel;
         
         if (isDragging) {
             isDragging = false;
-            targetSlot.classList.remove('drag-over');
+            DOM.slotConsonant.classList.remove('drag-over');
+            DOM.slotVowel.classList.remove('drag-over');
+            DOM.slotBatchim.classList.remove('drag-over');
             
             if (clone) {
-                if (checkCloneOverlap(clone, targetSlot)) {
-                    fillCombineSlot(type, letter);
+                if (type === 'vowel') {
+                    if (checkCloneOverlap(clone, DOM.slotVowel)) {
+                        fillCombineSlot(type, letter, false);
+                    } else {
+                        DOM.audioFeedback.pop();
+                    }
                 } else {
-                    DOM.audioFeedback.pop();
+                    if (checkCloneOverlap(clone, DOM.slotConsonant)) {
+                        fillCombineSlot(type, letter, false);
+                    } else if (checkCloneOverlap(clone, DOM.slotBatchim)) {
+                        fillCombineSlot(type, letter, true);
+                    } else {
+                        DOM.audioFeedback.pop();
+                    }
                 }
                 clone.remove();
                 clone = null;
             }
         } else {
             if (dragType === 'pending') {
-                fillCombineSlot(type, letter);
+                fillCombineSlot(type, letter, false);
             }
         }
         dragType = 'pending';
@@ -1685,16 +1712,31 @@ function checkCloneOverlap(clone, slot) {
              r1.top > r2.bottom);
 }
 
-function fillCombineSlot(type, letter) {
+let lastFillTime = 0;
+
+function fillCombineSlot(type, letter, preferBatchim = false) {
+    const now = Date.now();
+    if (now - lastFillTime < 150) {
+        return; // Prevents ghost duplicate clicks from touch+mouse events
+    }
+    lastFillTime = now;
+
     DOM.audioFeedback.correct();
-    if (type === 'consonant') {
-        state.combineCho = letter;
-        DOM.slotConsonant.classList.add('filled');
-        DOM.slotConsonant.innerHTML = letter + `<span class="combine-slot-label">자음</span>`;
-    } else {
+    if (type === 'vowel') {
         state.combineJung = letter;
         DOM.slotVowel.classList.add('filled');
         DOM.slotVowel.innerHTML = letter + `<span class="combine-slot-label">모음</span>`;
+    } else {
+        // For consonants, place in batchim slot if dragged to batchim or if consonant is already filled during simple tap
+        if (preferBatchim || (state.combineCho && !preferBatchim)) {
+            state.combineJong = letter;
+            DOM.slotBatchim.classList.add('filled');
+            DOM.slotBatchim.innerHTML = letter + `<span class="combine-slot-label">받침</span>`;
+        } else {
+            state.combineCho = letter;
+            DOM.slotConsonant.classList.add('filled');
+            DOM.slotConsonant.innerHTML = letter + `<span class="combine-slot-label">자음</span>`;
+        }
     }
     
     updateCombinedResult();
@@ -1704,9 +1746,10 @@ function updateCombinedResult() {
     if (state.combineCho && state.combineJung) {
         const choIdx = CHO_MAP[state.combineCho];
         const jungIdx = JUNG_MAP[state.combineJung];
+        const jongIdx = state.combineJong ? (JONG_MAP[state.combineJong] || 0) : 0;
         
-        // Hangeul combination formula
-        const charCode = 0xAC00 + (choIdx * 21 * 28) + (jungIdx * 28);
+        // Hangeul combination formula (with batchim)
+        const charCode = 0xAC00 + (choIdx * 21 * 28) + (jungIdx * 28) + jongIdx;
         const char = String.fromCharCode(charCode);
         
         DOM.combinedResultText.textContent = char;
@@ -1716,7 +1759,7 @@ function updateCombinedResult() {
         DOM.audioFeedback.cheer();
         triggerFireworks();
     } else {
-        DOM.combinedResultText.textContent = (state.combineCho || '') + (state.combineJung || '');
+        DOM.combinedResultText.textContent = (state.combineCho || '') + (state.combineJung || '') + (state.combineJong || '');
         if (!DOM.combinedResultText.textContent) {
             DOM.combinedResultText.textContent = '?';
         }
@@ -1727,12 +1770,16 @@ function updateCombinedResult() {
 function clearCombineSlots() {
     state.combineCho = null;
     state.combineJung = null;
+    state.combineJong = null;
     
     DOM.slotConsonant.classList.remove('filled');
     DOM.slotConsonant.innerHTML = `<span class="combine-slot-label">자음 넣는 곳</span>`;
     
     DOM.slotVowel.classList.remove('filled');
     DOM.slotVowel.innerHTML = `<span class="combine-slot-label">모음 넣는 곳</span>`;
+    
+    DOM.slotBatchim.classList.remove('filled');
+    DOM.slotBatchim.innerHTML = `<span class="combine-slot-label">받침 넣는 곳</span>`;
     
     DOM.combinedResultText.textContent = '?';
     DOM.combinedResultText.className = 'combined-char-text';
