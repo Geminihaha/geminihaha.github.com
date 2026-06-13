@@ -42,9 +42,31 @@
         </header>
 
         <!-- ===================================================================
+             0. INITIAL MENU SCREEN
+             =================================================================== -->
+        <main class="screen active" id="screen-menu">
+            <div class="menu-container">
+                <div class="menu-logo-box">
+                    <span style="font-size: 5.5rem; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.1)); display:inline-block;">🦸‍♂️</span>
+                </div>
+                <h2 class="menu-title">한글 히어로</h2>
+                <p class="menu-subtitle">재미있는 한글 모험을 떠나볼까요?</p>
+                
+                <div class="menu-buttons-wrapper">
+                    <button class="btn-menu-select btn-consonants" id="btn-menu-consonants">
+                        자음 모험 떠나기 🌟
+                    </button>
+                    <button class="btn-menu-select btn-vowels" id="btn-menu-vowels">
+                        모음 모험 떠나기 🌈
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- ===================================================================
              A. MAIN HUB (STAGE SELECT MAP) SCREEN
              =================================================================== -->
-        <main class="screen active" id="screen-hub">
+        <main class="screen" id="screen-hub">
             <div class="map-container">
                 <!-- SVG Curvy path linking stages -->
                 <svg class="map-road-svg" viewBox="0 0 400 1100" preserveAspectRatio="none">

@@ -242,6 +242,7 @@ const STAGE_DATA = [
 
 // SVG Letter Path Coordinates (Approximate font paths for guidelines)
 const LETTER_PATHS = {
+    // Consonants
     'ㄱ': 'M 100 110 L 200 110 L 200 240',
     'ㄴ': 'M 100 110 L 100 240 L 200 240',
     'ㄷ': 'M 200 110 L 100 110 L 100 240 L 200 240',
@@ -255,8 +256,159 @@ const LETTER_PATHS = {
     'ㅋ': 'M 100 110 L 200 110 L 200 240 M 100 175 L 200 175',
     'ㅌ': 'M 200 110 L 100 110 L 100 240 L 200 240 M 100 175 L 180 175',
     'ㅍ': 'M 100 110 L 200 110 M 130 110 L 130 240 M 170 110 L 170 240 M 100 240 L 200 240',
-    'ㅎ': 'M 150 75 L 150 95 M 100 110 L 200 110 M 150 130 A 50 50 0 1 0 150 230 A 50 50 0 1 0 150 130 Z'
+    'ㅎ': 'M 150 75 L 150 95 M 100 110 L 200 110 M 150 130 A 50 50 0 1 0 150 230 A 50 50 0 1 0 150 130 Z',
+    
+    // Vowels
+    'ㅏ': 'M 130 100 L 130 250 M 130 175 L 180 175',
+    'ㅑ': 'M 120 100 L 120 250 M 120 150 L 170 150 M 120 200 L 170 200',
+    'ㅓ': 'M 120 175 L 170 175 M 170 100 L 170 250',
+    'ㅕ': 'M 120 150 L 170 150 M 120 200 L 170 200 M 170 100 L 170 250',
+    'ㅗ': 'M 150 120 L 150 175 M 100 175 L 200 175',
+    'ㅛ': 'M 135 120 L 135 175 M 165 120 L 165 175 M 100 175 L 200 175',
+    'ㅜ': 'M 100 120 L 200 120 M 150 120 L 150 220',
+    'ㅠ': 'M 100 120 L 200 120 M 135 120 L 135 220 M 165 120 L 165 220',
+    'ㅡ': 'M 100 175 L 200 175',
+    'ㅣ': 'M 150 100 L 150 250'
 };
+
+const VOWEL_DATA = [
+    {
+        letter: 'ㅏ',
+        label: '아 배우기',
+        word: '아기',
+        options: ['ㅓ', 'ㅏ', 'ㅗ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <rect x="35" y="40" width="30" height="38" rx="5" fill="#e0f7fa" stroke="#00acc1" stroke-width="3"/>
+            <path d="M35 45 L65 45" stroke="#00acc1" stroke-width="2"/>
+            <rect x="42" y="26" width="16" height="14" rx="2" fill="#ffb74d" stroke="#f57c00" stroke-width="2"/>
+            <path d="M46 16 L54 16 L52 26 L48 26 Z" fill="#ff8a80"/>
+            <line x1="40" y1="52" x2="48" y2="52" stroke="#b2ebf2" stroke-width="2"/>
+            <line x1="40" y1="60" x2="48" y2="60" stroke="#b2ebf2" stroke-width="2"/>
+            <line x1="40" y1="68" x2="48" y2="68" stroke="#b2ebf2" stroke-width="2"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅑ',
+        label: '야 배우기',
+        word: '야구',
+        options: ['ㅛ', 'ㅑ', 'ㅠ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <path d="M22 68 C22 45, 32 30, 48 30 C58 30, 68 40, 68 55 C68 68, 55 75, 40 75 C28 75, 22 72, 22 68 Z" fill="#b08968" stroke="#7f5539" stroke-width="3"/>
+            <path d="M28 50 C28 40, 36 38, 44 44" stroke="#7f5539" stroke-width="2" fill="none"/>
+            <circle cx="68" cy="68" r="14" fill="#ffffff" stroke="#cfd8dc" stroke-width="3"/>
+            <path d="M58 62 Q66 68 62 78" stroke="#ff5252" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M78 62 Q70 68 74 78" stroke="#ff5252" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅓ',
+        label: '어 배우기',
+        word: '어머니',
+        options: ['ㅕ', 'ㅓ', 'ㅏ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <path d="M50 78 C50 78, 18 52, 18 36 C18 20, 42 16, 50 32 C58 16, 82 20, 82 36 C82 52, 50 78, 50 78 Z" fill="#ff8a80" stroke="#ff5252" stroke-width="3"/>
+            <path d="M38 34 Q50 24 62 34" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M42 46 Q50 52 58 46" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅕ',
+        label: '여 배우기',
+        word: '여우',
+        options: ['ㅕ', 'ㅑ', '요'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <polygon points="20,50 15,20 42,40" fill="#ff7043" stroke="#d84315" stroke-width="2"/>
+            <polygon points="23,45 18,25 36,38" fill="#ffccbc"/>
+            <polygon points="80,50 85,20 58,40" fill="#ff7043" stroke="#d84315" stroke-width="2"/>
+            <polygon points="77,45 82,25 64,38" fill="#ffccbc"/>
+            <path d="M20 50 C20 75, 80 75, 80 50 C80 38, 20 38, 20 50 Z" fill="#ff7043" stroke="#d84315" stroke-width="3"/>
+            <path d="M22 55 C26 70, 45 72, 50 62 C55 72, 74 70, 78 55" fill="#ffffff" opacity="0.9"/>
+            <circle cx="36" cy="48" r="3" fill="#212121"/>
+            <circle cx="64" cy="48" r="3" fill="#212121"/>
+            <circle cx="50" cy="58" r="4" fill="#212121"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅗ',
+        label: '오 배우기',
+        word: '오이',
+        options: ['ㅜ', 'ㅗ', 'ㅡ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <path d="M25 35 C35 25, 65 55, 75 65 C85 75, 75 85, 65 75 C55 65, 15 45, 25 35 Z" fill="#81c784" stroke="#2e7d32" stroke-width="3"/>
+            <polygon points="76,66 84,60 88,68 84,76 76,72" fill="#ffd54f" stroke="#f57c00" stroke-width="1.5"/>
+            <circle cx="36" cy="44" r="2" fill="#2e7d32"/>
+            <circle cx="46" cy="50" r="2" fill="#2e7d32"/>
+            <circle cx="56" cy="58" r="2" fill="#2e7d32"/>
+            <circle cx="40" cy="56" r="2" fill="#2e7d32"/>
+        </svg>`
+    },
+    {
+        letter: '요',
+        label: '요 배우기',
+        word: '요술',
+        options: ['ㅠ', '요', 'ㅑ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <line x1="25" y1="75" x2="60" y2="40" stroke="#795548" stroke-width="6" stroke-linecap="round"/>
+            <line x1="25" y1="75" x2="60" y2="40" stroke="#ffe082" stroke-width="2" stroke-linecap="round"/>
+            <polygon points="65,15 69,27 81,27 71,34 75,46 65,39 55,46 59,34 49,27 61,27" fill="#fff176" stroke="#f57c00" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="82" cy="18" r="2" fill="#fff176"/>
+            <circle cx="50" cy="18" r="2" fill="#fff176"/>
+            <circle cx="80" cy="42" r="2" fill="#fff176"/>
+            <circle cx="48" cy="40" r="3" fill="#ff8a80"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅜ',
+        label: '우 배우기',
+        word: '우산',
+        options: ['ㅡ', 'ㅜ', 'ㅗ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <path d="M50 50 L50 78 A 6 6 0 0 1 38 78" stroke="#795548" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M15 50 C15 25, 85 25, 85 50 C75 52, 65 44, 50 50 C35 44, 25 52, 15 50 Z" fill="#4fc3f7" stroke="#0288d1" stroke-width="3"/>
+            <path d="M50 22 C42 32, 40 45, 38 50" stroke="#0288d1" stroke-width="2" fill="none"/>
+            <path d="M50 22 C58 32, 60 45, 62 50" stroke="#0288d1" stroke-width="2" fill="none"/>
+            <rect x="48" y="15" width="4" height="7" fill="#795548"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅠ',
+        label: '유 배우기',
+        word: '유리컵',
+        options: ['요', 'ㅠ', 'ㅕ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <path d="M30 25 L36 70 C37 75, 42 78, 48 78 L52 78 C58 78, 63 75, 64 70 L70 25 Z" fill="#e0f7fa" stroke="#00acc1" stroke-width="3" opacity="0.8"/>
+            <path d="M33 45 L36 70 C37 73, 40 75, 45 75 L55 75 C60 75, 63 73, 64 70 L67 45 Z" fill="#ff8a80"/>
+            <line x1="48" y1="18" x2="62" y2="60" stroke="#ffd54f" stroke-width="3" stroke-linecap="round"/>
+            <line x1="48" y1="18" x2="40" y2="12" stroke="#ffd54f" stroke-width="3" stroke-linecap="round"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅡ',
+        label: '으 배우기',
+        word: '은행잎',
+        options: ['ㅣ', 'ㅡ', 'ㅜ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <path d="M50 78 L50 68 C35 62, 18 52, 22 35 C28 25, 48 38, 50 44 C52 38, 72 25, 78 35 C82 52, 65 62, 50 68 Z" fill="#ffeb3b" stroke="#f57c00" stroke-width="3"/>
+            <path d="M50 60 C42 50, 32 44, 28 40" stroke="#f57c00" stroke-width="1.5" fill="none"/>
+            <path d="M50 60 C58 50, 68 44, 72 40" stroke="#f57c00" stroke-width="1.5" fill="none"/>
+            <path d="M50 52 L50 44" stroke="#f57c00" stroke-width="1.5" fill="none"/>
+        </svg>`
+    },
+    {
+        letter: 'ㅣ',
+        label: '이 배우기',
+        word: '이불',
+        options: ['ㅡ', 'ㅣ', 'ㅏ'],
+        svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
+            <rect x="15" y="60" width="70" height="15" fill="#8d6e63" stroke="#5d4037" stroke-width="3"/>
+            <rect x="22" y="42" width="22" height="14" rx="4" fill="#ffeb3b" stroke="#f57c00" stroke-width="2"/>
+            <rect x="42" y="48" width="40" height="26" rx="4" fill="#a5d6a7" stroke="#2e7d32" stroke-width="2"/>
+            <line x1="50" y1="48" x2="50" y2="74" stroke="#2e7d32" stroke-width="2"/>
+            <line x1="60" y1="48" x2="60" y2="74" stroke="#2e7d32" stroke-width="2"/>
+            <line x1="70" y1="48" x2="70" y2="74" stroke="#2e7d32" stroke-width="2"/>
+        </svg>`
+    }
+];
 
 // Cute Bunny Mascot SVG
 const BUNNY_SVG = `
@@ -287,7 +439,9 @@ const BUNNY_SVG = `
 // 2. Application State
 // ==========================================================================
 let state = {
-    unlockedStage: 1, // Max stage completed + 1
+    unlockedConsonantStage: 1,
+    unlockedVowelStage: 1,
+    currentMode: 'menu', // 'menu', 'consonants', 'vowels'
     currentStageIdx: 0,
     jewels: 0,
     isDrawing: false,
@@ -304,6 +458,7 @@ const DOM = {
     appContainer: document.getElementById('app-container'),
     
     // Screens
+    screenMenu: document.getElementById('screen-menu'),
     screenHub: document.getElementById('screen-hub'),
     screenLearn: document.getElementById('screen-learn'),
     screenQuiz: document.getElementById('screen-quiz'),
@@ -313,6 +468,11 @@ const DOM = {
     // Global Header Items
     jewelCountText: document.getElementById('jewel-count'),
     btnBackToHub: document.getElementById('btn-back-to-hub'),
+    logoTitle: document.getElementById('logo-title'),
+    
+    // Menu Screen Buttons
+    btnMenuConsonants: document.getElementById('btn-menu-consonants'),
+    btnMenuVowels: document.getElementById('btn-menu-vowels'),
     
     // Hub Elements
     stagesLayer: document.getElementById('stages-layer'),
@@ -370,7 +530,8 @@ function loadSavedState() {
     if (saved) {
         try {
             const parsed = JSON.parse(saved);
-            state.unlockedStage = parsed.unlockedStage || 1;
+            state.unlockedConsonantStage = parsed.unlockedConsonantStage || 1;
+            state.unlockedVowelStage = parsed.unlockedVowelStage || 1;
             state.jewels = parsed.jewels || 0;
             updateJewelUI();
         } catch(e) {
@@ -381,7 +542,8 @@ function loadSavedState() {
 
 function saveCurrentState() {
     localStorage.setItem('hangul_hero_state', JSON.stringify({
-        unlockedStage: state.unlockedStage,
+        unlockedConsonantStage: state.unlockedConsonantStage,
+        unlockedVowelStage: state.unlockedVowelStage,
         jewels: state.jewels
     }));
 }
@@ -426,14 +588,20 @@ function showScreen(screenId) {
     DOM.audioFeedback.pop();
     
     // Hide all screens
+    DOM.screenMenu.classList.remove('active');
     DOM.screenHub.classList.remove('active');
     DOM.screenLearn.classList.remove('active');
     DOM.screenQuiz.classList.remove('active');
     
-    // Show back button only when not on main hub
-    if (screenId === 'hub') {
-        DOM.screenHub.classList.add('active');
+    // Handle back button on top app bar and screen activation
+    if (screenId === 'menu') {
+        state.currentMode = 'menu';
+        DOM.screenMenu.classList.add('active');
         DOM.btnBackToHub.style.display = 'none';
+        DOM.characterArea.classList.remove('active');
+    } else if (screenId === 'hub') {
+        DOM.screenHub.classList.add('active');
+        DOM.btnBackToHub.style.display = 'flex'; // Show to return to main menu
         DOM.characterArea.classList.remove('active');
         renderHubMap();
     } else if (screenId === 'learn') {
@@ -473,15 +641,21 @@ function updateJewelUI() {
 function renderHubMap() {
     DOM.stagesLayer.innerHTML = '';
     
-    STAGE_DATA.forEach((stage, idx) => {
+    const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
+    const unlockedLimit = state.currentMode === 'consonants' ? state.unlockedConsonantStage : state.unlockedVowelStage;
+    
+    // Dynamic logo title based on mode
+    DOM.logoTitle.innerHTML = state.currentMode === 'consonants' ? '자음 모험 🌟' : '모음 모험 🌈';
+    
+    dataset.forEach((stage, idx) => {
         const stageNum = idx + 1;
         const nodeDiv = document.createElement('div');
         nodeDiv.className = `stage-node node-${stageNum}`;
         
         let stateClass = 'locked';
-        if (stageNum < state.unlockedStage) {
+        if (stageNum < unlockedLimit) {
             stateClass = 'completed';
-        } else if (stageNum === state.unlockedStage) {
+        } else if (stageNum === unlockedLimit) {
             stateClass = 'active-now';
         }
         
@@ -536,7 +710,8 @@ document.head.appendChild(styleElem);
 // B. Learning Canvas Logic
 // ==========================================================================
 function setupLearnScreen() {
-    const stage = STAGE_DATA[state.currentStageIdx];
+    const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
+    const stage = dataset[state.currentStageIdx];
     DOM.currentLetterDisplay.textContent = stage.letter;
     
     // Draw guide line in SVG back overlay
@@ -715,7 +890,8 @@ DOM.btnNextToQuiz.addEventListener('click', () => {
 // C. Quiz Matching Mode (Drag & Drop)
 // ==========================================================================
 function setupQuizScreen() {
-    const stage = STAGE_DATA[state.currentStageIdx];
+    const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
+    const stage = dataset[state.currentStageIdx];
     
     // 1. Setup target area (display SVG of the matching word)
     DOM.quizTargetArea.classList.remove('matched', 'drag-over');
@@ -781,7 +957,8 @@ function setupDragEvent(el) {
         window.removeEventListener('touchmove', dragMove);
         window.removeEventListener('touchend', dragEnd);
         
-        const stage = STAGE_DATA[state.currentStageIdx];
+        const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
+        const stage = dataset[state.currentStageIdx];
         const selectedLetter = el.getAttribute('data-letter');
         
         if (checkOverlap(el, DOM.quizTargetArea) && selectedLetter === stage.letter) {
@@ -854,7 +1031,8 @@ function checkOverlap(el1, el2) {
 function showRewardPopup() {
     DOM.overlayReward.classList.add('active');
     
-    const stage = STAGE_DATA[state.currentStageIdx];
+    const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
+    const stage = dataset[state.currentStageIdx];
     DOM.rewardTitle.innerHTML = `<span style="font-family:'Jua'; color:var(--color-primary-dark); font-size: 2.5rem;">참 잘했어요!</span><br/>'${stage.word}' 쓰기 완료!`;
     
     // Spawn 3 flying jewels UI
@@ -914,10 +1092,18 @@ DOM.btnCollectReward.addEventListener('click', () => {
     state.jewels += 3;
     updateJewelUI();
     
-    // Unlock next stage if we just completed the highest unlocked stage
+    // Unlock next stage depending on mode
+    const dataset = state.currentMode === 'consonants' ? STAGE_DATA : VOWEL_DATA;
     const currentStageNum = state.currentStageIdx + 1;
-    if (currentStageNum === state.unlockedStage && state.unlockedStage < STAGE_DATA.length) {
-        state.unlockedStage++;
+    
+    if (state.currentMode === 'consonants') {
+        if (currentStageNum === state.unlockedConsonantStage && state.unlockedConsonantStage < STAGE_DATA.length) {
+            state.unlockedConsonantStage++;
+        }
+    } else {
+        if (currentStageNum === state.unlockedVowelStage && state.unlockedVowelStage < VOWEL_DATA.length) {
+            state.unlockedVowelStage++;
+        }
     }
     
     saveCurrentState();
@@ -942,13 +1128,17 @@ DOM.btnCloseStickers.addEventListener('click', () => {
 function renderStickerBook() {
     DOM.stickerGrid.innerHTML = '';
     
-    STAGE_DATA.forEach((stage, idx) => {
-        const isUnlocked = idx + 1 < state.unlockedStage;
-        
+    // Combine both sets for full stickers display
+    const allStages = [
+        ...STAGE_DATA.map((s, idx) => ({ ...s, isUnlocked: (idx + 1) < state.unlockedConsonantStage })),
+        ...VOWEL_DATA.map((s, idx) => ({ ...s, isUnlocked: (idx + 1) < state.unlockedVowelStage }))
+    ];
+    
+    allStages.forEach((stage) => {
         const card = document.createElement('div');
-        card.className = `glass-panel sticker-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+        card.className = `glass-panel sticker-card ${stage.isUnlocked ? 'unlocked' : 'locked'}`;
         
-        if (isUnlocked) {
+        if (stage.isUnlocked) {
             card.innerHTML = `
                 <div class="sticker-img-wrap">${stage.svg}</div>
                 <div class="sticker-name">${stage.word}</div>
@@ -1025,7 +1215,11 @@ document.head.appendChild(stickerStyles);
 
 // Back button on top app bar handler
 DOM.btnBackToHub.addEventListener('click', () => {
-    showScreen('hub');
+    if (DOM.screenLearn.classList.contains('active') || DOM.screenQuiz.classList.contains('active')) {
+        showScreen('hub');
+    } else if (DOM.screenHub.classList.contains('active')) {
+        showScreen('menu');
+    }
 });
 
 // ==========================================================================
@@ -1033,5 +1227,16 @@ DOM.btnBackToHub.addEventListener('click', () => {
 // ==========================================================================
 window.addEventListener('DOMContentLoaded', () => {
     loadSavedState();
-    showScreen('hub');
+    
+    // Bind Initial Menu screen buttons
+    DOM.btnMenuConsonants.addEventListener('click', () => {
+        state.currentMode = 'consonants';
+        showScreen('hub');
+    });
+    DOM.btnMenuVowels.addEventListener('click', () => {
+        state.currentMode = 'vowels';
+        showScreen('hub');
+    });
+    
+    showScreen('menu');
 });
