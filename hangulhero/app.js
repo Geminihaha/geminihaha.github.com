@@ -315,7 +315,7 @@ const VOWEL_DATA = [
         letter: 'ㅕ',
         label: '여 배우기',
         word: '여우',
-        options: ['ㅕ', 'ㅑ', '요'],
+        options: ['ㅕ', 'ㅑ', 'ㅛ'],
         svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
             <polygon points="20,50 15,20 42,40" fill="#ff7043" stroke="#d84315" stroke-width="2"/>
             <polygon points="23,45 18,25 36,38" fill="#ffccbc"/>
@@ -343,10 +343,10 @@ const VOWEL_DATA = [
         </svg>`
     },
     {
-        letter: '요',
-        label: '요 배우기',
+        letter: 'ㅛ',
+        label: 'ㅛ 배우기',
         word: '요술',
-        options: ['ㅠ', '요', 'ㅑ'],
+        options: ['ㅠ', 'ㅛ', 'ㅑ'],
         svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
             <line x1="25" y1="75" x2="60" y2="40" stroke="#795548" stroke-width="6" stroke-linecap="round"/>
             <line x1="25" y1="75" x2="60" y2="40" stroke="#ffe082" stroke-width="2" stroke-linecap="round"/>
@@ -374,7 +374,7 @@ const VOWEL_DATA = [
         letter: 'ㅠ',
         label: '유 배우기',
         word: '유리컵',
-        options: ['요', 'ㅠ', 'ㅕ'],
+        options: ['ㅛ', 'ㅠ', 'ㅕ'],
         svg: `<svg viewBox="0 0 100 100" class="quiz-target-image">
             <path d="M30 25 L36 70 C37 75, 42 78, 48 78 L52 78 C58 78, 63 75, 64 70 L70 25 Z" fill="#e0f7fa" stroke="#00acc1" stroke-width="3" opacity="0.8"/>
             <path d="M33 45 L36 70 C37 73, 40 75, 45 75 L55 75 C60 75, 63 73, 64 70 L67 45 Z" fill="#ff8a80"/>
@@ -441,13 +441,17 @@ const BUNNY_SVG = `
 let state = {
     unlockedConsonantStage: 1,
     unlockedVowelStage: 1,
-    currentMode: 'menu', // 'menu', 'consonants', 'vowels'
+    currentMode: 'menu', // 'menu', 'consonants', 'vowels', 'combine'
     currentStageIdx: 0,
     jewels: 0,
     isDrawing: false,
     drawnPixelsCount: 0,
     canvasCleared: true,
-    canvasThresholdReached: false
+    canvasThresholdReached: false,
+    
+    // Letter Maker State
+    combineCho: null,
+    combineJung: null
 };
 
 // ==========================================================================
@@ -462,6 +466,7 @@ const DOM = {
     screenHub: document.getElementById('screen-hub'),
     screenLearn: document.getElementById('screen-learn'),
     screenQuiz: document.getElementById('screen-quiz'),
+    screenCombine: document.getElementById('screen-combine'),
     overlayReward: document.getElementById('overlay-reward'),
     overlayStickers: document.getElementById('overlay-stickers'),
     
@@ -473,6 +478,15 @@ const DOM = {
     // Menu Screen Buttons
     btnMenuConsonants: document.getElementById('btn-menu-consonants'),
     btnMenuVowels: document.getElementById('btn-menu-vowels'),
+    btnMenuCombine: document.getElementById('btn-menu-combine'),
+    
+    // Combine Screen Elements
+    combinedResultText: document.getElementById('combined-result-text'),
+    slotConsonant: document.getElementById('slot-consonant'),
+    slotVowel: document.getElementById('slot-vowel'),
+    btnClearCombine: document.getElementById('btn-clear-combine'),
+    poolConsonants: document.getElementById('pool-consonants'),
+    poolVowels: document.getElementById('pool-vowels'),
     
     // Hub Elements
     stagesLayer: document.getElementById('stages-layer'),
@@ -592,6 +606,7 @@ function showScreen(screenId) {
     DOM.screenHub.classList.remove('active');
     DOM.screenLearn.classList.remove('active');
     DOM.screenQuiz.classList.remove('active');
+    DOM.screenCombine.classList.remove('active');
     
     // Handle back button on top app bar and screen activation
     if (screenId === 'menu') {
@@ -616,6 +631,12 @@ function showScreen(screenId) {
         DOM.characterArea.classList.add('active');
         triggerMascot('cheer');
         setupQuizScreen();
+    } else if (screenId === 'combine') {
+        state.currentMode = 'combine';
+        DOM.screenCombine.classList.add('active');
+        DOM.btnBackToHub.style.display = 'flex';
+        DOM.characterArea.classList.remove('active');
+        setupCombineScreen();
     }
 }
 
@@ -1217,7 +1238,7 @@ document.head.appendChild(stickerStyles);
 DOM.btnBackToHub.addEventListener('click', () => {
     if (DOM.screenLearn.classList.contains('active') || DOM.screenQuiz.classList.contains('active')) {
         showScreen('hub');
-    } else if (DOM.screenHub.classList.contains('active')) {
+    } else if (DOM.screenHub.classList.contains('active') || DOM.screenCombine.classList.contains('active')) {
         showScreen('menu');
     }
 });
@@ -1237,6 +1258,215 @@ window.addEventListener('DOMContentLoaded', () => {
         state.currentMode = 'vowels';
         showScreen('hub');
     });
+    DOM.btnMenuCombine.addEventListener('click', () => {
+        state.currentMode = 'combine';
+        showScreen('combine');
+    });
     
     showScreen('menu');
+});
+
+// ==========================================================================
+// E. Letter Maker (Combine Board) Logic
+// ==========================================================================
+const CHO_MAP = { 'ㄱ':0, 'ㄴ':2, 'ㄷ':3, 'ㄹ':5, 'ㅁ':6, 'ㅂ':7, 'ㅅ':9, 'ㅇ':11, 'ㅈ':12, 'ㅊ':14, 'ㅋ':15, 'ㅌ':16, 'ㅍ':17, 'ㅎ':18 };
+const JUNG_MAP = { 'ㅏ':0, 'ㅑ':2, 'ㅓ':4, 'ㅕ':6, 'ㅗ':8, 'ㅛ':12, 'ㅜ':13, 'ㅠ':17, 'ㅡ':18, 'ㅣ':20 };
+
+function setupCombineScreen() {
+    // 1. Reset Board
+    clearCombineSlots();
+    
+    // 2. Render Consonant Pool
+    DOM.poolConsonants.innerHTML = '';
+    STAGE_DATA.forEach(stage => {
+        const card = document.createElement('div');
+        card.className = 'pool-card';
+        card.textContent = stage.letter;
+        card.setAttribute('data-letter', stage.letter);
+        card.setAttribute('data-type', 'consonant');
+        
+        // Interactive Bindings (Hybrid touch/mouse drag + quick click)
+        setupCombineDrag(card);
+        
+        DOM.poolConsonants.appendChild(card);
+    });
+    
+    // 3. Render Vowel Pool
+    DOM.poolVowels.innerHTML = '';
+    VOWEL_DATA.forEach(stage => {
+        const card = document.createElement('div');
+        card.className = 'pool-card';
+        card.textContent = stage.letter;
+        card.setAttribute('data-letter', stage.letter);
+        card.setAttribute('data-type', 'vowel');
+        
+        setupCombineDrag(card);
+        
+        DOM.poolVowels.appendChild(card);
+    });
+}
+
+function setupCombineDrag(el) {
+    let startX = 0, startY = 0;
+    let isDragging = false;
+    let clone = null;
+    let clickTimeout = null;
+    
+    const dragStart = (e) => {
+        // Quick click check fallback
+        isDragging = false;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX;
+        startY = clientY;
+        
+        // Set timeout to decide if it is a drag
+        clickTimeout = setTimeout(() => {
+            isDragging = true;
+            DOM.audioFeedback.pop();
+            
+            // Create drag clone element
+            clone = el.cloneNode(true);
+            clone.style.position = 'fixed';
+            clone.style.zIndex = '9999';
+            clone.style.opacity = '0.9';
+            clone.style.pointerEvents = 'none'; // pass-through
+            clone.style.left = `${clientX - 26}px`;
+            clone.style.top = `${clientY - 26}px`;
+            
+            document.body.appendChild(clone);
+            
+            window.addEventListener('mousemove', dragMove);
+            window.addEventListener('touchmove', dragMove, { passive: false });
+        }, 120); // 120ms holds is drag
+        
+        window.addEventListener('mouseup', dragEnd);
+        window.addEventListener('touchend', dragEnd);
+    };
+    
+    const dragMove = (e) => {
+        if (!isDragging || !clone) return;
+        e.preventDefault();
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        clone.style.left = `${clientX - 26}px`;
+        clone.style.top = `${clientY - 26}px`;
+        
+        // Highlight active slots on overlap
+        const type = el.getAttribute('data-type');
+        const targetSlot = type === 'consonant' ? DOM.slotConsonant : DOM.slotVowel;
+        
+        if (checkCloneOverlap(clone, targetSlot)) {
+            targetSlot.classList.add('drag-over');
+        } else {
+            targetSlot.classList.remove('drag-over');
+        }
+    };
+    
+    const dragEnd = (e) => {
+        clearTimeout(clickTimeout);
+        
+        // Clean event listeners
+        window.removeEventListener('mousemove', dragMove);
+        window.removeEventListener('touchmove', dragMove);
+        window.removeEventListener('mouseup', dragEnd);
+        window.removeEventListener('touchend', dragEnd);
+        
+        const type = el.getAttribute('data-type');
+        const letter = el.getAttribute('data-letter');
+        const targetSlot = type === 'consonant' ? DOM.slotConsonant : DOM.slotVowel;
+        
+        if (isDragging) {
+            // End drag process
+            isDragging = false;
+            targetSlot.classList.remove('drag-over');
+            
+            if (clone) {
+                if (checkCloneOverlap(clone, targetSlot)) {
+                    // Successful Drop
+                    fillCombineSlot(type, letter);
+                } else {
+                    DOM.audioFeedback.pop();
+                }
+                clone.remove();
+                clone = null;
+            }
+        } else {
+            // It was a quick Tap/Click: auto fill the slot
+            fillCombineSlot(type, letter);
+        }
+    };
+    
+    el.addEventListener('mousedown', dragStart);
+    el.addEventListener('touchstart', dragStart, { passive: false });
+}
+
+function checkCloneOverlap(clone, slot) {
+    const r1 = clone.getBoundingClientRect();
+    const r2 = slot.getBoundingClientRect();
+    
+    return !(r1.right < r2.left || 
+             r1.left > r2.right || 
+             r1.bottom < r2.top || 
+             r1.top > r2.bottom);
+}
+
+function fillCombineSlot(type, letter) {
+    DOM.audioFeedback.correct();
+    if (type === 'consonant') {
+        state.combineCho = letter;
+        DOM.slotConsonant.classList.add('filled');
+        DOM.slotConsonant.innerHTML = letter + `<span class="combine-slot-label">자음</span>`;
+    } else {
+        state.combineJung = letter;
+        DOM.slotVowel.classList.add('filled');
+        DOM.slotVowel.innerHTML = letter + `<span class="combine-slot-label">모음</span>`;
+    }
+    
+    updateCombinedResult();
+}
+
+function updateCombinedResult() {
+    if (state.combineCho && state.combineJung) {
+        const choIdx = CHO_MAP[state.combineCho];
+        const jungIdx = JUNG_MAP[state.combineJung];
+        
+        // Hangeul combination formula
+        const charCode = 0xAC00 + (choIdx * 21 * 28) + (jungIdx * 28);
+        const char = String.fromCharCode(charCode);
+        
+        DOM.combinedResultText.textContent = char;
+        DOM.combinedResultText.className = 'combined-char-text success';
+        
+        // Celebrative jingle / mascot cheering feedback
+        DOM.audioFeedback.cheer();
+        triggerFireworks();
+    } else {
+        DOM.combinedResultText.textContent = (state.combineCho || '') + (state.combineJung || '');
+        if (!DOM.combinedResultText.textContent) {
+            DOM.combinedResultText.textContent = '?';
+        }
+        DOM.combinedResultText.className = 'combined-char-text';
+    }
+}
+
+function clearCombineSlots() {
+    state.combineCho = null;
+    state.combineJung = null;
+    
+    DOM.slotConsonant.classList.remove('filled');
+    DOM.slotConsonant.innerHTML = `<span class="combine-slot-label">자음 넣는 곳</span>`;
+    
+    DOM.slotVowel.classList.remove('filled');
+    DOM.slotVowel.innerHTML = `<span class="combine-slot-label">모음 넣는 곳</span>`;
+    
+    DOM.combinedResultText.textContent = '?';
+    DOM.combinedResultText.className = 'combined-char-text';
+}
+
+DOM.btnClearCombine.addEventListener('click', () => {
+    DOM.audioFeedback.pop();
+    clearCombineSlots();
 });

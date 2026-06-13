@@ -59,6 +59,9 @@
                     <button class="btn-menu-select btn-vowels" id="btn-menu-vowels">
                         모음 모험 떠나기 🌈
                     </button>
+                    <button class="btn-menu-select btn-combine" id="btn-menu-combine">
+                        글자 만들기 놀이 🧩
+                    </button>
                 </div>
             </div>
         </main>
@@ -85,6 +88,48 @@
                 <button class="btn-action btn-hint" id="btn-open-stickers" style="max-width: 260px;">
                     📖 내 스티커 도감 보기
                 </button>
+            </div>
+        </main>
+
+        <!-- ===================================================================
+             A-2. LETTER MAKER SCREEN
+             =================================================================== -->
+        <main class="screen" id="screen-combine">
+            <div class="combine-container">
+                <!-- Word result panel -->
+                <div class="result-display-panel">
+                    <span class="combined-char-text" id="combined-result-text">?</span>
+                </div>
+                
+                <!-- Kombi Slots -->
+                <div class="combine-slots-area">
+                    <div class="combine-slot" id="slot-consonant">
+                        <span class="combine-slot-label">자음 넣는 곳</span>
+                    </div>
+                    <div class="combine-slot" id="slot-vowel">
+                        <span class="combine-slot-label">모음 넣는 곳</span>
+                    </div>
+                </div>
+
+                <button class="btn-clear-slots" id="btn-clear-combine" aria-label="글자 조합 초기화">
+                    다시 만들기 🔄
+                </button>
+
+                <!-- Consonants pool row -->
+                <div class="card-pool-container" style="margin-top: 20px;">
+                    <div class="pool-title">🧱 자음 카드 (드래그하거나 눌러보세요)</div>
+                    <div class="pool-scroll-row" id="pool-consonants">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Vowels pool row -->
+                <div class="card-pool-container">
+                    <div class="pool-title">🧱 모음 카드 (드래그하거나 눌러보세요)</div>
+                    <div class="pool-scroll-row" id="pool-vowels">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
             </div>
         </main>
 
