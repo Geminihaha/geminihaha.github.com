@@ -1,97 +1,194 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EaselJS 수도쿠</title>
+    <title>SUDOKU ZEN</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css">
-    <script src="../lib/easeljs-0.8.2.min.js"></script>
 </head>
-<body onload="init();">
-    <div class="container">
-        <header class="game-header">
-            <h1 class="mini-title">Sudoku</h1>
-            <div id="timerDisplay">00:00</div>
-            <div class="header-btns">
-                <button id="pauseBtn" class="small-btn" onclick="togglePause()">Pause</button>
-                <button class="small-btn" onclick="showRecords()">🏆기록</button>
+<body>
+    <div class="app-container">
+        <!-- 1. HOME SCREEN -->
+        <div id="home-screen" class="screen active">
+            <div class="screen-top-bar">
+                <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="테마 변경">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
             </div>
-        </header>
-        
-        <canvas id="gameCanvas" width="450" height="450"></canvas>
-        
-        <div class="controls">
-            <div class="main-controls-row">
-                <button class="new-game-btn" onclick="openNewGameModal()">New Game</button>
-                <label class="hint-label"><input type="checkbox" id="hintToggle" onchange="updateHints()"> Hint</label>
+            <header class="home-header">
+                <div class="logo-circle">
+                    <i class="fa-solid fa-yin-yang logo-zen"></i>
+                </div>
+                <h1 class="title">SUDOKU ZEN</h1>
+                <p class="subtitle">마음을 맑게 하는 순수 논리 퍼즐</p>
+            </header>
+
+            <!-- Best Records -->
+            <div class="best-records-card">
+                <h3>🏆 개인 최고 기록</h3>
+                <div class="records-grid">
+                    <div class="record-box">
+                        <span class="rec-label">초급</span>
+                        <span id="best-easy" class="rec-time">--:--</span>
+                    </div>
+                    <div class="record-box">
+                        <span class="rec-label">중급</span>
+                        <span id="best-medium" class="rec-time">--:--</span>
+                    </div>
+                    <div class="record-box">
+                        <span class="rec-label">고급</span>
+                        <span id="best-hard" class="rec-time">--:--</span>
+                    </div>
+                </div>
             </div>
-            
-            <div id="numberKeypad" class="keypad">
-                <!-- Buttons will be generated in JS -->
+
+            <!-- Start Controls -->
+            <div class="menu-buttons">
+                <button id="continue-btn" class="btn btn-secondary btn-large" onclick="continueGame()" disabled>
+                    <i class="fa-solid fa-play"></i> 이어서 하기
+                </button>
+                <div class="divider-text"><span>새 게임 시작</span></div>
+                <button class="btn btn-primary" onclick="startNewGame('easy')">초급 (Easy)</button>
+                <button class="btn btn-primary" onclick="startNewGame('medium')">중급 (Medium)</button>
+                <button class="btn btn-primary" onclick="startNewGame('hard')">고급 (Hard)</button>
+            </div>
+
+            <footer class="home-footer">
+                <button class="btn-text" onclick="openHelpModal()">
+                    <i class="fa-regular fa-circle-question"></i> 게임 방법
+                </button>
+            </footer>
+        </div>
+
+        <!-- 2. GAME SCREEN -->
+        <div id="game-screen" class="screen">
+            <header class="game-header">
+                <button class="icon-btn" onclick="exitToHome()" title="메인 화면으로">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+                <div class="game-meta">
+                    <span id="difficulty-badge" class="badge">초급</span>
+                </div>
+                <div id="timerDisplay" class="timer-badge">
+                    <i class="fa-regular fa-clock"></i> <span>00:00</span>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="테마 변경">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button id="pauseBtn" class="icon-btn" onclick="togglePause()" title="일시정지">
+                        <i class="fa-solid fa-pause"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Sudoku Board -->
+            <div class="board-container">
+                <div id="sudoku-board">
+                    <!-- 9x9 = 81 Cells will be dynamically generated by JS -->
+                </div>
+            </div>
+
+            <!-- Utilities / Control Bar -->
+            <div class="game-utils">
+                <button id="undo-btn" class="util-btn" onclick="triggerUndo()" title="실행 취소">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>실행 취소</span>
+                </button>
+                <button id="erase-btn" class="util-btn" onclick="triggerErase()" title="지우기">
+                    <i class="fa-solid fa-eraser"></i>
+                    <span>지우기</span>
+                </button>
+                <button id="pencil-btn" class="util-btn" onclick="togglePencilMode()" title="메모 모드">
+                    <i class="fa-solid fa-pencil"></i>
+                    <span>메모 Off</span>
+                </button>
+                <button id="hint-btn" class="util-btn" onclick="triggerHint()" title="힌트">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>힌트 (3)</span>
+                </button>
+            </div>
+
+            <!-- Keypad -->
+            <div class="keypad-container">
+                <div class="keypad">
+                    <button class="key-btn" onclick="pressNumber(1)">1</button>
+                    <button class="key-btn" onclick="pressNumber(2)">2</button>
+                    <button class="key-btn" onclick="pressNumber(3)">3</button>
+                    <button class="key-btn" onclick="pressNumber(4)">4</button>
+                    <button class="key-btn" onclick="pressNumber(5)">5</button>
+                    <button class="key-btn" onclick="pressNumber(6)">6</button>
+                    <button class="key-btn" onclick="pressNumber(7)">7</button>
+                    <button class="key-btn" onclick="pressNumber(8)">8</button>
+                    <button class="key-btn" onclick="pressNumber(9)">9</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- New Game Modal -->
-    <div id="newGameModal" class="modal-overlay" style="display:none;">
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content">
-            <h2>새 게임 설정</h2>
-            <div class="settings-group">
-                <label>크기: 
-                    <select id="sizeSelect">
-                        <option value="9">9x9</option>
-                        <option value="6">6x6</option>
-                    </select>
-                </label>
+            <div class="modal-header">
+                <h2>📖 게임 방법</h2>
+                <button class="close-icon-btn" onclick="closeHelpModal()">&times;</button>
             </div>
-            <div class="settings-group">
-                <label>난이도: 
-                    <select id="levelSelect">
-                        <option value="easy">초급</option>
-                        <option value="medium">중급</option>
-                        <option value="hard">고수</option>
-                    </select>
-                </label>
+            <div class="modal-body">
+                <p><strong>스도쿠 규칙:</strong></p>
+                <ul>
+                    <li>가로 9칸, 세로 9칸의 그리드에 1부터 9까지의 숫자를 채워 넣습니다.</li>
+                    <li>모든 <strong>행(Row)</strong>에 1~9가 중복 없이 한 번씩만 들어가야 합니다.</li>
+                    <li>모든 <strong>열(Column)</strong>에 1~9가 중복 없이 한 번씩만 들어가야 합니다.</li>
+                    <li>두꺼운 선으로 둘러싸인 <strong>3x3 블록</strong>에 1~9가 중복 없이 들어가야 합니다.</li>
+                </ul>
+                <p class="modal-tip">💡 <strong>꿀팁:</strong> 막힐 때는 '메모(Pencil)' 기능을 활용해 셀에 들어갈 수 있는 후보 숫자들을 얇게 표시할 수 있습니다.</p>
             </div>
-            <div class="settings-group">
-                <label>방식: 
-                    <select id="modeSelect" onchange="toggleModeUIInModal()">
-                        <option value="random">랜덤</option>
-                        <option value="select">번호선택</option>
-                    </select>
-                </label>
-                <input type="number" id="puzzleNum" min="1" max="300" value="1" style="display:none; width: 60px;">
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-block" onclick="closeHelpModal()">확인</button>
             </div>
-            <div class="modal-btns">
-                <button onclick="confirmNewGame()">시작</button>
-                <button class="cancel-btn" onclick="closeNewGameModal()">취소</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Alert Modal -->
-    <div id="customAlert" class="modal-overlay" style="display:none;">
-        <div class="modal-content">
-            <p id="alertMessage"></p>
-            <button onclick="closeAlert()">확인</button>
         </div>
     </div>
 
     <!-- Pause Modal -->
-    <div id="pauseModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content">
-            <h2>일시정지</h2>
-            <p>게임이 일시정지되었습니다.</p>
-            <button onclick="togglePause()">재개하기</button>
+    <div id="pause-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content pause-content">
+            <div class="pause-icon-wrapper">
+                <i class="fa-solid fa-yin-yang fa-spin" style="animation-duration: 5s;"></i>
+            </div>
+            <h2>명상 중 (일시정지)</h2>
+            <p>마음을 가다듬고 정돈하는 시간입니다.<br>준비가 되면 아래 버튼을 눌러 재개하세요.</p>
+            <button class="btn btn-primary btn-block" onclick="togglePause()"><i class="fa-solid fa-play"></i> 계속하기</button>
         </div>
     </div>
 
-    <!-- Records Modal -->
-    <div id="recordsModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content records-content">
-            <h2>최고 기록</h2>
-            <div id="recordsList"></div>
-            <button onclick="closeRecords()">닫기</button>
+    <!-- Clear Modal (Game Finished) -->
+    <div id="clear-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content clear-content">
+            <div class="clear-icon-wrapper">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <h2>🏆 정진 완료!</h2>
+            <p>마음의 지혜가 밝아졌습니다.<br>스도쿠 퍼즐을 성공적으로 해결했습니다.</p>
+            <div class="clear-stats">
+                <div class="stat-item">
+                    <span class="stat-lbl">소요 시간</span>
+                    <span id="clear-time" class="stat-val">00:00</span>
+                </div>
+                <div id="new-record-badge" class="new-record-tag" style="display: none;">
+                    🎉 최고 기록 달성!
+                </div>
+            </div>
+            <div class="modal-footer-btns">
+                <button class="btn btn-primary" onclick="restartFromClear()">다시 하기</button>
+                <button class="btn btn-secondary" onclick="exitToHomeFromClear()">메인으로</button>
+            </div>
         </div>
     </div>
 
