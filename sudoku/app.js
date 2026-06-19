@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.2.1";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -457,6 +457,11 @@ function pressNumber(num) {
     
     if (gameState.pencilMode) {
         // 메모 모드: 후보 숫자 토글
+        // 규칙상 기입할 수 없는(이미 행, 열, 박스에 확정된) 숫자는 메모 기입 차단
+        if (num !== 0 && !isSafe(r, c, num)) {
+            return;
+        }
+        
         saveActionToHistory();
         var cell = gameState.currentBoard[r][c];
         cell.value = 0; // 메모할 때는 기존 메인값 지움
