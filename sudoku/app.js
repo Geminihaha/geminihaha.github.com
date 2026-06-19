@@ -455,18 +455,28 @@ function pressNumber(num) {
     // 고정값 또는 이미 제공된 힌트 셀은 변경 불가
     if (gameState.initialBoard[r][c] !== 0 || gameState.currentBoard[r][c].isHint) return;
     
-    saveActionToHistory();
-    
-    var cell = gameState.currentBoard[r][c];
-    
     if (gameState.pencilMode) {
         // 메모 모드: 후보 숫자 토글
+        saveActionToHistory();
+        var cell = gameState.currentBoard[r][c];
         cell.value = 0; // 메모할 때는 기존 메인값 지움
         cell.pencilMarks[num - 1] = !cell.pencilMarks[num - 1];
     } else {
         // 일반 모드: 값 입력
+        // 0이 아닌 숫자를 넣을 때 중복되는 숫자라면 입력을 차단 (오류 예방)
+        if (num !== 0 && !isSafe(r, c, num)) {
+            return;
+        }
+        
+        saveActionToHistory();
+        var cell = gameState.currentBoard[r][c];
         cell.value = num;
         cell.pencilMarks.fill(false); // 숫자 입력 시 메모는 지움
+        
+        // 동일 행, 열, 3x3 박스의 메모에서 입력한 숫자 자동 소거
+        if (num !== 0) {
+            removePencilMarksInScope(r, c, num);
+        }
     }
     
     updateErrors();
@@ -557,9 +567,13 @@ function triggerHint() {
     saveActionToHistory();
     
     var cell = gameState.currentBoard[r][c];
-    cell.value = gameState.solutionBoard[r][c];
+    var ans = gameState.solutionBoard[r][c];
+    cell.value = ans;
     cell.isHint = true;
     cell.pencilMarks.fill(false);
+    
+    // 힌트가 들어갔으므로 동일 행, 열, 3x3 박스의 메모에서 이 정답 소거
+    removePencilMarksInScope(r, c, ans);
     
     gameState.hintsLeft--;
     document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (" + gameState.hintsLeft + ")";
@@ -765,3 +779,66 @@ document.onkeydown = function(e) {
         triggerUndo();
     }
 };
+
+// ==========================================
+// 10. 스도쿠 입력 검증 및 연필 메모 자동 소거 유틸리티
+// ==========================================
+
+function isSafe(row, col, num) {
+    // 1. 행 검사 (가로)
+    for (var i = 0; i < 9; i++) {
+        if (i !== col && gameState.currentBoard[row][i].value === num) {
+            return false;
+        }
+    }
+    // 2. 열 검사 (세로)
+    for (var i = 0; i < 9; i++) {
+        if (i !== row && gameState.currentBoard[i][col].value === num) {
+            return false;
+        }
+    }
+    // 3. 3x3 박스 검사 (구역)
+    var startRow = Math.floor(row / 3) * 3;
+    var startCol = Math.floor(col / 3) * 3;
+    for (var r = 0; r < 3; r++) {
+        for (var c = 0; c < 3; c++) {
+            var currR = startRow + r;
+            var currC = startCol + c;
+            if ((currR !== row || currC !== col) && gameState.currentBoard[currR][currC].value === num) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function removePencilMarksInScope(row, col, num) {
+    var idx = num - 1;
+    
+    // 1. 동일 행(Row) 메모 소거
+    for (var c = 0; c < 9; c++) {
+        if (c !== col) {
+            gameState.currentBoard[row][c].pencilMarks[idx] = false;
+        }
+    }
+    
+    // 2. 동일 열(Col) 메모 소거
+    for (var r = 0; r < 9; r++) {
+        if (r !== row) {
+            gameState.currentBoard[r][col].pencilMarks[idx] = false;
+        }
+    }
+    
+    // 3. 동일 3x3 박스(Box) 메모 소거
+    var startRow = Math.floor(row / 3) * 3;
+    var startCol = Math.floor(col / 3) * 3;
+    for (var r = 0; r < 3; r++) {
+        for (var c = 0; c < 3; c++) {
+            var currR = startRow + r;
+            var currC = startCol + c;
+            if (currR !== row || currC !== col) {
+                gameState.currentBoard[currR][currC].pencilMarks[idx] = false;
+            }
+        }
+    }
+}
