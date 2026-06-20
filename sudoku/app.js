@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.4";
+const APP_VERSION = "1.2.5";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -946,14 +946,14 @@ function playSFX(type) {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(523.25, now); // C5
             osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.08); // G5
-            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.setValueAtTime(0.35, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
             osc.start(now);
             osc.stop(now + 0.08);
         } else if (type === 'pencil') {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(880, now); // A5
-            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.setValueAtTime(0.25, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
             osc.start(now);
             osc.stop(now + 0.05);
@@ -961,7 +961,7 @@ function playSFX(type) {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.linearRampToValueAtTime(110, now + 0.22);
-            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.setValueAtTime(0.40, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
             
             var filter = audioCtx.createBiquadFilter();
