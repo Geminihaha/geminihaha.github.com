@@ -401,6 +401,12 @@ body {
     background-color: var(--cell-same-number);
 }
 
+.sudoku-cell.same-number-memo {
+    background-color: var(--cell-same-number);
+    border: 2px dashed var(--accent) !important;
+    box-sizing: border-box;
+}
+
 .sudoku-cell.error {
     background-color: var(--error-bg) !important;
 }
@@ -551,6 +557,16 @@ body {
 
 .key-btn:active {
     transform: scale(0.95);
+}
+
+.key-btn:disabled, .key-btn.completed {
+    opacity: 0.25;
+    cursor: not-allowed;
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+    pointer-events: none;
+    transform: none !important;
 }
 
 /* Modals */

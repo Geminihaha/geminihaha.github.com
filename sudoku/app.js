@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.1";
+const APP_VERSION = "1.2.2";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -334,9 +334,13 @@ function renderBoard() {
                 cellEl.classList.add("highlighted");
             }
             
-            // 3.3 동일 숫자 강조
-            if (selectedVal !== 0 && stateCell.value === selectedVal && (sel.r !== r || sel.c !== c)) {
-                cellEl.classList.add("same-number");
+            // 3.3 동일 숫자 강조 (메모 포함)
+            if (selectedVal !== 0) {
+                if (stateCell.value === selectedVal && (sel.r !== r || sel.c !== c)) {
+                    cellEl.classList.add("same-number");
+                } else if (stateCell.value === 0 && stateCell.pencilMarks[selectedVal - 1]) {
+                    cellEl.classList.add("same-number-memo");
+                }
             }
         }
         
@@ -345,6 +349,9 @@ function renderBoard() {
             cellEl.classList.add("error");
         }
     });
+    
+    // 키패드 활성/비활성 갱신
+    updateKeypad();
 }
 
 // ==========================================
@@ -846,4 +853,32 @@ function removePencilMarksInScope(row, col, num) {
             }
         }
     }
+}
+
+function updateKeypad() {
+    // 1~9 숫자별 보드 위 존재 개수 집계
+    var counts = new Array(10).fill(0);
+    for (var r = 0; r < 9; r++) {
+        for (var c = 0; c < 9; c++) {
+            var val = gameState.currentBoard[r][c].value;
+            if (val >= 1 && val <= 9) {
+                counts[val]++;
+            }
+        }
+    }
+    
+    // 9개 다 쓰인 숫자는 비활성화(disabled) 및 클래스 토글
+    var keyBtns = document.querySelectorAll(".keypad .key-btn");
+    keyBtns.forEach(function(btn, idx) {
+        var num = idx + 1;
+        var isCompleted = (counts[num] >= 9);
+        
+        if (isCompleted) {
+            btn.setAttribute("disabled", "true");
+            btn.classList.add("completed");
+        } else {
+            btn.removeAttribute("disabled");
+            btn.classList.remove("completed");
+        }
+    });
 }
