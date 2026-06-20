@@ -339,6 +339,13 @@ body {
     border: 1px solid rgba(79, 70, 229, 0.2);
 }
 
+.badge.danger-badge {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    margin-left: 6px;
+}
+
 .timer-badge {
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;

@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.2";
+const APP_VERSION = "1.2.3";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -13,6 +13,8 @@ var gameState = {
     seconds: 0,         // 소요 시간 (초)
     isPaused: false,    // 일시정지 여부
     selectedCell: null, // 현재 선택된 셀 좌표 { r: row, c: col }
+    selectedNumber: 0,  // 현재 강조 선택된 숫자 (키패드 또는 셀 값 기반)
+    warnings: 0,        // 오답 기입 경고 횟수
     pencilMode: false   // 메모 모드 활성화 여부
 };
 
@@ -322,9 +324,9 @@ function renderBoard() {
         
         // 3. 하이라이팅 처리
         var sel = gameState.selectedCell;
+        var activeNum = 0;
+        
         if (sel) {
-            var selectedVal = gameState.currentBoard[sel.r][sel.c].value;
-            
             // 3.1 선택 상태
             if (sel.r === r && sel.c === c) {
                 cellEl.classList.add("selected");
@@ -333,14 +335,21 @@ function renderBoard() {
             else if (r === sel.r || c === sel.c || (Math.floor(r/3) === Math.floor(sel.r/3) && Math.floor(c/3) === Math.floor(sel.c/3))) {
                 cellEl.classList.add("highlighted");
             }
-            
-            // 3.3 동일 숫자 강조 (메모 포함)
-            if (selectedVal !== 0) {
-                if (stateCell.value === selectedVal && (sel.r !== r || sel.c !== c)) {
-                    cellEl.classList.add("same-number");
-                } else if (stateCell.value === 0 && stateCell.pencilMarks[selectedVal - 1]) {
-                    cellEl.classList.add("same-number-memo");
-                }
+            activeNum = gameState.currentBoard[sel.r][sel.c].value;
+        }
+        
+        // 선택된 셀이 없거나 빈 셀인 경우, 전역 활성화된 selectedNumber를 기준으로 하이라이팅 설정
+        if (activeNum === 0 && gameState.selectedNumber !== 0) {
+            activeNum = gameState.selectedNumber;
+        }
+        
+        // 3.3 동일 숫자 강조 (메모 포함)
+        if (activeNum !== 0) {
+            var isSelectedSelf = (sel && sel.r === r && sel.c === c);
+            if (stateCell.value === activeNum && !isSelectedSelf) {
+                cellEl.classList.add("same-number");
+            } else if (stateCell.value === 0 && stateCell.pencilMarks[activeNum - 1]) {
+                cellEl.classList.add("same-number-memo");
             }
         }
         
@@ -389,10 +398,13 @@ function startNewGame(difficulty) {
     gameState.history = [];
     gameState.hintsLeft = 3;
     gameState.seconds = 0;
+    gameState.warnings = 0;
+    gameState.selectedNumber = 0;
     gameState.isPaused = false;
     gameState.selectedCell = null;
     gameState.pencilMode = false;
     
+    updateWarningUI();
     document.getElementById("pencil-btn").classList.remove("active");
     document.getElementById("pencil-btn").querySelector("span").innerText = "메모 Off";
     document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (3)";
@@ -417,10 +429,13 @@ function continueGame() {
     gameState.history = data.history || [];
     gameState.hintsLeft = (data.hintsLeft !== undefined) ? data.hintsLeft : 3;
     gameState.seconds = data.seconds || 0;
+    gameState.warnings = data.warnings || 0;
+    gameState.selectedNumber = data.selectedNumber || 0;
     gameState.isPaused = false;
     gameState.selectedCell = null;
     gameState.pencilMode = false;
     
+    updateWarningUI();
     document.getElementById("pencil-btn").classList.remove("active");
     document.getElementById("pencil-btn").querySelector("span").innerText = "메모 Off";
     document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (" + gameState.hintsLeft + ")";
@@ -448,13 +463,34 @@ function exitToHome() {
 
 function selectCell(row, col) {
     if (gameState.isPaused) return;
-    gameState.selectedCell = { r: row, c: col };
+    
+    var cell = gameState.currentBoard[row][col];
+    var isInitial = (gameState.initialBoard[row][col] !== 0);
+    var isHint = cell.isHint;
+    
+    if (isInitial || isHint) {
+        gameState.selectedCell = null;
+        if (cell.value !== 0) {
+            gameState.selectedNumber = cell.value;
+        }
+    } else {
+        gameState.selectedCell = { r: row, c: col };
+        if (cell.value !== 0) {
+            gameState.selectedNumber = cell.value;
+        }
+    }
     renderBoard();
 }
 
 // 숫자 입력 코어 처리 (키패드 & 키보드 수신)
 function pressNumber(num) {
-    if (gameState.isPaused || !gameState.selectedCell) return;
+    if (gameState.isPaused) return;
+    
+    if (!gameState.selectedCell) {
+        gameState.selectedNumber = num;
+        renderBoard();
+        return;
+    }
     
     var r = gameState.selectedCell.r;
     var c = gameState.selectedCell.c;
@@ -473,21 +509,29 @@ function pressNumber(num) {
         var cell = gameState.currentBoard[r][c];
         cell.value = 0; // 메모할 때는 기존 메인값 지움
         cell.pencilMarks[num - 1] = !cell.pencilMarks[num - 1];
+        
+        gameState.selectedNumber = num;
     } else {
         // 일반 모드: 값 입력
-        // 0이 아닌 숫자를 넣을 때 중복되는 숫자라면 입력을 차단 (오류 예방)
-        if (num !== 0 && !isSafe(r, c, num)) {
-            return;
-        }
-        
-        saveActionToHistory();
         var cell = gameState.currentBoard[r][c];
-        cell.value = num;
-        cell.pencilMarks.fill(false); // 숫자 입력 시 메모는 지움
         
-        // 동일 행, 열, 3x3 박스의 메모에서 입력한 숫자 자동 소거
-        if (num !== 0) {
-            removePencilMarksInScope(r, c, num);
+        if (cell.value !== num) {
+            saveActionToHistory();
+            cell.value = num;
+            cell.pencilMarks.fill(false); // 숫자 입력 시 메모는 지움
+            
+            if (num !== 0) {
+                var correctAnswer = gameState.solutionBoard[r][c];
+                if (num !== correctAnswer) {
+                    gameState.warnings++;
+                    updateWarningUI();
+                }
+                
+                // 동일 행, 열, 3x3 박스의 메모에서 입력한 숫자 자동 소거
+                removePencilMarksInScope(r, c, num);
+            }
+            
+            gameState.selectedNumber = num;
         }
     }
     
@@ -583,6 +627,7 @@ function triggerHint() {
     cell.value = ans;
     cell.isHint = true;
     cell.pencilMarks.fill(false);
+    gameState.selectedNumber = ans;
     
     // 힌트가 들어갔으므로 동일 행, 열, 3x3 박스의 메모에서 이 정답 소거
     removePencilMarksInScope(r, c, ans);
@@ -598,45 +643,15 @@ function triggerHint() {
     checkWinCondition();
 }
 
-// 실시간 에러(중복) 마킹
+// 실시간 에러(정답 대조) 마킹
 function updateErrors() {
     for (var r = 0; r < 9; r++) {
         for (var c = 0; c < 9; c++) {
-            gameState.currentBoard[r][c].isError = false;
-        }
-    }
-    
-    for (var r = 0; r < 9; r++) {
-        for (var c = 0; c < 9; c++) {
             var cell = gameState.currentBoard[r][c];
-            if (cell.value !== 0) {
-                // Row 중복 검사
-                for (var i = 0; i < 9; i++) {
-                    if (i !== c && gameState.currentBoard[r][i].value === cell.value) {
-                        cell.isError = true;
-                        gameState.currentBoard[r][i].isError = true;
-                    }
-                }
-                // Column 중복 검사
-                for (var i = 0; i < 9; i++) {
-                    if (i !== r && gameState.currentBoard[i][c].value === cell.value) {
-                        cell.isError = true;
-                        gameState.currentBoard[i][c].isError = true;
-                    }
-                }
-                // Box 중복 검사
-                var startRow = Math.floor(r / 3) * 3;
-                var startCol = Math.floor(c / 3) * 3;
-                for (var i = 0; i < 3; i++) {
-                    for (var j = 0; j < 3; j++) {
-                        var currR = startRow + i;
-                        var currC = startCol + j;
-                        if ((currR !== r || currC !== c) && gameState.currentBoard[currR][currC].value === cell.value) {
-                            cell.isError = true;
-                            gameState.currentBoard[currR][currC].isError = true;
-                        }
-                    }
-                }
+            if (cell.value !== 0 && cell.value !== gameState.solutionBoard[r][c]) {
+                cell.isError = true;
+            } else {
+                cell.isError = false;
             }
         }
     }
@@ -753,9 +768,23 @@ function saveGame() {
         currentBoard: gameState.currentBoard,
         history: gameState.history,
         hintsLeft: gameState.hintsLeft,
-        seconds: gameState.seconds
+        seconds: gameState.seconds,
+        warnings: gameState.warnings,
+        selectedNumber: gameState.selectedNumber
     };
     localStorage.setItem("SUDOKU_SAVE_GAME", JSON.stringify(dataToSave));
+}
+
+function updateWarningUI() {
+    var badge = document.getElementById("warning-badge");
+    if (badge) {
+        if (gameState.warnings > 0) {
+            badge.style.display = "inline-block";
+            badge.innerText = "경고 " + gameState.warnings;
+        } else {
+            badge.style.display = "none";
+        }
+    }
 }
 
 // ==========================================
