@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.3";
+const APP_VERSION = "1.2.4";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -511,6 +511,7 @@ function pressNumber(num) {
         cell.pencilMarks[num - 1] = !cell.pencilMarks[num - 1];
         
         gameState.selectedNumber = num;
+        playSFX('pencil');
     } else {
         // 일반 모드: 값 입력
         var cell = gameState.currentBoard[r][c];
@@ -525,10 +526,16 @@ function pressNumber(num) {
                 if (num !== correctAnswer) {
                     gameState.warnings++;
                     updateWarningUI();
+                    playSFX('error');
+                    triggerVibration('error');
+                } else {
+                    playSFX('input');
                 }
                 
                 // 동일 행, 열, 3x3 박스의 메모에서 입력한 숫자 자동 소거
                 removePencilMarksInScope(r, c, num);
+            } else {
+                playSFX('input');
             }
             
             gameState.selectedNumber = num;
@@ -583,6 +590,8 @@ function triggerErase() {
     var cell = gameState.currentBoard[r][c];
     cell.value = 0;
     cell.pencilMarks.fill(false);
+    
+    playSFX('input');
     
     updateErrors();
     renderBoard();
@@ -910,4 +919,71 @@ function updateKeypad() {
             btn.classList.remove("completed");
         }
     });
+}
+
+// ==========================================
+// 11. 사운드(Web Audio API) 및 햅틱 진동 효과 유틸리티
+// ==========================================
+var audioCtx = null;
+
+function playSFX(type) {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        var now = audioCtx.currentTime;
+        
+        if (type === 'input') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now); // C5
+            osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.08); // G5
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+            osc.start(now);
+            osc.stop(now + 0.08);
+        } else if (type === 'pencil') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(880, now); // A5
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        } else if (type === 'error') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(110, now + 0.22);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+            
+            var filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 550;
+            
+            osc.disconnect(gain);
+            osc.connect(filter);
+            filter.connect(gain);
+            
+            osc.start(now);
+            osc.stop(now + 0.25);
+        }
+    } catch (e) {
+        console.warn("Web Audio API is not supported or blocked: ", e);
+    }
+}
+
+function triggerVibration(type) {
+    if (navigator.vibrate) {
+        if (type === 'error') {
+            navigator.vibrate([100, 50, 100]); // 짧게 두 번 진동
+        }
+    }
 }
