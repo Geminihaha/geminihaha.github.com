@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.5";
+const APP_VERSION = "1.2.6";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -28,6 +28,11 @@ function init() {
     loadBestRecords();
     checkSavedGame();
     generateHTMLBoard();
+    
+    // 히스토리 초기 상태 설정
+    if (!window.location.hash || window.location.hash !== '#home') {
+        history.replaceState({ screen: 'home' }, '', '#home');
+    }
 }
 
 window.onload = init;
@@ -411,6 +416,7 @@ function startNewGame(difficulty) {
     document.getElementById("difficulty-badge").innerText = 
         difficulty === 'easy' ? '초급' : (difficulty === 'medium' ? '중급' : '고급');
     
+    history.pushState({ screen: 'game' }, '', '#game');
     switchScreen("game-screen");
     renderBoard();
     startTimer();
@@ -442,6 +448,7 @@ function continueGame() {
     document.getElementById("difficulty-badge").innerText = 
         gameState.difficulty === 'easy' ? '초급' : (gameState.difficulty === 'medium' ? '중급' : '고급');
     
+    history.pushState({ screen: 'game' }, '', '#game');
     switchScreen("game-screen");
     renderBoard();
     startTimer();
@@ -454,6 +461,14 @@ function switchScreen(screenId) {
 }
 
 function exitToHome() {
+    if (window.location.hash === '#game') {
+        history.back();
+    } else {
+        exitToHomeNoPush();
+    }
+}
+
+function exitToHomeNoPush() {
     stopTimer();
     saveGame();
     checkSavedGame();
@@ -987,3 +1002,14 @@ function triggerVibration(type) {
         }
     }
 }
+
+window.addEventListener('popstate', function(event) {
+    var state = event.state;
+    var activeScreen = document.querySelector(".screen.active");
+    
+    if (activeScreen && activeScreen.id === "game-screen") {
+        if (!state || state.screen === 'home') {
+            exitToHomeNoPush();
+        }
+    }
+});
