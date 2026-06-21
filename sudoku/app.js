@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.11";
+const APP_VERSION = "1.2.12";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
