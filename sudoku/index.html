@@ -11,7 +11,7 @@
     <!-- FontAwesome Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css?v=1.2.12">
+    <link rel="stylesheet" href="style.css?v=1.2.13">
     <!-- PWA 및 iOS 홈 화면 아이콘 설정 -->
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -104,19 +104,19 @@
 
             <!-- Utilities / Control Bar -->
             <div class="game-utils">
-                <button id="undo-btn" class="util-btn" onclick="triggerUndo()" title="실행 취소">
+                <button id="undo-btn" class="util-btn" onpointerdown="triggerUndo()" title="실행 취소">
                     <i class="fa-solid fa-rotate-left"></i>
                     <span>실행 취소</span>
                 </button>
-                <button id="erase-btn" class="util-btn" onclick="triggerErase()" title="지우기">
+                <button id="erase-btn" class="util-btn" onpointerdown="triggerErase()" title="지우기">
                     <i class="fa-solid fa-eraser"></i>
                     <span>지우기</span>
                 </button>
-                <button id="pencil-btn" class="util-btn" onclick="togglePencilMode()" title="메모 모드">
+                <button id="pencil-btn" class="util-btn" onpointerdown="togglePencilMode()" title="메모 모드">
                     <i class="fa-solid fa-pencil"></i>
                     <span>메모 Off</span>
                 </button>
-                <button id="hint-btn" class="util-btn" onclick="triggerHint()" title="힌트">
+                <button id="hint-btn" class="util-btn" onpointerdown="triggerHint()" title="힌트">
                     <i class="fa-solid fa-lightbulb"></i>
                     <span>힌트 (3)</span>
                 </button>
@@ -125,15 +125,15 @@
             <!-- Keypad -->
             <div class="keypad-container">
                 <div class="keypad">
-                    <button class="key-btn" onclick="pressNumber(1)">1</button>
-                    <button class="key-btn" onclick="pressNumber(2)">2</button>
-                    <button class="key-btn" onclick="pressNumber(3)">3</button>
-                    <button class="key-btn" onclick="pressNumber(4)">4</button>
-                    <button class="key-btn" onclick="pressNumber(5)">5</button>
-                    <button class="key-btn" onclick="pressNumber(6)">6</button>
-                    <button class="key-btn" onclick="pressNumber(7)">7</button>
-                    <button class="key-btn" onclick="pressNumber(8)">8</button>
-                    <button class="key-btn" onclick="pressNumber(9)">9</button>
+                    <button class="key-btn" onpointerdown="pressNumber(1)">1</button>
+                    <button class="key-btn" onpointerdown="pressNumber(2)">2</button>
+                    <button class="key-btn" onpointerdown="pressNumber(3)">3</button>
+                    <button class="key-btn" onpointerdown="pressNumber(4)">4</button>
+                    <button class="key-btn" onpointerdown="pressNumber(5)">5</button>
+                    <button class="key-btn" onpointerdown="pressNumber(6)">6</button>
+                    <button class="key-btn" onpointerdown="pressNumber(7)">7</button>
+                    <button class="key-btn" onpointerdown="pressNumber(8)">8</button>
+                    <button class="key-btn" onpointerdown="pressNumber(9)">9</button>
                 </div>
             </div>
         </div>
@@ -198,6 +198,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.2.12"></script>
+    <script src="app.js?v=1.2.13"></script>
 </body>
 </html>

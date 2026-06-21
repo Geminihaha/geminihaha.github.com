@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.12";
+const APP_VERSION = "1.2.13";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -267,9 +267,12 @@ function generateHTMLBoard() {
             if (r === 2 || r === 5) cell.classList.add("border-bottom-thick");
             if (c === 2 || c === 5) cell.classList.add("border-right-thick");
             
-            // 클릭 리스너 연결
-            cell.onclick = (function(row, col) {
-                return function() { selectCell(row, col); };
+            // 포인터 이벤트(즉시 입력) 리스너 연결
+            cell.onpointerdown = (function(row, col) {
+                return function(e) {
+                    e.preventDefault(); // 더블탭 줌 등 브라우저 지연 조작 제어 방지
+                    selectCell(row, col);
+                };
             })(r, c);
             
             boardContainer.appendChild(cell);
@@ -278,7 +281,8 @@ function generateHTMLBoard() {
 }
 
 // 보드 상태 그리기 (gameState -> DOM)
-function renderBoard() {
+// 보드 상태 그리기 (gameState -> DOM) - 실제 드로잉 로직
+function _renderBoard() {
     var cells = document.querySelectorAll(".sudoku-cell");
     
     cells.forEach(function(cellEl) {
@@ -366,6 +370,17 @@ function renderBoard() {
     
     // 키패드 활성/비활성 갱신
     updateKeypad();
+}
+
+// 렌더 프레임 디바운스 래퍼 (연타 시 렌더링 스레드 차단으로 인한 유실 전면 해결)
+var renderPending = false;
+function renderBoard() {
+    if (renderPending) return;
+    renderPending = true;
+    requestAnimationFrame(function() {
+        _renderBoard();
+        renderPending = false;
+    });
 }
 
 // ==========================================
