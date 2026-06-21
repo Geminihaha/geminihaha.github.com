@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.14";
+const APP_VERSION = "1.3.0";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -32,6 +32,19 @@ function init() {
     // 히스토리 초기 상태 설정
     if (!window.location.hash || window.location.hash !== '#home') {
         history.replaceState({ screen: 'home' }, '', '#home');
+    }
+    
+    // 브라우저 영구 저장소 보존 요청 (PWA 삭제나 브라우저 자동 캐시 클리어 방어)
+    if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().then(function(granted) {
+            if (granted) {
+                console.log("Sudoku Zen: Persistent storage granted.");
+            } else {
+                console.log("Sudoku Zen: Persistent storage not granted.");
+            }
+        }).catch(function(err) {
+            console.warn("Persistent storage request failed: ", err);
+        });
     }
 }
 
@@ -1157,3 +1170,82 @@ function handlePWARecovery() {
 }
 document.addEventListener('visibilitychange', handlePWARecovery);
 window.addEventListener('focus', handlePWARecovery);
+
+// ==========================================
+// 12. 백업 및 복구 매니저 (JSON 백업/가져오기)
+// ==========================================
+
+function openBackupModal() {
+    document.getElementById("backup-modal").style.display = "flex";
+}
+
+function closeBackupModal() {
+    document.getElementById("backup-modal").style.display = "none";
+}
+
+function exportBackup() {
+    try {
+        var backupData = {
+            version: APP_VERSION,
+            timestamp: new Date().toISOString(),
+            records: localStorage.getItem("SUDOKU_BEST_RECORDS"),
+            saveGame: localStorage.getItem("SUDOKU_SAVE_GAME"),
+            theme: localStorage.getItem("sudoku_theme")
+        };
+        
+        var jsonStr = JSON.stringify(backupData, null, 2);
+        var blob = new Blob([jsonStr], { type: "application/json" });
+        var url = URL.createObjectURL(blob);
+        
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "sudoku_zen_backup_" + new Date().toISOString().slice(0,10) + ".json";
+        document.body.appendChild(a);
+        a.click();
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        playSFX('input');
+        alert("백업 파일이 성공적으로 다운로드되었습니다.");
+    } catch (e) {
+        alert("백업 파일 내보내기 중 에러가 발생했습니다: " + e.message);
+    }
+}
+
+function importBackup(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var data = JSON.parse(e.target.result);
+            
+            if (data.records === undefined || data.theme === undefined) {
+                throw new Error("올바른 백업 파일 형식이 아닙니다.");
+            }
+            
+            if (data.records) {
+                localStorage.setItem("SUDOKU_BEST_RECORDS", data.records);
+            }
+            if (data.saveGame) {
+                localStorage.setItem("SUDOKU_SAVE_GAME", data.saveGame);
+            } else {
+                localStorage.removeItem("SUDOKU_SAVE_GAME");
+            }
+            if (data.theme) {
+                localStorage.setItem("sudoku_theme", data.theme);
+            }
+            
+            playSFX('input');
+            alert("성공적으로 복구되었습니다! 기록 갱신을 위해 페이지를 새로고침합니다.");
+            location.reload();
+        } catch (err) {
+            playSFX('error');
+            alert("기록 복구 실패: " + err.message);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+}
