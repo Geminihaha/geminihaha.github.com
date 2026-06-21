@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -1249,3 +1249,10 @@ function importBackup(event) {
     reader.readAsText(file);
     event.target.value = "";
 }
+
+// 두 손가락 이상 터치 시 브라우저 핀치 줌(확대/축소) 제스처 강제 차단 (iOS/PWA 대응)
+document.addEventListener('touchmove', function(event) {
+    if (event.touches.length > 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
