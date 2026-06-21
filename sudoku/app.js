@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.10";
+const APP_VERSION = "1.2.11";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -944,6 +944,10 @@ var audioCtx = null;
 
 function playSFX(type) {
     try {
+        if (audioCtx && (audioCtx.state === 'closed' || (audioCtx.state === 'suspended' && !audioCtx.resume))) {
+            audioCtx = null;
+        }
+        
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
@@ -953,6 +957,7 @@ function playSFX(type) {
                 runOscillator(type);
             }).catch(function(e) {
                 console.warn("Failed to resume AudioContext: ", e);
+                resetAudioContext();
             });
         } else {
             runOscillator(type);
@@ -962,15 +967,27 @@ function playSFX(type) {
     }
 }
 
+function resetAudioContext() {
+    try {
+        if (audioCtx) {
+            audioCtx.close();
+        }
+    } catch (e) {}
+    audioCtx = null;
+}
+
 function runOscillator(type) {
     if (!audioCtx || audioCtx.state === 'closed') return;
     
     var osc = audioCtx.createOscillator();
     var gain = audioCtx.createGain();
+    var filter = null;
+    
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     
     var now = audioCtx.currentTime;
+    var duration = 0.12;
     
     if (type === 'input') {
         osc.type = 'sine';
@@ -978,15 +995,13 @@ function runOscillator(type) {
         osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.08); // G5
         gain.gain.setValueAtTime(0.35, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-        osc.start(now);
-        osc.stop(now + 0.08);
+        duration = 0.08;
     } else if (type === 'pencil') {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(880, now); // A5
         gain.gain.setValueAtTime(0.25, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
+        duration = 0.05;
     } else if (type === 'error') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(150, now);
@@ -994,17 +1009,28 @@ function runOscillator(type) {
         gain.gain.setValueAtTime(0.40, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
         
-        var filter = audioCtx.createBiquadFilter();
+        filter = audioCtx.createBiquadFilter();
         filter.type = 'lowpass';
         filter.frequency.value = 550;
         
         osc.disconnect(gain);
         osc.connect(filter);
         filter.connect(gain);
-        
-        osc.start(now);
-        osc.stop(now + 0.25);
+        duration = 0.25;
     }
+    
+    osc.start(now);
+    osc.stop(now + duration);
+    
+    osc.onended = function() {
+        try {
+            osc.disconnect();
+            gain.disconnect();
+            if (filter) {
+                filter.disconnect();
+            }
+        } catch (err) {}
+    };
 }
 
 function triggerVibration(type) {
@@ -1097,3 +1123,17 @@ function highlightConflict(row, col, num) {
         });
     }, 800);
 }
+
+// iOS PWA 백그라운드 전환 복귀 대응 오디오 복구 리스너
+function handlePWARecovery() {
+    if (document.visibilityState === 'visible' && audioCtx) {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(function(e) {
+                console.warn("Failed to resume audio on visibilitychange: ", e);
+                resetAudioContext();
+            });
+        }
+    }
+}
+document.addEventListener('visibilitychange', handlePWARecovery);
+window.addEventListener('focus', handlePWARecovery);
