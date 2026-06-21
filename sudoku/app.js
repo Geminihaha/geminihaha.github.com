@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.13";
+const APP_VERSION = "1.2.14";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -497,8 +497,9 @@ function selectCell(row, col) {
     var cell = gameState.currentBoard[row][col];
     var isInitial = (gameState.initialBoard[row][col] !== 0);
     var isHint = cell.isHint;
+    var isCorrect = (cell.value !== 0 && cell.value === gameState.solutionBoard[row][col]);
     
-    if (isInitial || isHint) {
+    if (isInitial || isHint || isCorrect) {
         gameState.selectedCell = null;
         if (cell.value !== 0) {
             gameState.selectedNumber = cell.value;
@@ -524,9 +525,11 @@ function pressNumber(num) {
     
     var r = gameState.selectedCell.r;
     var c = gameState.selectedCell.c;
+    var cell = gameState.currentBoard[r][c];
+    var isCorrect = (cell.value !== 0 && cell.value === gameState.solutionBoard[r][c]);
     
-    // 고정값 또는 이미 제공된 힌트 셀은 변경 불가
-    if (gameState.initialBoard[r][c] !== 0 || gameState.currentBoard[r][c].isHint) return;
+    // 고정값 또는 이미 제공된 힌트 셀 또는 확정된 정답 셀은 변경 불가
+    if (gameState.initialBoard[r][c] !== 0 || cell.isHint || isCorrect) return;
     
     if (gameState.pencilMode) {
         // 메모 모드: 후보 숫자 토글
@@ -613,8 +616,10 @@ function triggerErase() {
     
     var r = gameState.selectedCell.r;
     var c = gameState.selectedCell.c;
+    var cell = gameState.currentBoard[r][c];
+    var isCorrect = (cell.value !== 0 && cell.value === gameState.solutionBoard[r][c]);
     
-    if (gameState.initialBoard[r][c] !== 0 || gameState.currentBoard[r][c].isHint) return;
+    if (gameState.initialBoard[r][c] !== 0 || cell.isHint || isCorrect) return;
     
     saveActionToHistory();
     
