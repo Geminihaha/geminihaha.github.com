@@ -760,3 +760,17 @@ body {
 .modal-footer-btns button {
     flex: 1;
 }
+
+/* 메모 중복 기입 차단 피드백 하이라이트 */
+.sudoku-cell.conflict-highlight {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+.sudoku-cell.conflict-flash {
+    animation: flashConflict 0.8s ease-in-out;
+}
+
+@keyframes flashConflict {
+    0%, 100% { background-color: var(--error-bg); }
+    50% { background-color: rgba(239, 68, 68, 0.45); }
+}

@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.2.9";
+const APP_VERSION = "1.2.10";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -517,6 +517,7 @@ function pressNumber(num) {
         // 메모 모드: 후보 숫자 토글
         // 규칙상 기입할 수 없는(이미 행, 열, 박스에 확정된) 숫자는 메모 기입 차단
         if (num !== 0 && !isSafe(r, c, num)) {
+            highlightConflict(r, c, num);
             return;
         }
         
@@ -1024,3 +1025,75 @@ window.addEventListener('popstate', function(event) {
         }
     }
 });
+
+function highlightConflict(row, col, num) {
+    var conflictCells = [];
+    var conflictRows = new Set();
+    var conflictCols = new Set();
+    var conflictBoxes = false;
+    
+    // 1. 행 검사 (중복 원인 탐색)
+    for (var i = 0; i < 9; i++) {
+        if (i !== col && gameState.currentBoard[row][i].value === num) {
+            conflictCells.push({ r: row, c: i });
+            conflictRows.add(row);
+        }
+    }
+    
+    // 2. 열 검사 (중복 원인 탐색)
+    for (var i = 0; i < 9; i++) {
+        if (i !== row && gameState.currentBoard[i][col].value === num) {
+            conflictCells.push({ r: i, c: col });
+            conflictCols.add(col);
+        }
+    }
+    
+    // 3. 3x3 박스 검사 (중복 원인 탐색)
+    var startRow = Math.floor(row / 3) * 3;
+    var startCol = Math.floor(col / 3) * 3;
+    for (var r = 0; r < 3; r++) {
+        for (var c = 0; c < 3; c++) {
+            var currR = startRow + r;
+            var currC = startCol + c;
+            if ((currR !== row || currC !== col) && gameState.currentBoard[currR][currC].value === num) {
+                conflictCells.push({ r: currR, c: currC });
+                conflictBoxes = true;
+            }
+        }
+    }
+    
+    // 중복 범위 내 모든 셀에 은은한 붉은색 하이라이트 일시 적용
+    var allCellEls = document.querySelectorAll(".sudoku-cell");
+    allCellEls.forEach(function(cellEl) {
+        var r = parseInt(cellEl.getAttribute("data-row"));
+        var c = parseInt(cellEl.getAttribute("data-col"));
+        
+        var inRow = conflictRows.has(r);
+        var inCol = conflictCols.has(c);
+        var inBox = conflictBoxes && (Math.floor(r / 3) === Math.floor(row / 3) && Math.floor(c / 3) === Math.floor(col / 3));
+        
+        if (inRow || inCol || inBox) {
+            cellEl.classList.add("conflict-highlight");
+        }
+    });
+    
+    // 중복 충돌을 직접 일으킨 원인 숫자 셀에는 빨간색 펄스 플래시 부여
+    conflictCells.forEach(function(coord) {
+        var cellEl = document.querySelector('[data-row="' + coord.r + '"][data-col="' + coord.c + '"]');
+        if (cellEl) {
+            cellEl.classList.add("conflict-flash");
+        }
+    });
+    
+    // 햅틱 사운드 및 진동 피드백
+    playSFX('error');
+    triggerVibration('error');
+    
+    // 800ms 뒤 일괄 스타일 제거
+    setTimeout(function() {
+        allCellEls.forEach(function(cellEl) {
+            cellEl.classList.remove("conflict-highlight");
+            cellEl.classList.remove("conflict-flash");
+        });
+    }, 800);
+}
