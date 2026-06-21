@@ -71,7 +71,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    padding: 4px;
     color: var(--text-primary);
     overflow-x: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -79,11 +79,11 @@ body {
 
 .app-container {
     width: 100%;
-    max-width: 450px;
+    max-width: 480px;
     background-color: var(--bg-surface);
     border-radius: 16px;
     box-shadow: var(--shadow);
-    padding: 20px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -332,7 +332,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .badge {
@@ -369,7 +369,7 @@ body {
 /* Sudoku Board Layout */
 .board-container {
     width: 100%;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 #sudoku-board {
@@ -501,7 +501,7 @@ body {
     display: flex;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .util-btn {
