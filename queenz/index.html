@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="N-Queen 룰과 색상 영역 제한이 결합된 중독성 있는 두뇌 논리 퍼즐 게임, 퀸즈(Queens)를 지금 바로 웹에서 즐겨보세요! 5x5, 7x7, 9x9 난이도 및 무한 랜덤 모드 제공.">
+  <title>퀸즈 퍼즐: Queens Logic Puzzle</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 상단 브랜딩 헤더 -->
+  <header>
+    <h1>Queens Puzzle</h1>
+    <p class="subtitle">행, 열, 영역당 단 하나의 퀸을 배치하세요</p>
+  </header>
+
+  <!-- 메인 콘텐츠 영역 -->
+  <main>
+    
+    <!-- 1. 로비 화면 -->
+    <section id="screen-lobby" class="lobby-container">
+      
+      <!-- 플레이 통계 패널 -->
+      <div id="lobby-stats" class="stats-card">
+        <div class="stat-item">
+          <span class="stat-label">클리어한 스테이지</span>
+          <span id="stat-clears" class="stat-val">0개 스테이지</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">최단 클리어 타임</span>
+          <span id="stat-best-time" class="stat-val">--:--</span>
+        </div>
+      </div>
+
+      <!-- 5x5 난이도 -->
+      <div class="difficulty-section">
+        <h2 class="difficulty-title">초급 보드 (5x5)</h2>
+        <div id="stages-5" class="stages-grid">
+          <!-- JS로 동적 생성됨 -->
+        </div>
+      </div>
+
+      <!-- 7x7 난이도 -->
+      <div class="difficulty-section">
+        <h2 class="difficulty-title">중급 보드 (7x7)</h2>
+        <div id="stages-7" class="stages-grid">
+          <!-- JS로 동적 생성됨 -->
+        </div>
+      </div>
+
+      <!-- 9x9 난이도 -->
+      <div class="difficulty-section">
+        <h2 class="difficulty-title">고급 보드 (9x9)</h2>
+        <div id="stages-9" class="stages-grid">
+          <!-- JS로 동적 생성됨 -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 2. 게임 플레이 화면 -->
+    <section id="screen-game" class="game-container hidden">
+      
+      <!-- 게임 상단 컨트롤 내비바 -->
+      <div class="game-navbar">
+        <button id="btn-lobby" class="btn btn-nav-back" aria-label="로비로 돌아가기">
+          <svg viewBox="0 0 24 24">
+            <path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/>
+          </svg>
+          로비
+        </button>
+        
+        <div class="nav-left">
+          <div class="nav-title-group">
+            <span id="stage-title">스테이지 이름</span>
+            <span id="stage-size-badge">5x5</span>
+          </div>
+          <div class="nav-stats">
+            <div class="nav-stat-sub">퀸 <span id="queen-counter">0 / 5</span></div>
+            <div class="nav-stat-sub">시간 <span id="timer-display">00:00</span></div>
+          </div>
+        </div>
+
+        <div class="control-buttons-group">
+          <!-- 실행 취소 -->
+          <button id="btn-undo" class="btn btn-icon" title="실행 취소 (Undo)" disabled>
+            <span style="transform: scaleX(-1); display: inline-block;">⟳</span>
+          </button>
+          <!-- 다시 시작 -->
+          <button id="btn-restart" class="btn btn-icon" title="새로고침 (Restart)">
+            ↻
+          </button>
+        </div>
+      </div>
+
+      <!-- 퍼즐 격자 보드판 -->
+      <div class="board-wrapper">
+        <div id="game-board" class="game-board">
+          <!-- JS로 동적 격자 생성됨 -->
+        </div>
+      </div>
+
+      <!-- 하단 툴바 및 액션 버튼들 -->
+      <div class="game-toolbar">
+        <div class="tool-selector">
+          <button id="tool-q" class="tool-btn active" aria-label="퀸 설치 모드">
+            <svg viewBox="0 0 100 100">
+              <path d="M15,85 L85,85 L80,70 L20,70 Z" fill="currentColor"/>
+              <path d="M22,70 L15,35 L33,55 L50,25 L67,55 L85,35 L78,70 Z" fill="currentColor"/>
+              <circle cx="15" cy="31" r="5" fill="currentColor"/>
+              <circle cx="33" cy="51" r="5" fill="currentColor"/>
+              <circle cx="50" cy="21" r="5" fill="currentColor"/>
+              <circle cx="67" cy="51" r="5" fill="currentColor"/>
+              <circle cx="85" cy="31" r="5" fill="currentColor"/>
+            </svg>
+            퀸
+          </button>
+          <button id="tool-x" class="tool-btn" aria-label="X 메모 모드">
+            <span style="font-size: 1.2rem; font-weight: bold; line-height: 1;">×</span>
+            메모
+          </button>
+        </div>
+        
+        <div class="action-buttons">
+          <!-- 스마트 힌트 -->
+          <button id="btn-hint" class="btn btn-action btn-hint-orange" title="힌트">
+            💡 힌트
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- 토스트 메시지 컨테이너 -->
+  <div id="toast-container"></div>
+
+  <!-- 3. 우승 클리어 팝업 모달 -->
+  <div id="win-modal" class="modal-overlay hidden">
+    <!-- 폭죽 효과 생성용 컨테이너 -->
+    <div id="confetti-container"></div>
+    
+    <div class="modal-content">
+      <span class="modal-icon">👑</span>
+      <h2 class="modal-title">성공!</h2>
+      <p style="color: var(--text-secondary); font-size: 0.95rem;">보드의 모든 규칙을 정복했습니다!</p>
+      
+      <span class="modal-time-label">클리어 타임</span>
+      <span id="modal-time" class="modal-time-val">01:23</span>
+      <span id="modal-hint-notice" class="modal-hint-notice"></span>
+      <span id="new-record-badge" class="new-record-badge hidden">🏆 PERSONAL BEST</span>
+      
+      <button id="btn-modal-close" class="btn btn-modal">로비로 이동</button>
+    </div>
+  </div>
+
+  <!-- 게임 로직 로드 -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
