@@ -1,5 +1,21 @@
 import { PRESET_STAGES, generateRandomStage } from './stages.js';
 
+// --- 앱 버전 관리 (캐시 무효화용) ---
+const APP_VERSION = "1.0.3";
+const STORAGE_KEY_VERSION = "queens_app_version_v1";
+
+function checkAppVersion() {
+  const savedVersion = localStorage.getItem(STORAGE_KEY_VERSION);
+  if (savedVersion !== APP_VERSION) {
+    // 신규 버전 감지 시 로컬에 저장하고 하드 새로고침 유도
+    localStorage.setItem(STORAGE_KEY_VERSION, APP_VERSION);
+    // 무한 루프 방지를 위해 짧은 딜레이 후 강제 리로드
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 100);
+  }
+}
+
 // --- 게임 상태 (State) ---
 let currentStage = null;
 let currentDifficulty = 5; // 5, 7, 9
@@ -33,13 +49,93 @@ function saveRecord(stageId, timeSec) {
   return false;
 }
 
+// --- 데이터 백업 및 복원 기능 ---
+function backupData() {
+  const records = loadRecords();
+  if (Object.keys(records).length === 0) {
+    showToast("백업할 클리어 기록이 없습니다.");
+    return;
+  }
+  
+  try {
+    const dataStr = JSON.stringify(records, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement("a");
+    a.href = url;
+    // 날짜 기반 파일명 생성
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `queens_puzzle_backup_${dateStr}.json`;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast("기록이 파일로 안전하게 백업되었습니다!");
+    triggerHaptic();
+  } catch (err) {
+    showToast("백업 파일 생성에 실패했습니다.");
+    console.error(err);
+  }
+}
+
+function triggerRestore() {
+  document.getElementById("file-restore").click();
+}
+
+function handleRestoreFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const importedData = JSON.parse(evt.target.result);
+      
+      // 간단한 스키마 검증
+      if (typeof importedData !== "object" || importedData === null || Array.isArray(importedData)) {
+        throw new Error("Invalid format");
+      }
+
+      // 기존 기록과 병합 (더 짧은 시간을 선택하여 진행 상황을 지켜줍니다)
+      const currentRecords = loadRecords();
+      let mergedCount = 0;
+
+      Object.keys(importedData).forEach(stageId => {
+        const importedTime = importedData[stageId];
+        if (typeof importedTime === "number") {
+          // 기존에 기록이 없거나, 가져온 기록이 기존보다 더 빠른 경우에만 덮어씀
+          if (!currentRecords[stageId] || currentRecords[stageId] > importedTime) {
+            currentRecords[stageId] = importedTime;
+            mergedCount++;
+          }
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(currentRecords));
+      
+      showToast(`${mergedCount}개의 신기록이 성공적으로 복원/병합되었습니다!`);
+      triggerHaptic("success");
+      renderLobby(); // 로비 화면 갱신
+    } catch (err) {
+      showToast("오류: 올바르지 않은 백업 파일 형식입니다.");
+      triggerHaptic("error");
+      console.error(err);
+    }
+    // 파일 엘리먼트 값 초기화
+    e.target.value = "";
+  };
+  reader.readAsText(file);
+}
+
 // --- 코어 규칙 검증 (Validator) ---
 function validateBoard() {
   if (!currentStage) return { isValid: false, conflicts: {}, queenCount: 0 };
   const size = currentStage.size;
   const regions = currentStage.regions;
 
-  // 퀸들의 위치 목록 [{r, c, region}]
   const queens = [];
   let queenCount = 0;
   for (let r = 0; r < size; r++) {
@@ -51,7 +147,6 @@ function validateBoard() {
     }
   }
 
-  // 충돌 기록 객체 (key: "r-c", value: { row, col, region, adj })
   const conflicts = {};
   const markConflict = (r, c, type) => {
     const key = `${r}-${c}`;
@@ -61,7 +156,6 @@ function validateBoard() {
     conflicts[key][type] = true;
   };
 
-  // 1. 행/열/구역별 퀸 카운팅
   const rowQueens = Array.from({ length: size }, () => []);
   const colQueens = Array.from({ length: size }, () => []);
   const regionQueens = {};
@@ -73,28 +167,24 @@ function validateBoard() {
     regionQueens[q.region].push(q);
   });
 
-  // 행 충돌 검사
   for (let r = 0; r < size; r++) {
     if (rowQueens[r].length > 1) {
       rowQueens[r].forEach(q => markConflict(q.r, q.c, 'row'));
     }
   }
 
-  // 열 충돌 검사
   for (let c = 0; c < size; c++) {
     if (colQueens[c].length > 1) {
       colQueens[c].forEach(q => markConflict(q.r, q.c, 'col'));
     }
   }
 
-  // 영역 충돌 검사
   Object.keys(regionQueens).forEach(regId => {
     if (regionQueens[regId].length > 1) {
       regionQueens[regId].forEach(q => markConflict(q.r, q.c, 'region'));
     }
   });
 
-  // 2. 8방향 인접 검사
   for (let i = 0; i < queens.length; i++) {
     for (let j = i + 1; j < queens.length; j++) {
       const q1 = queens[i];
@@ -106,7 +196,6 @@ function validateBoard() {
     }
   }
 
-  // 3. 성공 여부 확인
   const hasConflict = Object.keys(conflicts).length > 0;
   const isValid = queenCount === size && !hasConflict;
 
@@ -130,7 +219,7 @@ function undo() {
   boardState = prevState;
   triggerHaptic();
   renderBoard();
-  checkGameWin(); // 언두 할 때도 즉시 상태 체크
+  checkGameWin();
   updateUndoButtonState();
 }
 
@@ -279,7 +368,7 @@ function handleCellEnter(e) {
   if (boardState[row][col] !== dragVal) {
     boardState[row][col] = dragVal;
     renderBoard();
-    checkGameWin(); // 드래그 상태가 변할 때도 퀸 충돌 검출 및 승리 즉시 검사
+    checkGameWin();
   }
 }
 
@@ -319,7 +408,7 @@ function handleTouchMove(e) {
   if (boardState[row][col] !== dragVal) {
     boardState[row][col] = dragVal;
     renderBoard();
-    checkGameWin(); // 드래그 시 즉시 검사
+    checkGameWin();
   }
 }
 
@@ -360,7 +449,7 @@ function toggleCell(r, c, tool) {
   }
 
   renderBoard();
-  checkGameWin(); // 퀸이나 X 마크가 배치되거나 해제되는 순간 즉시 판단!
+  checkGameWin();
 }
 
 // --- 게임 클리어 확인 ---
@@ -474,7 +563,6 @@ function initGame(stage) {
   document.getElementById("stage-title").textContent = stage.name;
   document.getElementById("stage-size-badge").textContent = `${size}x${size}`;
   
-  // 모든 스크린 숨기고 게임판 보이기
   document.getElementById("screen-lobby").classList.add("hidden");
   document.getElementById("screen-stage-select").classList.add("hidden");
   document.getElementById("screen-game").classList.remove("hidden");
@@ -536,7 +624,7 @@ function showWinModal(isNewRecord) {
 
 function closeWinModal() {
   document.getElementById("win-modal").classList.add("hidden");
-  goBackToStages(); // 로비 대신 해당 난이도 스테이지 선택 화면으로 복귀
+  goBackToStages();
 }
 
 function createConfetti() {
@@ -565,13 +653,11 @@ function createConfetti() {
 function renderLobby() {
   const records = loadRecords();
 
-  // 각 난이도별 최단 클리어 기록 수집 및 표시
   const sizes = [5, 7, 9];
   sizes.forEach(size => {
     const stages = PRESET_STAGES[size] || [];
     const stageIds = stages.map(s => s.id);
     
-    // 해당 크기의 프리셋 + 랜덤맵 레코드 중 최단 기록 필터링
     const diffTimes = Object.keys(records)
       .filter(id => id.startsWith(`rand-${size}-`) || stageIds.includes(id))
       .map(id => records[id]);
@@ -584,7 +670,6 @@ function renderLobby() {
       bestStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
 
-    // 로비 최고기록 엘리먼트들 채우기
     const statBestEl = document.getElementById(`stat-best-${size}`);
     const lobbyBestEl = document.getElementById(`lobby-best-${size}`);
     
@@ -592,7 +677,6 @@ function renderLobby() {
     if (lobbyBestEl) lobbyBestEl.textContent = bestStr;
   });
 
-  // 총 클리어 개수 계산
   const clearedCount = Object.keys(records).length;
   document.getElementById("stat-clears").textContent = `${clearedCount}회`;
 }
@@ -605,14 +689,12 @@ function renderStageSelect(difficulty) {
   const container = document.getElementById("stages-list-container");
   container.innerHTML = "";
 
-  // 난이도 타이틀 설정
   let titleStr = "";
   if (difficulty === 5) titleStr = "초급 보드 (5x5)";
   else if (difficulty === 7) titleStr = "중급 보드 (7x7)";
   else if (difficulty === 9) titleStr = "고급 보드 (9x9)";
   document.getElementById("selected-difficulty-title").textContent = titleStr;
 
-  // 이 난이도의 최고 기록 표시
   const stageIds = stages.map(s => s.id);
   const diffTimes = Object.keys(records)
     .filter(id => id.startsWith(`rand-${difficulty}-`) || stageIds.includes(id))
@@ -627,7 +709,6 @@ function renderStageSelect(difficulty) {
   }
   document.getElementById("selected-difficulty-best").textContent = bestStr;
 
-  // 스테이지 카드 동적 빌드
   stages.forEach((stage, idx) => {
     const card = document.createElement("div");
     card.className = "stage-card";
@@ -661,7 +742,6 @@ function renderStageSelect(difficulty) {
     container.appendChild(card);
   });
 
-  // 무한 랜덤 맵 카드
   const randCard = document.createElement("div");
   randCard.className = "stage-card random-card";
   randCard.innerHTML = `
@@ -681,7 +761,6 @@ function renderStageSelect(difficulty) {
   });
   container.appendChild(randCard);
 
-  // 스크린 전환
   document.getElementById("screen-lobby").classList.add("hidden");
   document.getElementById("screen-game").classList.add("hidden");
   document.getElementById("screen-stage-select").classList.remove("hidden");
@@ -689,6 +768,9 @@ function renderStageSelect(difficulty) {
 
 // --- 이벤트 바인딩 및 초기화 ---
 document.addEventListener("DOMContentLoaded", () => {
+  // 앱 캐시 버전 검사 우선 가동
+  checkAppVersion();
+
   renderLobby();
 
   // 난이도 카드 선택 바인딩 (로비)
@@ -699,6 +781,11 @@ document.addEventListener("DOMContentLoaded", () => {
       triggerHaptic();
     });
   });
+
+  // 데이터 백업 및 복원 버튼 바인딩
+  document.getElementById("btn-backup").addEventListener("click", backupData);
+  document.getElementById("btn-restore").addEventListener("click", triggerRestore);
+  document.getElementById("file-restore").addEventListener("change", handleRestoreFile);
 
   // 뒤로가기 버튼들 바인딩
   document.getElementById("btn-back-to-lobby").addEventListener("click", goBackToLobby);
@@ -727,10 +814,8 @@ document.addEventListener("DOMContentLoaded", () => {
     triggerHaptic();
   });
 
-  // 모달 버튼 바인딩
   document.getElementById("btn-modal-close").addEventListener("click", closeWinModal);
 
-  // 백그라운드 전환 시 타이머 일시정지
   document.addEventListener("visibilitychange", () => {
     isPaused = document.hidden;
   });

@@ -21,15 +21,11 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  // 기본 경로 처리
   let filePath = req.url === '/' ? '/index.html' : req.url;
-  
-  // 쿼리 스트링 제거
   filePath = filePath.split('?')[0];
 
   const fullPath = path.join(__dirname, filePath);
   
-  // 보안 및 파일 존재 체크
   if (!fullPath.startsWith(__dirname)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
@@ -46,9 +42,12 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(fullPath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
+    // 앱 업데이트 시 새로고침하면 즉각 반영되도록 Cache-Control 정책 강화 (no-store, no-cache 강제)
     res.writeHead(200, { 
       'Content-Type': contentType,
-      'Cache-Control': 'no-cache'
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     });
 
     const stream = fs.createReadStream(fullPath);

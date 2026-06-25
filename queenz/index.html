@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="N-Queen 룰과 색상 영역 제한이 결합된 중독성 있는 두뇌 논리 퍼즐 게임, 퀸즈(Queens)를 지금 바로 웹에서 즐겨보세요! 5x5, 7x7, 9x9 난이도 및 무한 랜덤 모드 제공.">
   <title>퀸즈 퍼즐: Queens Logic Puzzle</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=1.0.3">
 </head>
 <body>
 
@@ -32,6 +32,17 @@
           <div class="stat-sub-record">7x7 최고: <span id="stat-best-7">--:--</span></div>
           <div class="stat-sub-record">9x9 최고: <span id="stat-best-9">--:--</span></div>
         </div>
+      </div>
+
+      <!-- 데이터 백업/복원 패널 -->
+      <div class="data-actions-panel">
+        <button id="btn-backup" class="btn btn-sm btn-data-action" title="기록 데이터 백업">
+          📥 기록 백업
+        </button>
+        <button id="btn-restore" class="btn btn-sm btn-data-action" title="기록 데이터 복원">
+          📤 기록 복원
+        </button>
+        <input type="file" id="file-restore" class="hidden" accept=".json">
       </div>
 
       <!-- 난이도 카드 선택 그리드 -->
@@ -189,7 +200,7 @@
     </div>
   </div>
 
-  <!-- 게임 로직 로드 -->
-  <script type="module" src="app.js"></script>
+  <!-- 게임 로직 로드 (버전 적용) -->
+  <script type="module" src="app.js?v=1.0.3"></script>
 </body>
 </html>
