@@ -1,15 +1,13 @@
 import { PRESET_STAGES, generateRandomStage } from './stages.js';
 
 // --- 앱 버전 관리 (캐시 무효화용) ---
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.0.4";
 const STORAGE_KEY_VERSION = "queens_app_version_v1";
 
 function checkAppVersion() {
   const savedVersion = localStorage.getItem(STORAGE_KEY_VERSION);
   if (savedVersion !== APP_VERSION) {
-    // 신규 버전 감지 시 로컬에 저장하고 하드 새로고침 유도
     localStorage.setItem(STORAGE_KEY_VERSION, APP_VERSION);
-    // 무한 루프 방지를 위해 짧은 딜레이 후 강제 리로드
     setTimeout(() => {
       window.location.reload(true);
     }, 100);
@@ -64,7 +62,6 @@ function backupData() {
     
     const a = document.createElement("a");
     a.href = url;
-    // 날짜 기반 파일명 생성
     const dateStr = new Date().toISOString().slice(0, 10);
     a.download = `queens_puzzle_backup_${dateStr}.json`;
     
@@ -94,19 +91,16 @@ function handleRestoreFile(e) {
     try {
       const importedData = JSON.parse(evt.target.result);
       
-      // 간단한 스키마 검증
       if (typeof importedData !== "object" || importedData === null || Array.isArray(importedData)) {
         throw new Error("Invalid format");
       }
 
-      // 기존 기록과 병합 (더 짧은 시간을 선택하여 진행 상황을 지켜줍니다)
       const currentRecords = loadRecords();
       let mergedCount = 0;
 
       Object.keys(importedData).forEach(stageId => {
         const importedTime = importedData[stageId];
         if (typeof importedTime === "number") {
-          // 기존에 기록이 없거나, 가져온 기록이 기존보다 더 빠른 경우에만 덮어씀
           if (!currentRecords[stageId] || currentRecords[stageId] > importedTime) {
             currentRecords[stageId] = importedTime;
             mergedCount++;
@@ -118,13 +112,12 @@ function handleRestoreFile(e) {
       
       showToast(`${mergedCount}개의 신기록이 성공적으로 복원/병합되었습니다!`);
       triggerHaptic("success");
-      renderLobby(); // 로비 화면 갱신
+      renderLobby();
     } catch (err) {
       showToast("오류: 올바르지 않은 백업 파일 형식입니다.");
       triggerHaptic("error");
       console.error(err);
     }
-    // 파일 엘리먼트 값 초기화
     e.target.value = "";
   };
   reader.readAsText(file);
@@ -255,8 +248,8 @@ function updateTimerDisplay() {
   document.getElementById("timer-display").textContent = timeStr;
 }
 
-// --- 보드 렌더링 ---
-function renderBoard() {
+// --- 보드판 최초 생성 (격자 틀 1회만 그리기 - 성능 최적화 및 터치 드래그 감도 보장) ---
+function createBoardDOM() {
   const boardEl = document.getElementById("game-board");
   boardEl.innerHTML = "";
 
@@ -266,8 +259,6 @@ function renderBoard() {
 
   boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
   boardEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
-
-  const { conflicts } = validateBoard();
 
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
@@ -280,42 +271,13 @@ function renderBoard() {
       const regionColor = colors[regionId];
       cell.style.backgroundColor = regionColor;
 
-      if (r === 0 || regions[r - 1][c] !== regionId) {
-        cell.classList.add("border-top-thick");
-      }
-      if (r === size - 1 || regions[r + 1][c] !== regionId) {
-        cell.classList.add("border-bottom-thick");
-      }
-      if (c === 0 || regions[r][c - 1] !== regionId) {
-        cell.classList.add("border-left-thick");
-      }
-      if (c === size - 1 || regions[r][c + 1] !== regionId) {
-        cell.classList.add("border-right-thick");
-      }
+      // 영역 구분선 굵게 표시
+      if (r === 0 || regions[r - 1][c] !== regionId) cell.classList.add("border-top-thick");
+      if (r === size - 1 || regions[r + 1][c] !== regionId) cell.classList.add("border-bottom-thick");
+      if (c === 0 || regions[r][c - 1] !== regionId) cell.classList.add("border-left-thick");
+      if (c === size - 1 || regions[r][c + 1] !== regionId) cell.classList.add("border-right-thick");
 
-      const val = boardState[r][c];
-      if (val === "Q") {
-        cell.innerHTML = `
-          <svg class="queen-svg" viewBox="0 0 100 100">
-            <path d="M15,85 L85,85 L80,70 L20,70 Z" fill="currentColor"/>
-            <path d="M22,70 L15,35 L33,55 L50,25 L67,55 L85,35 L78,70 Z" fill="currentColor"/>
-            <circle cx="15" cy="31" r="5" fill="currentColor"/>
-            <circle cx="33" cy="51" r="5" fill="currentColor"/>
-            <circle cx="50" cy="21" r="5" fill="currentColor"/>
-            <circle cx="67" cy="51" r="5" fill="currentColor"/>
-            <circle cx="85" cy="31" r="5" fill="currentColor"/>
-          </svg>
-        `;
-        cell.classList.add("has-queen");
-      } else if (val === "X") {
-        cell.innerHTML = '<span class="x-mark">×</span>';
-        cell.classList.add("has-x");
-      }
-
-      if (conflicts[`${r}-${c}`]) {
-        cell.classList.add("conflict-blink");
-      }
-
+      // 이벤트 리스너 바인딩
       cell.addEventListener("mousedown", handleCellStart);
       cell.addEventListener("mouseenter", handleCellEnter);
       cell.addEventListener("touchstart", handleTouchStart, { passive: false });
@@ -323,8 +285,71 @@ function renderBoard() {
       boardEl.appendChild(cell);
     }
   }
+}
+
+// --- 부분 DOM 업데이트 (Partial Rendering) ---
+function updateBoardStateUI() {
+  if (!currentStage) return;
+  const size = currentStage.size;
+  const { conflicts } = validateBoard();
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const cell = document.querySelector(`.board-cell[data-row="${r}"][data-col="${c}"]`);
+      if (!cell) continue;
+
+      const val = boardState[r][c];
+      const hasQueen = cell.classList.contains("has-queen");
+      const hasX = cell.classList.contains("has-x");
+      const isConflict = cell.classList.contains("conflict-blink");
+
+      // 값에 맞게 HTML 내용 갱신 (불필요한 DOM 쓰기 방지)
+      if (val === "Q") {
+        if (!hasQueen) {
+          cell.innerHTML = `
+            <svg class="queen-svg" viewBox="0 0 100 100">
+              <path d="M15,85 L85,85 L80,70 L20,70 Z" fill="currentColor"/>
+              <path d="M22,70 L15,35 L33,55 L50,25 L67,55 L85,35 L78,70 Z" fill="currentColor"/>
+              <circle cx="15" cy="31" r="5" fill="currentColor"/>
+              <circle cx="33" cy="51" r="5" fill="currentColor"/>
+              <circle cx="50" cy="21" r="5" fill="currentColor"/>
+              <circle cx="67" cy="51" r="5" fill="currentColor"/>
+              <circle cx="85" cy="31" r="5" fill="currentColor"/>
+            </svg>
+          `;
+          cell.classList.add("has-queen");
+          cell.classList.remove("has-x");
+        }
+      } else if (val === "X") {
+        if (!hasX) {
+          cell.innerHTML = '<span class="x-mark">×</span>';
+          cell.classList.add("has-x");
+          cell.classList.remove("has-queen");
+        }
+      } else {
+        if (hasQueen || hasX || cell.innerHTML !== "") {
+          cell.innerHTML = "";
+          cell.classList.remove("has-queen", "has-x");
+        }
+      }
+
+      // 규칙 충돌 갱신
+      const shouldConflict = !!conflicts[`${r}-${c}`];
+      if (shouldConflict !== isConflict) {
+        if (shouldConflict) {
+          cell.classList.add("conflict-blink");
+        } else {
+          cell.classList.remove("conflict-blink");
+        }
+      }
+    }
+  }
 
   updateInfoDisplay();
+}
+
+function renderBoard() {
+  updateBoardStateUI();
 }
 
 function updateInfoDisplay() {
@@ -354,7 +379,17 @@ function handleCellStart(e) {
   toggleCell(row, col, activeTool);
 
   dragActive = true;
-  dragVal = boardState[row][col]; 
+  
+  // 사용자가 "X 드래그로 쭉 채우기"를 원할 때:
+  // 도구가 X 모드라면, 첫 터치로 토글되어 지워지거나 생기더라도 
+  // 드래그 시에는 "무조건 X를 칠하는(Painting)" 동작을 수행하게 유도
+  if (activeTool === "X") {
+    dragVal = "X";
+  } else {
+    // 퀸 모드 등 일반적인 드래그 토글 보존
+    dragVal = boardState[row][col];
+  }
+  
   triggerHaptic();
 }
 
@@ -363,6 +398,7 @@ function handleCellEnter(e) {
   const row = parseInt(this.dataset.row);
   const col = parseInt(this.dataset.col);
 
+  // 퀸은 드래그로 연속 배치할 수 없음 (퀸 중복 오류 방지)
   if (dragVal === "Q" || boardState[row][col] === "Q") return;
 
   if (boardState[row][col] !== dragVal) {
@@ -387,7 +423,14 @@ function handleTouchStart(e) {
   toggleCell(row, col, currentTool);
 
   dragActive = true;
-  dragVal = boardState[row][col];
+  
+  // 터치 드래그 시 X 모드이면 라인에 쭉 X가 칠해지도록 보정
+  if (currentTool === "X") {
+    dragVal = "X";
+  } else {
+    dragVal = boardState[row][col];
+  }
+  
   triggerHaptic();
 }
 
@@ -569,6 +612,8 @@ function initGame(stage) {
 
   document.getElementById("btn-hint").disabled = false;
 
+  // 보드판의 DOM 틀을 1회 최초 생성 (이후 값 변경 시 파괴하지 않고 상태 업데이트만 유도)
+  createBoardDOM();
   renderBoard();
   startTimer();
 }
@@ -768,12 +813,10 @@ function renderStageSelect(difficulty) {
 
 // --- 이벤트 바인딩 및 초기화 ---
 document.addEventListener("DOMContentLoaded", () => {
-  // 앱 캐시 버전 검사 우선 가동
   checkAppVersion();
 
   renderLobby();
 
-  // 난이도 카드 선택 바인딩 (로비)
   document.querySelectorAll(".diff-select-card").forEach(card => {
     card.addEventListener("click", () => {
       const diff = parseInt(card.dataset.difficulty);
@@ -782,21 +825,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 데이터 백업 및 복원 버튼 바인딩
   document.getElementById("btn-backup").addEventListener("click", backupData);
   document.getElementById("btn-restore").addEventListener("click", triggerRestore);
   document.getElementById("file-restore").addEventListener("change", handleRestoreFile);
 
-  // 뒤로가기 버튼들 바인딩
   document.getElementById("btn-back-to-lobby").addEventListener("click", goBackToLobby);
   document.getElementById("btn-back-to-stages").addEventListener("click", goBackToStages);
 
-  // 인게임 액션 버튼 바인딩
   document.getElementById("btn-restart").addEventListener("click", restartStage);
   document.getElementById("btn-undo").addEventListener("click", undo);
   document.getElementById("btn-hint").addEventListener("click", provideHint);
 
-  // 툴 전환 버튼 바인딩
   const toolQ = document.getElementById("tool-q");
   const toolX = document.getElementById("tool-x");
 
