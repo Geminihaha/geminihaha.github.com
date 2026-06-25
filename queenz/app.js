@@ -2,6 +2,7 @@ import { PRESET_STAGES, generateRandomStage } from './stages.js';
 
 // --- 게임 상태 (State) ---
 let currentStage = null;
+let currentDifficulty = 5; // 5, 7, 9
 let boardState = []; // NxN 2차원 배열. 값: "", "Q", "X"
 let history = []; // 실행 취소(Undo) 스택
 let secondsElapsed = 0;
@@ -106,7 +107,6 @@ function validateBoard() {
   }
 
   // 3. 성공 여부 확인
-  // 퀸의 개수가 보드 크기 N과 같고, 충돌이 없어야 함
   const hasConflict = Object.keys(conflicts).length > 0;
   const isValid = queenCount === size && !hasConflict;
 
@@ -120,7 +120,7 @@ function validateBoard() {
 // --- 상태 변경 내역 저장 (Undo) ---
 function pushHistory() {
   history.push(JSON.stringify(boardState));
-  if (history.length > 50) history.shift(); // 최대 50단계 저장
+  if (history.length > 50) history.shift();
   updateUndoButtonState();
 }
 
@@ -130,6 +130,7 @@ function undo() {
   boardState = prevState;
   triggerHaptic();
   renderBoard();
+  checkGameWin(); // 언두 할 때도 즉시 상태 체크
   updateUndoButtonState();
 }
 
@@ -138,7 +139,7 @@ function updateUndoButtonState() {
   if (btn) btn.disabled = history.length === 0;
 }
 
-// --- 진동 피드백 (모바일 지원용) ---
+// --- 진동 피드백 ---
 function triggerHaptic(type = "light") {
   if (navigator.vibrate) {
     if (type === "light") navigator.vibrate(10);
@@ -174,7 +175,6 @@ function renderBoard() {
   const colors = currentStage.colors;
   const regions = currentStage.regions;
 
-  // CSS Grid를 이용해 크기에 맞춰 격자 비율 동적 조절
   boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
   boardEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
 
@@ -187,30 +187,23 @@ function renderBoard() {
       cell.dataset.row = r;
       cell.dataset.col = c;
 
-      // 영역별 배경색 입히기 (파스텔 톤)
       const regionId = regions[r][c];
       const regionColor = colors[regionId];
       cell.style.backgroundColor = regionColor;
 
-      // 경계선 그리기 (굵은 보더로 영역 경계구분)
-      // 위쪽 칸과 영역이 다른가?
       if (r === 0 || regions[r - 1][c] !== regionId) {
         cell.classList.add("border-top-thick");
       }
-      // 아래쪽 칸과 영역이 다른가?
       if (r === size - 1 || regions[r + 1][c] !== regionId) {
         cell.classList.add("border-bottom-thick");
       }
-      // 왼쪽 칸과 영역이 다른가?
       if (c === 0 || regions[r][c - 1] !== regionId) {
         cell.classList.add("border-left-thick");
       }
-      // 오른쪽 칸과 영역이 다른가?
       if (c === size - 1 || regions[r][c + 1] !== regionId) {
         cell.classList.add("border-right-thick");
       }
 
-      // 셀 내용물 (퀸 또는 X 표시)
       const val = boardState[r][c];
       if (val === "Q") {
         cell.innerHTML = `
@@ -230,23 +223,18 @@ function renderBoard() {
         cell.classList.add("has-x");
       }
 
-      // 충돌 발생 시 붉은색 깜빡임 처리
       if (conflicts[`${r}-${c}`]) {
         cell.classList.add("conflict-blink");
       }
 
-      // 마우스 및 터치 이벤트 바인딩
       cell.addEventListener("mousedown", handleCellStart);
       cell.addEventListener("mouseenter", handleCellEnter);
-      
-      // 모바일 터치 드래그 지원을 위한 리스너
       cell.addEventListener("touchstart", handleTouchStart, { passive: false });
 
       boardEl.appendChild(cell);
     }
   }
 
-  // 퀸 배치 개수 UI 업데이트
   updateInfoDisplay();
 }
 
@@ -268,7 +256,6 @@ function handleCellStart(e) {
   const row = parseInt(this.dataset.row);
   const col = parseInt(this.dataset.col);
 
-  // 마우스 오른쪽 버튼 클릭 시 반대 모드 강제 적용
   let activeTool = currentTool;
   if (e.button === 2) {
     activeTool = currentTool === "Q" ? "X" : "Q";
@@ -277,9 +264,7 @@ function handleCellStart(e) {
   pushHistory();
   toggleCell(row, col, activeTool);
 
-  // 드래그 페인팅 개시
   dragActive = true;
-  // 첫 타겟의 최종 상태를 기반으로 드래그 시 칠할 값을 결정
   dragVal = boardState[row][col]; 
   triggerHaptic();
 }
@@ -289,19 +274,18 @@ function handleCellEnter(e) {
   const row = parseInt(this.dataset.row);
   const col = parseInt(this.dataset.col);
 
-  // 퀸은 드래그 드로잉에서 배제 (X 마크와 지우기만 드래그 가능하게 하여 오동작 방지)
   if (dragVal === "Q" || boardState[row][col] === "Q") return;
 
   if (boardState[row][col] !== dragVal) {
     boardState[row][col] = dragVal;
     renderBoard();
+    checkGameWin(); // 드래그 상태가 변할 때도 퀸 충돌 검출 및 승리 즉시 검사
   }
 }
 
-// 모바일 터치 이벤트 핸들러 (드래그 매핑용)
 function handleTouchStart(e) {
   if (gameCleared) return;
-  e.preventDefault(); // 스크롤 방지
+  e.preventDefault();
   const touch = e.touches[0];
   const target = document.elementFromPoint(touch.clientX, touch.clientY);
   const cell = target.closest(".board-cell");
@@ -335,10 +319,10 @@ function handleTouchMove(e) {
   if (boardState[row][col] !== dragVal) {
     boardState[row][col] = dragVal;
     renderBoard();
+    checkGameWin(); // 드래그 시 즉시 검사
   }
 }
 
-// 전역 마우스/터치 업 이벤트 리스너 등록
 window.addEventListener("mouseup", () => {
   if (dragActive) {
     dragActive = false;
@@ -351,33 +335,23 @@ window.addEventListener("touchend", () => {
     checkGameWin();
   }
 });
-// 모바일 터치 무브 등록
 document.addEventListener("touchmove", handleTouchMove, { passive: false });
 
-// 우클릭 메뉴 방지
 document.addEventListener("contextmenu", e => {
   const target = e.target.closest(".board-cell");
   if (target) e.preventDefault();
 });
 
-/**
- * 특정 칸의 상태 토글
- * @param {number} r 행
- * @param {number} c 열
- * @param {string} tool "Q" 또는 "X"
- */
 function toggleCell(r, c, tool) {
   const current = boardState[r][c];
 
   if (tool === "Q") {
-    // 퀸 모드: 빈 칸 -> 퀸 -> 빈 칸 (X 무시 또는 덮어쓰기)
     if (current === "Q") {
       boardState[r][c] = "";
     } else {
       boardState[r][c] = "Q";
     }
   } else {
-    // X 모드: 빈 칸 -> X -> 빈 칸 (퀸 무시 또는 덮어쓰기)
     if (current === "X") {
       boardState[r][c] = "";
     } else {
@@ -386,6 +360,7 @@ function toggleCell(r, c, tool) {
   }
 
   renderBoard();
+  checkGameWin(); // 퀸이나 X 마크가 배치되거나 해제되는 순간 즉시 판단!
 }
 
 // --- 게임 클리어 확인 ---
@@ -396,20 +371,18 @@ function checkGameWin() {
     clearInterval(timerInterval);
     triggerHaptic("success");
 
-    // 최고 기록 저장 및 신기록 판별
     const isNewRecord = saveRecord(currentStage.id, secondsElapsed);
     showWinModal(isNewRecord);
   }
 }
 
-// --- 힌트 제공 시스템 ---
+// --- 힌트 제공 ---
 function provideHint() {
   if (gameCleared || !currentStage) return;
 
   const size = currentStage.size;
-  const solution = currentStage.solution; // [[r, c], ...]
+  const solution = currentStage.solution;
 
-  // 아직 정답 위치에 퀸이 놓이지 않은 칸들 찾기
   const missingQueens = [];
   solution.forEach(([sr, sc]) => {
     if (boardState[sr][sc] !== "Q") {
@@ -417,7 +390,6 @@ function provideHint() {
     }
   });
 
-  // 이미 퀸이 엉뚱한 곳에 놓여있다면 해당 잘못된 퀸들을 제거하거나 알려줌
   const incorrectQueens = [];
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
@@ -433,32 +405,23 @@ function provideHint() {
   pushHistory();
 
   if (incorrectQueens.length > 0) {
-    // 1순위 힌트: 잘못 배치된 퀸을 경고하고 하나 제거
     const [ir, ic] = incorrectQueens[Math.floor(Math.random() * incorrectQueens.length)];
-    boardState[ir][ic] = "X"; // 잘못 놓인 퀸은 X로 마킹해 유저가 인지하게 도움
+    boardState[ir][ic] = "X";
     showToast("잘못 배치된 퀸이 있어 정정했습니다.");
   } else if (missingQueens.length > 0) {
-    // 2순위 힌트: 누락된 정답 퀸 중 하나를 보드에 자동으로 배치
     const [mr, mc] = missingQueens[Math.floor(Math.random() * missingQueens.length)];
-    
-    // 배치할 자리를 방해하는 주변 X들을 제거하고 퀸 배치
     boardState[mr][mc] = "Q";
 
-    // 퀸이 배치된 행, 열, 대각선 인접 및 같은 색상 구역에는 퀸이 들어갈 수 없으므로,
-    // 정답 퀸을 돕기 위해 해당 행/열/영역에 자동으로 X 마킹을 적절히 서비스해 줌
     const regId = currentStage.regions[mr][mc];
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (r === mr && c === mc) continue;
-        // 같은 행, 열
         if (r === mr || c === mc) {
           if (boardState[r][c] === "") boardState[r][c] = "X";
         }
-        // 같은 구역
         if (currentStage.regions[r][c] === regId) {
           if (boardState[r][c] === "") boardState[r][c] = "X";
         }
-        // 8방향 인접
         if (Math.abs(r - mr) <= 1 && Math.abs(c - mc) <= 1) {
           if (boardState[r][c] === "") boardState[r][c] = "X";
         }
@@ -495,9 +458,9 @@ function showToast(message) {
 // --- 게임 시작 및 화면 제어 ---
 function initGame(stage) {
   currentStage = stage;
+  currentDifficulty = stage.size;
   const size = stage.size;
   
-  // 보드 초기화
   boardState = Array.from({ length: size }, () => Array(size).fill(""));
   history = [];
   secondsElapsed = 0;
@@ -508,15 +471,14 @@ function initGame(stage) {
   updateUndoButtonState();
   updateTimerDisplay();
   
-  // UI 텍스트 설정
   document.getElementById("stage-title").textContent = stage.name;
   document.getElementById("stage-size-badge").textContent = `${size}x${size}`;
   
-  // 로비 숨기고 게임판 보이기
+  // 모든 스크린 숨기고 게임판 보이기
   document.getElementById("screen-lobby").classList.add("hidden");
+  document.getElementById("screen-stage-select").classList.add("hidden");
   document.getElementById("screen-game").classList.remove("hidden");
 
-  // 힌트 버튼 리셋
   document.getElementById("btn-hint").disabled = false;
 
   renderBoard();
@@ -531,11 +493,20 @@ function restartStage() {
 function goBackToLobby() {
   clearInterval(timerInterval);
   document.getElementById("screen-game").classList.add("hidden");
+  document.getElementById("screen-stage-select").classList.add("hidden");
   document.getElementById("screen-lobby").classList.remove("hidden");
   renderLobby();
 }
 
-// --- 우승 모달 렌더링 ---
+function goBackToStages() {
+  clearInterval(timerInterval);
+  document.getElementById("screen-game").classList.add("hidden");
+  document.getElementById("screen-lobby").classList.add("hidden");
+  document.getElementById("screen-stage-select").classList.remove("hidden");
+  renderStageSelect(currentDifficulty);
+}
+
+// --- 우승 모달 ---
 function showWinModal(isNewRecord) {
   const modal = document.getElementById("win-modal");
   const finalTimeStr = document.getElementById("timer-display").textContent;
@@ -550,7 +521,6 @@ function showWinModal(isNewRecord) {
     recordBadge.classList.add("hidden");
   }
 
-  // 힌트 사용 여부 멘트
   const hintNotice = document.getElementById("modal-hint-notice");
   if (hintCount > 0) {
     hintNotice.textContent = `(힌트를 ${hintCount}회 사용했습니다)`;
@@ -566,10 +536,9 @@ function showWinModal(isNewRecord) {
 
 function closeWinModal() {
   document.getElementById("win-modal").classList.add("hidden");
-  goBackToLobby();
+  goBackToStages(); // 로비 대신 해당 난이도 스테이지 선택 화면으로 복귀
 }
 
-// 간단한 폭죽/스파크 생성
 function createConfetti() {
   const container = document.getElementById("confetti-container");
   container.innerHTML = "";
@@ -586,107 +555,156 @@ function createConfetti() {
     const duration = 2 + Math.random() * 3;
     const delay = Math.random() * 1.5;
     p.style.animation = `fall ${duration}s linear ${delay}s infinite`;
-    
-    // 무작위 흔들림 너비
     p.style.setProperty('--drift', `${-50 + Math.random() * 100}px`);
 
     container.appendChild(p);
   }
 }
 
-// --- 로비 렌더링 ---
+// --- 메인 로비 렌더링 (난이도 선택) ---
 function renderLobby() {
   const records = loadRecords();
 
-  // 각 난이도 컨테이너들
+  // 각 난이도별 최단 클리어 기록 수집 및 표시
   const sizes = [5, 7, 9];
   sizes.forEach(size => {
-    const listEl = document.getElementById(`stages-${size}`);
-    listEl.innerHTML = "";
-
     const stages = PRESET_STAGES[size] || [];
-    stages.forEach((stage, idx) => {
-      const card = document.createElement("div");
-      card.className = "stage-card";
-      
-      const recordTime = records[stage.id];
-      let recordStr = "기록 없음";
-      let isCleared = false;
-      
-      if (recordTime !== undefined) {
-        isCleared = true;
-        const mins = Math.floor(recordTime / 60);
-        const secs = recordTime % 60;
-        recordStr = `⏱️ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-      }
+    const stageIds = stages.map(s => s.id);
+    
+    // 해당 크기의 프리셋 + 랜덤맵 레코드 중 최단 기록 필터링
+    const diffTimes = Object.keys(records)
+      .filter(id => id.startsWith(`rand-${size}-`) || stageIds.includes(id))
+      .map(id => records[id]);
 
-      card.innerHTML = `
-        <div class="stage-card-header">
-          <span class="stage-name">${stage.name}</span>
-          ${isCleared ? '<span class="clear-badge">★ 클리어</span>' : '<span class="play-badge">도전</span>'}
-        </div>
-        <div class="stage-card-body">
-          <span class="stage-num">Level ${idx + 1}</span>
-          <span class="stage-record">${recordStr}</span>
-        </div>
-      `;
+    let bestStr = "--:--";
+    if (diffTimes.length > 0) {
+      const minTime = Math.min(...diffTimes);
+      const mins = Math.floor(minTime / 60);
+      const secs = minTime % 60;
+      bestStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
 
-      card.addEventListener("click", () => {
-        initGame(stage);
-      });
-
-      listEl.appendChild(card);
-    });
-
-    // 랜덤 생성 카드 추가
-    const randCard = document.createElement("div");
-    randCard.className = "stage-card random-card";
-    randCard.innerHTML = `
-      <div class="stage-card-header">
-        <span class="stage-name">무한 랜덤 맵</span>
-        <span class="play-badge random">생성</span>
-      </div>
-      <div class="stage-card-body">
-        <span class="stage-num">실시간 생성</span>
-        <span class="stage-record">새로운 도전!</span>
-      </div>
-    `;
-    randCard.addEventListener("click", () => {
-      const newStage = generateRandomStage(size, `rand-${size}-${Date.now()}`);
-      newStage.name = `${size}x${size} 랜덤 미션`;
-      initGame(newStage);
-    });
-    listEl.appendChild(randCard);
+    // 로비 최고기록 엘리먼트들 채우기
+    const statBestEl = document.getElementById(`stat-best-${size}`);
+    const lobbyBestEl = document.getElementById(`lobby-best-${size}`);
+    
+    if (statBestEl) statBestEl.textContent = bestStr;
+    if (lobbyBestEl) lobbyBestEl.textContent = bestStr;
   });
 
-  // 전체 통계 렌더링
-  renderStats(records);
+  // 총 클리어 개수 계산
+  const clearedCount = Object.keys(records).length;
+  document.getElementById("stat-clears").textContent = `${clearedCount}회`;
 }
 
-function renderStats(records) {
-  const totalStages = 5 + 7 + 9; // 대략적인 개수
-  const clearedCount = Object.keys(records).filter(key => !key.startsWith("rand-")).length;
-  
-  document.getElementById("stat-clears").textContent = `${clearedCount}개 스테이지`;
+// --- 스테이지 선택 화면 렌더링 ---
+function renderStageSelect(difficulty) {
+  currentDifficulty = difficulty;
+  const records = loadRecords();
+  const stages = PRESET_STAGES[difficulty] || [];
+  const container = document.getElementById("stages-list-container");
+  container.innerHTML = "";
 
-  // 최단 시간 기록
-  const times = Object.keys(records).map(key => records[key]);
-  if (times.length > 0) {
-    const minTime = Math.min(...times);
+  // 난이도 타이틀 설정
+  let titleStr = "";
+  if (difficulty === 5) titleStr = "초급 보드 (5x5)";
+  else if (difficulty === 7) titleStr = "중급 보드 (7x7)";
+  else if (difficulty === 9) titleStr = "고급 보드 (9x9)";
+  document.getElementById("selected-difficulty-title").textContent = titleStr;
+
+  // 이 난이도의 최고 기록 표시
+  const stageIds = stages.map(s => s.id);
+  const diffTimes = Object.keys(records)
+    .filter(id => id.startsWith(`rand-${difficulty}-`) || stageIds.includes(id))
+    .map(id => records[id]);
+
+  let bestStr = "최고기록: --:--";
+  if (diffTimes.length > 0) {
+    const minTime = Math.min(...diffTimes);
     const mins = Math.floor(minTime / 60);
     const secs = minTime % 60;
-    document.getElementById("stat-best-time").textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  } else {
-    document.getElementById("stat-best-time").textContent = "--:--";
+    bestStr = `최고기록: ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
+  document.getElementById("selected-difficulty-best").textContent = bestStr;
+
+  // 스테이지 카드 동적 빌드
+  stages.forEach((stage, idx) => {
+    const card = document.createElement("div");
+    card.className = "stage-card";
+    
+    const recordTime = records[stage.id];
+    let recordStr = "기록 없음";
+    let isCleared = false;
+    
+    if (recordTime !== undefined) {
+      isCleared = true;
+      const mins = Math.floor(recordTime / 60);
+      const secs = recordTime % 60;
+      recordStr = `⏱️ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    card.innerHTML = `
+      <div class="stage-card-header">
+        <span class="stage-name">${stage.name}</span>
+        ${isCleared ? '<span class="clear-badge">★ 클리어</span>' : '<span class="play-badge">도전</span>'}
+      </div>
+      <div class="stage-card-body">
+        <span class="stage-num">Level ${idx + 1}</span>
+        <span class="stage-record">${recordStr}</span>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      initGame(stage);
+    });
+
+    container.appendChild(card);
+  });
+
+  // 무한 랜덤 맵 카드
+  const randCard = document.createElement("div");
+  randCard.className = "stage-card random-card";
+  randCard.innerHTML = `
+    <div class="stage-card-header">
+      <span class="stage-name">무한 랜덤 맵</span>
+      <span class="play-badge random">생성</span>
+    </div>
+    <div class="stage-card-body">
+      <span class="stage-num">실시간 생성</span>
+      <span class="stage-record">새로운 도전!</span>
+    </div>
+  `;
+  randCard.addEventListener("click", () => {
+    const newStage = generateRandomStage(difficulty, `rand-${difficulty}-${Date.now()}`);
+    newStage.name = `${difficulty}x${difficulty} 랜덤 미션`;
+    initGame(newStage);
+  });
+  container.appendChild(randCard);
+
+  // 스크린 전환
+  document.getElementById("screen-lobby").classList.add("hidden");
+  document.getElementById("screen-game").classList.add("hidden");
+  document.getElementById("screen-stage-select").classList.remove("hidden");
 }
 
 // --- 이벤트 바인딩 및 초기화 ---
 document.addEventListener("DOMContentLoaded", () => {
   renderLobby();
 
-  // 상단 바 버튼 바인딩
-  document.getElementById("btn-lobby").addEventListener("click", goBackToLobby);
+  // 난이도 카드 선택 바인딩 (로비)
+  document.querySelectorAll(".diff-select-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const diff = parseInt(card.dataset.difficulty);
+      renderStageSelect(diff);
+      triggerHaptic();
+    });
+  });
+
+  // 뒤로가기 버튼들 바인딩
+  document.getElementById("btn-back-to-lobby").addEventListener("click", goBackToLobby);
+  document.getElementById("btn-back-to-stages").addEventListener("click", goBackToStages);
+
+  // 인게임 액션 버튼 바인딩
   document.getElementById("btn-restart").addEventListener("click", restartStage);
   document.getElementById("btn-undo").addEventListener("click", undo);
   document.getElementById("btn-hint").addEventListener("click", provideHint);
@@ -712,7 +730,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 모달 버튼 바인딩
   document.getElementById("btn-modal-close").addEventListener("click", closeWinModal);
 
-  // 일시정지 처리 (페이지 백그라운드 전환 시 타이머 정지)
+  // 백그라운드 전환 시 타이머 일시정지
   document.addEventListener("visibilitychange", () => {
     isPaused = document.hidden;
   });

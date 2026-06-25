@@ -8,24 +8,35 @@
 
 ## 📂 프로젝트 파일 구조
 
-* 📄 **[index.html](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/index.html)**: 마크업 골격, 모바일 최적화 뷰포트 설정, SEO 최적화 및 팝업 모달 마크업
-* 🎨 **[styles.css](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/styles.css)**: 딥 블루 다크모드, 글래스모피즘 계열 로비 카드, 영역 구분 굵은 보더 시스템, 충돌 시 네온 레드 점멸 깜빡임 애니메이션 및 클리어 폭죽 이펙트
-* 🧠 **[app.js](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/app.js)**: N-Queen 및 구역 충돌 실시간 검출 논리, 50단계 실행 취소(Undo), 모바일 터치 및 드래그 스와이프를 이용한 X 마크 페인팅 제스처, 영리한 정답 가이드 힌트(Hint) 시스템, LocalStorage 연동 및 화면 전환 제어
+* 📄 **[index.html](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/index.html)**: 마크업 골격, 모바일 최적화 뷰포트 설정, SEO 최적화, 3단계 화면 구조(로비/스테이지 선택/게임판) 및 팝업 모달 마크업
+* 🎨 **[styles.css](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/styles.css)**: 딥 블루 다크모드, 글래스모피즘 계열 UI 카드, 난이도별 네온 보더 효과, 영역 구분 굵은 보더 시스템, 충돌 시 네온 레드 점멸 깜빡임 애니메이션 및 클리어 폭죽 이펙트
+* 🧠 **[app.js](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/app.js)**: N-Queen 및 구역 충돌 실시간 검출 논리, 50단계 실행 취소(Undo), 모바일 터치 및 드래그 스와이프를 이용한 X 마크 페인팅 제스처, 영리한 정답 가이드 힌트(Hint) 시스템, LocalStorage 연동 및 3단계 화면 라우팅 제어
 * 🗄️ **[stages.js](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/stages.js)**: 난이도별 프리셋(5x5, 7x7, 9x9) 맵 데이터 및 **백트래킹 N-Queen + BFS 구역 팽창** 기반 실시간 무작위 맵 생성 알고리즘
 * 🌐 **[server.js](file:///data/data/com.termux/files/home/workspace/geminihaha.github.com/queenz/server.js)**: 안드로이드 Termux 환경 맞춤형 zero-dependency 정적 파일 웹 서버
 
 ---
 
-## 🧠 핵심 로직 및 알고리즘 구현 완료
+## 🧠 핵심 기능 및 논리 알고리즘
 
-### 1. 실시간 3대 규칙 검증기 (Validator)
-보드에 배치된 모든 퀸(Queen)들의 위치를 실시간으로 탐색하여 충돌을 검출합니다.
+### 1. 실시간 3대 규칙 즉시 검증기 (Validator)
+보드에 배치된 모든 퀸(Queen)들의 위치를 실시간으로 탐색하여 충돌을 검출합니다. **특히 퀸을 설치/제거하는 즉시 승리 조건을 판별하여 딜레이 없이 즉시 완료 팝업이 노출되도록 최적화했습니다.**
 * **행/열 중복 방지**: 하나의 행(Row)과 열(Column)에 단 1개의 퀸만 위치해야 함.
-* **색상 구역(Region) 제한**: 불규칙하게 분포된 각 색상 영역 내에 단 1개의 퀸만 위치해야 함.
+* **색상 구역(Region) 제한**: 각 색상 영역 내에 단 1개의 퀸만 위치해야 함.
 * **8방향 인접 제한**: 퀸이 놓인 칸을 기준으로 **바로 인접한 이웃 8칸**에는 다른 퀸이 존재할 수 없음.
 * **시각적 피드백**: 규칙 위반을 일으키는 퀸 셀에는 `conflict-blink` 클래스를 실시간으로 부여하여 빨간색으로 점멸(Blink)하도록 처리.
 
-### 2. 무한 랜덤 맵 생성기 (Generator)
+### 2. 난이도별 화면 분리 및 스테이지 선택 스크린
+* **메인 로비 (난이도 선택)**: 5x5(초급), 7x7(중급), 9x9(고급) 난이도를 선택하는 메인 홈 화면.
+* **스테이지 선택 화면**: 선택한 난이도에 수록된 개별 스테이지 카드 및 '무한 랜덤 맵 생성' 카드를 보여주는 서브 화면.
+* **게임 플레이 화면**: 선택한 개별 퍼즐을 실시간 타이머 및 액션 컨트롤러와 함께 플레이하는 최종 화면.
+
+### 3. 난이도별 클리어 타임 기록 제공
+유저의 도전 욕구를 극대화하기 위해 클리어 시간을 전체 기준이 아닌 **난이도별(5x5, 7x7, 9x9)로 세분화하여 기록**합니다.
+* 메인 로비 상단 통계 패널에 난이도별 최고 기록 실시간 노출.
+* 난이도 카드 하단 및 개별 스테이지 선택 내비바 영역에 최고 기록 정보 노출.
+* `LocalStorage`를 통해 마지막 성공 기록이 지속 갱신 및 영구 저장됩니다.
+
+### 4. 무한 랜덤 맵 생성기 (Generator)
 기본 프리셋 스테이지 이외에 무한히 새로운 도전을 할 수 있도록 실시간 맵 제네레이터를 완벽 구현했습니다.
 * **N-Queen 백트래킹**: 8방향 인접 제한과 행/열 중복 방지를 만족하는 $N$개의 퀸 좌표를 백트래킹으로 신속하게 검색.
 * **BFS 구역 팽창**: 생성된 퀸 좌표를 씨앗(Seed)으로 삼아, $N$개의 큐에서 임의의 방향으로 칸을 확장하여 영역(Region)을 분할. 이를 통해 **항상 유효한 해가 최소 1개 보장된 연결성 맵**을 무한히 자동 생성합니다.
@@ -37,7 +48,6 @@
 * **시각적 인지성 극대화**: 영역 구분을 한눈에 할 수 있도록, 인접한 셀의 영역 ID가 다를 경우에만 `3px solid rgba(255, 255, 255, 0.85)`의 굵은 테두리를 렌더링하도록 렌더러 설계.
 * **스마트 드로잉 (X 마크 브러시)**: 모바일 터치 스와이프나 마우스 드래그를 통해 빈칸에 X(메모) 마크를 쓱 문질러 칠할 수 있는 페인팅 기능 적용.
 * **지능형 힌트 (💡)**: 오답 퀸이 있으면 오답 위치를 정정해주고, 오답이 없으면 정답 퀸 위치를 보드에 자동으로 올바르게 배치해주며 주변 영역에 유도적인 X 마킹 서비스 제공.
-* **로컬 신기록 저장**: 유저가 스테이지를 클리어하면 `LocalStorage`에 영구 기록되어 로비 화면의 레코드 및 통계에 즉시 반영.
 
 ---
 
