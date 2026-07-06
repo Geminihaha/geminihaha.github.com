@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>한글핑의 한글놀이 (Hangulping Quest) - 만 7세 이하 한글 놀이터</title>
+    <meta name="description" content="만 7세 이하 아이들을 위한 파스텔 톤 한글 따라쓰기 및 단어 매칭 놀이 웹앱">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Main Native-like App Wrapper -->
+    <div class="app-container" id="app-container">
+        
+        <!-- Scenic background with floating clouds and hills (Always visible underneath panels) -->
+        <div class="landscape-bg">
+            <div class="cloud c1"></div>
+            <div class="cloud c2"></div>
+            <div class="hill-back"></div>
+            <div class="hill-front"></div>
+        </div>
+
+        <!-- Top App Bar -->
+        <header class="app-header" id="app-header">
+            <!-- Back to Hub Button (Hidden on Hub screen) -->
+            <button class="btn-icon-only" id="btn-back-to-hub" style="display: none;" aria-label="이전 화면으로 돌아가기">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+            </button>
+            
+            <!-- Logo / Home Badge -->
+            <h1 class="logo-title" id="logo-title">
+                🌟 한글핑의 한글놀이
+            </h1>
+
+            <!-- Jewel Display -->
+            <div class="jewel-counter" id="jewel-counter-box" title="획득한 보석">
+                <span class="jewel-icon">💎</span>
+                <span id="jewel-count">0</span>
+            </div>
+        </header>
+
+        <!-- ===================================================================
+             0. INITIAL MENU SCREEN
+             =================================================================== -->
+        <main class="screen active" id="screen-menu">
+            <div class="menu-container">
+                <div class="menu-logo-box animate-float">
+                    <img class="menu-character-img" src="hangulping.png" alt="한글핑 캐릭터" />
+                </div>
+                <h2 class="menu-title">한글핑의<br/>한글놀이</h2>
+                <p class="menu-subtitle">✨ 재미있는 한글 모험을 떠나볼까요? ✨</p>
+                
+                <div class="menu-buttons-wrapper">
+                    <button class="btn-menu-select btn-consonants" id="btn-menu-consonants">
+                        자음 모험 떠나기 🌟
+                    </button>
+                    <button class="btn-menu-select btn-vowels" id="btn-menu-vowels">
+                        모음 모험 떠나기 🌈
+                    </button>
+                    <button class="btn-menu-select btn-combine" id="btn-menu-combine">
+                        글자 만들기 놀이 🧩
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- ===================================================================
+             A. MAIN HUB (STAGE SELECT MAP) SCREEN
+             =================================================================== -->
+        <main class="screen" id="screen-hub">
+            <div class="map-container">
+                <!-- SVG Curvy path linking stages -->
+                <svg class="map-road-svg" viewBox="0 0 400 1100" preserveAspectRatio="none">
+                    <!-- Core dirt road border -->
+                    <path class="road-line-back" d="M 200 1020 C 100 970, 100 900, 200 850 C 300 800, 300 730, 200 680 C 100 630, 100 560, 200 510 C 300 460, 300 390, 200 340 C 100 290, 100 220, 200 170 C 300 120, 250 50, 200 50" />
+                    <!-- Inner yellow/white dashed line -->
+                    <path class="road-line-front" d="M 200 1020 C 100 970, 100 900, 200 850 C 300 800, 300 730, 200 680 C 100 630, 100 560, 200 510 C 300 460, 300 390, 200 340 C 100 290, 100 220, 200 170 C 300 120, 250 50, 200 50" />
+                </svg>
+
+                <!-- Absolute positioned star nodes will be rendered here by JS -->
+                <div class="stages-layer" id="stages-layer"></div>
+            </div>
+            
+            <!-- Sticker book trigger button at the bottom of the map -->
+            <div style="padding: 10px; z-index:10; display:flex; justify-content:center;">
+                <button class="btn-action btn-hint" id="btn-open-stickers" style="max-width: 260px;">
+                    📖 내 스티커 도감 보기
+                </button>
+            </div>
+        </main>
+
+        <!-- ===================================================================
+             A-2. LETTER MAKER SCREEN
+             =================================================================== -->
+        <main class="screen" id="screen-combine">
+            <div class="combine-container">
+                <!-- Word result panel -->
+                <div class="result-display-panel">
+                    <span class="combined-char-text" id="combined-result-text">?</span>
+                    <!-- Speaker button for TTS feedback -->
+                    <button class="btn-tts" id="btn-speak-combined" style="display: none;" aria-label="글자 소리 듣기">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Kombi Slots -->
+                <div class="combine-slots-area">
+                    <div class="combine-slot" id="slot-consonant">
+                        <span class="combine-slot-label">자음 넣는 곳</span>
+                    </div>
+                    <div class="combine-slot" id="slot-vowel">
+                        <span class="combine-slot-label">모음 넣는 곳</span>
+                    </div>
+                    <div class="combine-slot" id="slot-batchim">
+                        <span class="combine-slot-label">받침 넣는 곳</span>
+                    </div>
+                </div>
+
+                <button class="btn-clear-slots" id="btn-clear-combine" aria-label="글자 조합 초기화">
+                    다시 만들기 🔄
+                </button>
+
+                <!-- Consonants pool row -->
+                <div class="card-pool-container" style="margin-top: 20px;">
+                    <div class="pool-title">🧱 자음 카드 (드래그하거나 눌러보세요)</div>
+                    <div class="pool-scroll-row" id="pool-consonants">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Vowels pool row -->
+                <div class="card-pool-container">
+                    <div class="pool-title">🧱 모음 카드 (드래그하거나 눌러보세요)</div>
+                    <div class="pool-scroll-row" id="pool-vowels">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ===================================================================
+             B. WRITING GAME SCREEN
+             =================================================================== -->
+        <main class="screen" id="screen-learn">
+            <!-- Stage information bar -->
+            <div class="learn-header">
+                <div>
+                    <h2 style="font-size: 1.8rem; color: var(--color-text-main);">글자를 따라 써요!</h2>
+                    <p style="font-size: 1.1rem; color: var(--color-text-muted);">손가락으로 쓱쓱 그려보세요</p>
+                </div>
+                <!-- Big visual card showing target letter -->
+                <div class="current-letter-display" id="current-letter">ㄱ</div>
+            </div>
+
+            <!-- Drawing Canvas Wrapper -->
+            <div class="canvas-outer">
+                <!-- Underlaid guide SVG structure representing letter strokes -->
+                <svg class="canvas-guide-svg" viewBox="0 0 300 350">
+                    <line x1="150" y1="0" x2="150" y2="350" class="guide-crosshair" />
+                    <line x1="0" y1="175" x2="300" y2="175" class="guide-crosshair" />
+                    
+                    <!-- Dotted background path for guidance (Controlled by JS via letter ID) -->
+                    <path id="guide-letter-path" d="" class="guide-letter-path" />
+                    <path id="guide-letter-core" d="" class="guide-letter-core" />
+                </svg>
+
+                <!-- Interactive canvas -->
+                <canvas id="writing-canvas"></canvas>
+
+                <!-- Overlay guide SVG for stroke numbers, arrows and hint animation (Above canvas) -->
+                <svg id="canvas-overlay-svg" class="canvas-overlay-svg" viewBox="0 0 300 350">
+                    <defs>
+                        <!-- Cute purple/violet arrow marker for stroke direction -->
+                        <marker id="guide-arrow" viewBox="0 0 10 10" refX="8" refY="5" 
+                                markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+                            <path d="M 1 2 L 8 5 L 1 8 Z" fill="hsl(262, 70%, 60%)" stroke="white" stroke-width="1" stroke-linejoin="round" />
+                        </marker>
+                    </defs>
+                    <g id="stroke-guides-group"></g>
+                </svg>
+            </div>
+
+            <!-- Canvas bottom control options -->
+            <div class="canvas-footer">
+                <button class="btn-action btn-reset" id="btn-reset" aria-label="캔버스 다시 그리기">
+                    <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    다시 쓰기
+                </button>
+                <button class="btn-action btn-hint" id="btn-hint" aria-label="글자 쓰는 힌트 얻기">
+                    <svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1L13 14v3h-2v-3l-1.85-1.9C8.48 11.48 8 10.3 8 9c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.3-.48 2.48-1.15 3.1z"/></svg>
+                    힌트 보기
+                </button>
+                <button class="btn-action btn-next shimmer" id="btn-next" style="display: none;" aria-label="글자 쓰기 완료하고 퀴즈 풀기">
+                    우와! 완성
+                    <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+                </button>
+            </div>
+        </main>
+
+        <!-- ===================================================================
+             C. QUIZ / MATCHING GAME SCREEN
+             =================================================================== -->
+        <main class="screen" id="screen-quiz">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <span class="quiz-title">그림에 알맞은 글자를 맞춰보세요</span>
+                </div>
+
+                <!-- Drop center target area -->
+                <div class="quiz-target-area" id="quiz-target-area">
+                    <!-- SVG and empty block inserted by JS -->
+                </div>
+
+                <!-- Choices container -->
+                <div class="quiz-options-area" id="quiz-options-area">
+                    <!-- Choices draggable blocks rendered by JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- ===================================================================
+             OVERLAY 1: CELEBRATION REWARD SCREEN
+             =================================================================== -->
+        <div class="overlay-container" id="overlay-reward">
+            <div class="glass-panel reward-popup">
+                <div style="font-size: 4rem; margin-bottom: 10px; animation: floatAsset 2s infinite alternate ease-in-out;">🎉</div>
+                <h2 class="reward-title" id="reward-title">참 잘했어요!</h2>
+                
+                <!-- Jewel celebration blocks -->
+                <div class="jewels-reward-display" id="jewels-reward-display"></div>
+
+                <button class="reward-sticker-btn shimmer" id="btn-collect">
+                    보석 받고 지도 가기 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             OVERLAY 2: STICKER BOOK (COLLECTION) SCREEN
+             =================================================================== -->
+        <div class="overlay-container" id="overlay-stickers">
+            <div class="glass-panel" style="width: 100%; max-width: 400px; padding: 25px; position:relative;">
+                <h2 style="font-size: 2rem; text-align: center; margin-bottom: 20px; color: var(--color-text-main);">🎒 나의 단어 스티커 북</h2>
+                
+                <div class="sticker-grid" id="sticker-grid">
+                    <!-- Rendered programmatically -->
+                </div>
+
+                <button class="btn-action btn-reset" id="btn-close-stickers" style="margin-top: 25px; width:100%;">
+                    도감 닫기
+                </button>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             LIVELY MASCOT AREA (ANIMATING BUNNY ON CORNER)
+             =================================================================== -->
+        <div class="character-area" id="character-area">
+            <div class="bunny-character" id="bunny-character">
+                <!-- SVG inject -->
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

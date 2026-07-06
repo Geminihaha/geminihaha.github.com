@@ -1,0 +1,13 @@
+{
+  "name": "queens-puzzle",
+  "version": "1.0.0",
+  "description": "Queens Logic Puzzle Game in HTML/CSS/JS",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
