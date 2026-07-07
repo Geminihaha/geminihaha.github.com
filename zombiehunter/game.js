@@ -4,6 +4,7 @@
 
 // ─── 설정 ───
 let W = window.innerWidth, H = window.innerHeight;
+let touchCount=0, lastTouchTime=0;
 const MAP_W = 4000, MAP_H = 4000;
 const FIXED_DT = 1/60;
 const PI = Math.PI, TAU = PI*2;
@@ -344,11 +345,13 @@ document.addEventListener('mousedown',e=>{
 });
 document.addEventListener('mouseup',e=>{mouse.clicked=false;});
 document.addEventListener('touchstart',e=>{
+  touchCount++; lastTouchTime=Date.now();
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
   mouse.x=c.x; mouse.y=c.y; mouse.clicked=true; mouse.justClicked=true;
-  handleMenuClick(c.x,c.y); // 메뉴 직접 처리
+  handleMenuClick(c.x,c.y);
 },{passive:true});
 document.addEventListener('touchmove',e=>{
+  touchCount++; lastTouchTime=Date.now();
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
   mouse.x=c.x; mouse.y=c.y;
 },{passive:true});
@@ -1105,9 +1108,11 @@ class Game {
     ctx.fillStyle='#666'; ctx.font='14px sans-serif'; ctx.textAlign='center';
     ctx.fillText('방향키/WASD 이동  •  자동 공격  •  레벨업으로 능력 강화',W/2,H-30);
 
-    // 터치 위치 표시 (진단용)
-    ctx.fillStyle='lime'; ctx.font='12px monospace'; ctx.textAlign='left';
-    ctx.fillText(`W=${W} H=${H} mouse=(${Math.round(mouse.x)},${Math.round(mouse.y)})`,10,20);
+    // 디버그 정보 (진단용)
+    ctx.fillStyle='lime'; ctx.font='11px monospace'; ctx.textAlign='left';
+    const ago=lastTouchTime?((Date.now()-lastTouchTime)/1000).toFixed(1)+'s ago':'none';
+    ctx.fillText(`state=${game.state} W=${W} H=${H}`,10,16);
+    ctx.fillText(`mouse=(${Math.round(mouse.x)},${Math.round(mouse.y)}) touch#=${touchCount} last=${ago}`,10,30);
     // 터치 위치 빨간 점
     if(mouse.clicked||mouse.justClicked){
       ctx.beginPath(); ctx.arc(mouse.x,mouse.y,12,0,TAU);
