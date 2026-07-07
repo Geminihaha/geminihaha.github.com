@@ -324,6 +324,8 @@ const ENEMY_TYPES = [
 
 // ─── 입력 ───
 const keys={}, mouse={x:0,y:0,clicked:false,justClicked:false};
+// 가상 스틱: 터치/클릭 시작 지점(base)을 중심으로 현재 포인터(cur) 방향에 따라 이동
+const joystick={active:false,baseX:0,baseY:0,curX:0,curY:0};
 
 function toCanvasCoords(clientX,clientY){
   const cv=document.getElementById('gc');
@@ -336,27 +338,38 @@ function toCanvasCoords(clientX,clientY){
 
 document.addEventListener('keydown',e=>{keys[e.key]=true; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.key))e.preventDefault();});
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
-document.addEventListener('mousemove',e=>{const c=toCanvasCoords(e.clientX,e.clientY);mouse.x=c.x;mouse.y=c.y;});
+document.addEventListener('mousemove',e=>{
+  const c=toCanvasCoords(e.clientX,e.clientY);
+  mouse.x=c.x;mouse.y=c.y;
+  if(joystick.active){ joystick.curX=c.x; joystick.curY=c.y; }
+});
 document.addEventListener('mousedown',e=>{
   mouse.clicked=true;mouse.justClicked=true;
+  const c=toCanvasCoords(e.clientX,e.clientY);
+  mouse.x=c.x; mouse.y=c.y;
   if(game&&game.state==='menu'){
-    const c=toCanvasCoords(e.clientX,e.clientY);
     handleMenuClick(c.x,c.y);
+  } else if(game&&game.state==='playing'){
+    joystick.active=true; joystick.baseX=joystick.curX=c.x; joystick.baseY=joystick.curY=c.y;
   }
 });
-document.addEventListener('mouseup',e=>{mouse.clicked=false;});
+document.addEventListener('mouseup',e=>{mouse.clicked=false; joystick.active=false;});
 document.addEventListener('touchstart',e=>{
   touchCount++; lastTouchTime=Date.now();
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
   mouse.x=c.x; mouse.y=c.y; mouse.clicked=true; mouse.justClicked=true;
   handleMenuClick(c.x,c.y);
+  if(game&&game.state==='playing'){
+    joystick.active=true; joystick.baseX=joystick.curX=c.x; joystick.baseY=joystick.curY=c.y;
+  }
 },{passive:true});
 document.addEventListener('touchmove',e=>{
   touchCount++; lastTouchTime=Date.now();
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
   mouse.x=c.x; mouse.y=c.y;
+  if(joystick.active){ joystick.curX=c.x; joystick.curY=c.y; }
 },{passive:true});
-document.addEventListener('touchend',e=>{mouse.clicked=false;},{passive:true});
+document.addEventListener('touchend',e=>{mouse.clicked=false; joystick.active=false;},{passive:true});
 
 // 메뉴 클릭/터치 직접 처리 — 게임 루프 타이밍과 무관하게 즉시 반응
 function handleMenuClick(cx,cy){
@@ -721,16 +734,13 @@ class Game {
     if(keys['a']||keys['A']||keys['ArrowLeft']) dx=-1;
     if(keys['d']||keys['D']||keys['ArrowRight']) dx=1;
 
-    // touch input - move toward touch
-    if(!dx&&!dy&&mouse.clicked){
-      const mx=mouse.x, my=mouse.y;
-      if(mx>=0&&mx<=W&&my>=0&&my<=H){
-        const wx=mx+this.camX, wy=my+this.camY;
-        if(dist(p.x,p.y,wx,wy)>10){
-          dx=wx-p.x; dy=wy-p.y;
-          const len=Math.hypot(dx,dy);
-          dx/=len; dy/=len;
-        }
+    // 가상 스틱 입력 - 터치/클릭 시작 지점(base) 대비 현재 포인터 방향으로 이동
+    if(!dx&&!dy&&joystick.active){
+      const jdx=joystick.curX-joystick.baseX, jdy=joystick.curY-joystick.baseY;
+      const jlen=Math.hypot(jdx,jdy);
+      const deadzone=8;
+      if(jlen>deadzone){
+        dx=jdx/jlen; dy=jdy/jlen;
       }
     }
 
@@ -1252,6 +1262,24 @@ class Game {
       ctx.fillRect(W-200,H-20,195,16);
       ctx.fillStyle='#8f8'; ctx.font='10px monospace'; ctx.textAlign='right';
       ctx.fillText(`${avgFps}FPS ${this.entities.length}ent 히트:${this.hitCount}`,W-8,H-8);
+    }
+
+    // 가상 스틱 표시 (터치/클릭 시작 지점 기준)
+    if(this.state==='playing' && joystick.active){
+      const jdx=joystick.curX-joystick.baseX, jdy=joystick.curY-joystick.baseY;
+      const jlen=Math.hypot(jdx,jdy);
+      const maxR=50, ang=Math.atan2(jdy,jdx);
+      const clampedLen=Math.min(jlen,maxR);
+      const stickX=joystick.baseX+(jlen>0?Math.cos(ang)*clampedLen:0);
+      const stickY=joystick.baseY+(jlen>0?Math.sin(ang)*clampedLen:0);
+
+      ctx.beginPath(); ctx.arc(joystick.baseX,joystick.baseY,maxR,0,TAU);
+      ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=2; ctx.stroke();
+
+      ctx.beginPath(); ctx.arc(stickX,stickY,22,0,TAU);
+      ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=2; ctx.stroke();
     }
   }
 
