@@ -1361,7 +1361,7 @@ function loop(timestamp){
       `fps=${avgFps} `+
       `dt=${(dt*1000).toFixed(1)}ms `+
       `entities=${game?game.entities.length:'-'} `+
-      `player=(${game?Math.round(game.player.x):'-'},${game?Math.round(game.player.y):'-'}) `+
+      `player=(${game&&game.player?Math.round(game.player.x):'-'},${game&&game.player?Math.round(game.player.y):'-'}) `+
       `cam=(${game?Math.round(game.camX):'-'},${game?Math.round(game.camY):'-'})`
     );
   }
