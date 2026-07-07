@@ -335,11 +335,18 @@ function toCanvasCoords(clientX,clientY){
 document.addEventListener('keydown',e=>{keys[e.key]=true; if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.key))e.preventDefault();});
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
 document.addEventListener('mousemove',e=>{const c=toCanvasCoords(e.clientX,e.clientY);mouse.x=c.x;mouse.y=c.y;});
-document.addEventListener('mousedown',e=>{mouse.clicked=true;mouse.justClicked=true;});
+document.addEventListener('mousedown',e=>{
+  mouse.clicked=true;mouse.justClicked=true;
+  if(game&&game.state==='menu'){
+    const c=toCanvasCoords(e.clientX,e.clientY);
+    handleMenuClick(c.x,c.y);
+  }
+});
 document.addEventListener('mouseup',e=>{mouse.clicked=false;});
 document.addEventListener('touchstart',e=>{
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
   mouse.x=c.x; mouse.y=c.y; mouse.clicked=true; mouse.justClicked=true;
+  handleMenuClick(c.x,c.y); // 메뉴 직접 처리
   e.preventDefault();
 },{passive:false});
 document.addEventListener('touchmove',e=>{
@@ -347,6 +354,25 @@ document.addEventListener('touchmove',e=>{
   mouse.x=c.x; mouse.y=c.y; e.preventDefault();
 },{passive:false});
 document.addEventListener('touchend',e=>{mouse.clicked=false; e.preventDefault();},{passive:false});
+
+// 메뉴 클릭/터치 직접 처리 — 게임 루프 타이밍과 무관하게 즉시 반응
+function handleMenuClick(cx,cy){
+  if(!game||game.state!=='menu') return;
+  const menuBoxW = Math.min(440, W * 0.9);
+  const itemH=60, startY=160;
+  for(let i=0;i<CHARACTERS.length;i++){
+    const y=startY+i*itemH;
+    if(cy>=y&&cy<y+itemH&&cx>W/2-menuBoxW/2&&cx<W/2+menuBoxW/2){
+      game.startGame(i);
+      return;
+    }
+  }
+}
+document.addEventListener('click',e=>{
+  if(!game||game.state!=='menu') return;
+  const c=toCanvasCoords(e.clientX,e.clientY);
+  handleMenuClick(c.x,c.y);
+});
 
 // ─── 게임 메인 ───
 const canvas=document.getElementById('gc');
@@ -676,20 +702,8 @@ class Game {
   }
 
   updateMenu(dt){
-    // handle character selection
-    const total=CHARACTERS.length;
-    const menuBoxW = Math.min(440, W * 0.9);
-    const itemH=60, startY=160;
-    this.menuHover=-1;
-    for(let i=0;i<total;i++){
-      const y=startY+i*itemH;
-      if(mouse.y>=y&&mouse.y<y+itemH&&mouse.x>W/2-menuBoxW/2&&mouse.x<W/2+menuBoxW/2){
-        this.menuHover=i;
-        if(mouse.justClicked){ this.startGame(i); mouse.justClicked=false; return; }
-      }
-    }
-    // keyboard selection
-    for(let i=0;i<total;i++){
+    // keyboard selection (handled here because event timing is reliable)
+    for(let i=0;i<CHARACTERS.length;i++){
       if(keys[String(i+1)]){
         this.startGame(i); keys[String(i+1)]=false; return;
       }
