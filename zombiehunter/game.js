@@ -725,7 +725,7 @@ class Game {
     if(!dx&&!dy&&mouse.clicked){
       const mx=mouse.x, my=mouse.y;
       if(mx>=0&&mx<=W&&my>=0&&my<=H){
-        const wx=mx+this.camX-W/2, wy=my+this.camY-H/2;
+        const wx=mx+this.camX, wy=my+this.camY;
         if(dist(p.x,p.y,wx,wy)>10){
           dx=wx-p.x; dy=wy-p.y;
           const len=Math.hypot(dx,dy);
