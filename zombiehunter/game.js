@@ -29,7 +29,6 @@ const randInt = (a,b) => Math.floor(rand(a,b+1));
 const dist = (x1,y1,x2,y2) => Math.hypot(x2-x1,y2-y1);
 const clamp = (v,min,max) => Math.max(min,Math.min(max,v));
 const lerp = (a,b,t) => a+(b-a)*t;
-const choice = arr => arr[Math.floor(Math.random()*arr.length)];
 
 // ─── 캐릭터 정의 ───
 const CHARACTERS = [
@@ -131,13 +130,15 @@ const WEAPON_DEFS = {
     update:(g,w,dt)=>{
       w.timer+=dt; if(w.timer<w.cd*g.speedMul) return; w.timer=0;
       const p=g.player, range=200*g.areaMul;
-      let targets=[];
+      // 가장 가까운(=가장 위협적인) 몬스터부터 처치 - 체력 많은 몬스터가 무작위로 반복 선택되어
+      // 체력 낮은 몬스터들이 방치된 채 근처에 몰리는 현상 방지
+      let t=null, minDist=range;
       for(const e of g.entities){
         if(e.type!=='enemy'||e.hp<=0) continue;
-        if(dist(p.x,p.y,e.x,e.y)<=range) targets.push(e);
+        const d=dist(p.x,p.y,e.x,e.y);
+        if(d<=minDist){minDist=d; t=e;}
       }
-      if(!targets.length) return;
-      const t=choice(targets);
+      if(!t) return;
       const dmg=w.dmg*g.dmgMul;
       t.hp-=dmg; g.spawnDamageNum(t.x,t.y,dmg);
       g.screenshake=4;
@@ -169,7 +170,17 @@ const WEAPON_DEFS = {
     desc:'폭발성 화염구',
     update:(g,w,dt)=>{
       w.timer+=dt; if(w.timer<w.cd*g.speedMul) return; w.timer=0;
-      const p=g.player, angle=Math.atan2(p.fy,p.fx);
+      const p=g.player;
+      // 가장 가까운 몬스터를 조준 - 기존에는 이동 방향으로만 발사되어 캐릭터가 멈추거나
+      // 방향을 바꾸면 근처 몬스터(특히 체력 낮은 몬스터)를 계속 빗맞혀 방치하는 문제가 있었음
+      let target=null, minDist=350*g.areaMul;
+      for(const e of g.entities){
+        if(e.type!=='enemy'||e.hp<=0) continue;
+        const d=dist(p.x,p.y,e.x,e.y);
+        if(d<minDist){minDist=d; target=e;}
+      }
+      let angle=Math.atan2(p.fy,p.fx);
+      if(target) angle=Math.atan2(target.y-p.y,target.x-p.x);
       const sp=w.speed||200;
       g.entities.push({
         type:'projectile', team:'player', x:p.x, y:p.y,
