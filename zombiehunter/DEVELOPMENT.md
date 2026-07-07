@@ -67,6 +67,12 @@
   - 추가 CSS: `-webkit-touch-callout:none; -webkit-user-select:none;` (.getSelection 방지).
 - **검증**: 모바일 환경에서 터치 좌표가 지속적으로 업데이트되고, 메뉴 선택이 정상 동작하는지 확인 필요.
 
+### 2026-07-07 (추가) — 좌표 변환 실패로 인한 좌측 상단(0,0) 이동 버그 수정
+- **증상**: 터치/클릭 시 포인터가 항상 좌측 상단 (0,0)으로 이동.
+- **원인**: `toCanvasCoords()` 함수(line 328)가 `const canvas` 선언(line 381)보다 먼저 정의됨. `const`는 TDZ(Temporal Dead Zone) 적용으로, 함수 호출 시점에 `canvas`가 `undefined` → `canvas.getBoundingClientRect()`에서 TypeError 발생 → 예외 처리 없이 좌표 (0,0)으로 폴백.
+- **수정**: `toCanvasCoords()` 내부에서 `canvas` 대신 `document.getElementById('gc')`를 직접 참조하도록 변경. 함수 호출 시점과 무관하게 안전하게 DOM 요소를 가져옴.
+- **검증**: `node --check game.js` 통과. 실제 모바일에서 터치 위치가 정확히 표시되는지 확인 필요.
+
 ### 2026-07-07 21:15 (약) — 메인 화면 1초 후 전체 입력 먹통 현상 수정 (실제 근본 원인)
 - **증상**: 메인 화면 진입 1초 정도 후 캐릭터 선택 등 모든 동작이 멈춤.
 - **원인 분석**: `loop()` 함수의 1초 간격 디버그 로그(`console.log`)가 `game.player.x`를 널 체크 없이 참조. 메뉴 상태에서는 `game.player=null`이므로 진입 후 첫 로그 타이밍(1초)에 `TypeError` 발생. 이 로그 코드는 `game.update()/render()`를 감싸는 `try/catch` 범위 밖에 있어 예외가 그대로 `requestAnimationFrame` 콜백을 중단시킴 → 다음 프레임 예약이 안 되어 렌더/업데이트 루프 자체가 완전히 정지. 캐릭터 선택 이벤트 핸들러는 별도로 동작해 내부적으로 호출은 되지만 화면이 갱신되지 않아 "아무 반응 없음"으로 보임.
