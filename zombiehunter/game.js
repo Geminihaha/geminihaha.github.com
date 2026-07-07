@@ -1033,62 +1033,58 @@ class Game {
     if(this.state==='menu'){ this.renderMenu(); ctx.restore(); return; }
 
     this.renderBackground();
-    this.renderEntities();
-
-    // player
-    this.renderPlayer();
-
-    // damage numbers
-    for(const d of this.damageNums) if(d.draw) d.draw(ctx);
-
-    ctx.restore();
-
-    // HUD (not affected by shake)
-    this.renderHUD();
-
-    if(this.state==='levelUp') this.renderLevelUp();
-    if(this.state==='gameOver') this.renderGameOver();
+    const menuBoxW = Math.min(440, W * 0.9);
+    const itemH=70, startY=200;
+    this.menuHover=-1;
+    for(let i=0;i<total;i++){
+      const y=startY+i*itemH;
+      if(mouse.y>=y&&mouse.y<y+itemH&&mouse.x>W/2-menuBoxW/2&&mouse.x<W/2+menuBoxW/2){
+        this.menuHover=i;
+        if(mouse.justClicked){ this.startGame(i); mouse.justClicked=false; return; }
+      }
+    }
+    // keyboard selection
+    for(let i=0;i<total;i++){
+      if(keys[String(i+1)]){
+        this.startGame(i); keys[String(i+1)]=false; return;
+      }
+    }
   }
 
+  // 메뉴 화면 렌더링
   renderMenu(){
     // background
     ctx.fillStyle='#0a0a12';
     ctx.fillRect(0,0,W,H);
 
-    // grid lines
-    ctx.strokeStyle='rgba(40,40,80,0.3)'; ctx.lineWidth=1;
-    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-
     // title
-    ctx.fillStyle='#f44'; ctx.font='bold 52px sans-serif'; ctx.textAlign='center';
-    ctx.shadowColor='#f44'; ctx.shadowBlur=30;
-    ctx.fillText('🧟 ZOMBIE HUNTER',W/2,90);
-    ctx.shadowBlur=0;
-    ctx.fillStyle='#aaa'; ctx.font='20px sans-serif';
-    ctx.fillText('뱀파이어 서바이버 스타일 서바이벌 액션 게임',W/2,130);
+    ctx.fillStyle='#f44'; ctx.font='bold 40px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('🧟 ZOMBIE HUNTER',W/2,70);
+    ctx.fillStyle='#aaa'; ctx.font='16px sans-serif';
+    ctx.fillText('뱀파이어 서바이버 스타일',W/2,100);
 
     // character select
-    ctx.fillStyle='#fff'; ctx.font='bold 22px sans-serif';
-    ctx.fillText('— 캐릭터 선택 —',W/2,180);
+    ctx.fillStyle='#fff'; ctx.font='bold 18px sans-serif';
+    ctx.fillText('— 캐릭터 선택 —',W/2,140);
 
-    const itemH=70, startY=200;
+    const menuBoxW = Math.min(440, W * 0.9);
+    const itemH=60, startY=160;
     for(let i=0;i<CHARACTERS.length;i++){
       const ch=CHARACTERS[i];
       const y=startY+i*itemH;
       const hover=i===this.menuHover;
 
       ctx.fillStyle=hover?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.05)';
-      ctx.fillRect(W/2-220,y,440,itemH-6);
+      ctx.fillRect(W/2-menuBoxW/2,y,menuBoxW,itemH-6);
       if(hover){
         ctx.strokeStyle='#f44'; ctx.lineWidth=2;
-        ctx.strokeRect(W/2-220,y,440,itemH-6);
+        ctx.strokeRect(W/2-menuBoxW/2,y,menuBoxW,itemH-6);
       }
 
-      ctx.fillStyle='#fff'; ctx.font='20px sans-serif'; ctx.textAlign='left';
-      ctx.fillText(`${i+1}. ${ch.name}  —  ${ch.weapon?WEAPON_DEFS[ch.weapon]?.name||'':''}`,W/2-200,y+25);
-      ctx.fillStyle='#aaa'; ctx.font='15px sans-serif';
-      ctx.fillText(ch.bonus,W/2-200,y+50);
+      ctx.fillStyle='#fff'; ctx.font='16px sans-serif'; ctx.textAlign='left';
+      ctx.fillText(`${i+1}. ${ch.name}`, W/2-menuBoxW/2+20, y+25);
+      ctx.fillStyle='#aaa'; ctx.font='12px sans-serif';
+      ctx.fillText(ch.bonus, W/2-menuBoxW/2+20, y+45);
     }
 
     // bottom
@@ -1242,8 +1238,9 @@ class Game {
     ctx.fillStyle='#aaa'; ctx.font='18px sans-serif';
     ctx.fillText('원하는 강화를 선택하세요 (1/2/3 키 또는 클릭)',W/2,155);
 
-    const boxW=250, boxH=200, gap=30, totalW=this.upgradeChoices.length*boxW+(this.upgradeChoices.length-1)*gap;
-    const startX=(W-totalW)/2;
+    const boxW = Math.min(250, (W - 40) / this.upgradeChoices.length);
+    const boxH = 200, gap = 10, totalW = this.upgradeChoices.length * boxW + (this.upgradeChoices.length - 1) * gap;
+    const startX = (W - totalW) / 2;
     for(let i=0;i<this.upgradeChoices.length;i++){
       const up=this.upgradeChoices[i];
       const bx=startX+i*(boxW+gap), by=200;
@@ -1254,14 +1251,14 @@ class Game {
       ctx.strokeStyle=hover?'#ff4':'#444';
       ctx.lineWidth=2; ctx.strokeRect(bx,by,boxW,boxH);
 
-      ctx.fillStyle='#fff'; ctx.font='40px sans-serif'; textAlignCenterH();
-      ctx.fillText(up.icon||'⭐',bx+boxW/2,by+60);
-      ctx.font='bold 20px sans-serif'; ctx.fillStyle='#ff4';
-      ctx.fillText(up.name,bx+boxW/2,by+105);
-      ctx.font='15px sans-serif'; ctx.fillStyle='#ccc';
-      ctx.fillText(up.desc,bx+boxW/2,by+140);
-      ctx.fillStyle='#888'; ctx.font='13px sans-serif';
-      ctx.fillText(`[${i+1}] 선택`,bx+boxW/2,by+175);
+      ctx.fillStyle='#fff'; ctx.font='20px sans-serif'; textAlignCenterH();
+      ctx.fillText(up.icon||'⭐',bx+boxW/2,by+50);
+      ctx.font='bold 16px sans-serif'; ctx.fillStyle='#ff4';
+      ctx.fillText(up.name,bx+boxW/2,by+80);
+      ctx.font='12px sans-serif'; ctx.fillStyle='#ccc';
+      ctx.fillText(up.desc,bx+boxW/2,by+100);
+      ctx.fillStyle='#888'; ctx.font='11px sans-serif';
+      ctx.fillText(`[${i+1}]`,bx+boxW/2,by+180);
 
       // handle click
       if(hover&&mouse.justClicked){this.applyUpgrade(i); mouse.justClicked=false; return;}
