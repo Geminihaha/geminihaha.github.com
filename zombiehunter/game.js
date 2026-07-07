@@ -15,7 +15,7 @@ function resize() {
   const gc = document.getElementById('gc');
   gc.width = W;
   gc.height = H;
-  if(game) {
+  if(game && game.player) {
     game.camX = game.player.x - W/2;
     game.camY = game.player.y - H/2;
   }
@@ -1105,6 +1105,15 @@ class Game {
     // bottom
     ctx.fillStyle='#666'; ctx.font='14px sans-serif'; ctx.textAlign='center';
     ctx.fillText('방향키/WASD 이동  •  자동 공격  •  레벨업으로 능력 강화',W/2,H-30);
+
+    // 터치 위치 표시 (진단용)
+    ctx.fillStyle='lime'; ctx.font='12px monospace'; ctx.textAlign='left';
+    ctx.fillText(`W=${W} H=${H} mouse=(${Math.round(mouse.x)},${Math.round(mouse.y)})`,10,20);
+    // 터치 위치 빨간 점
+    if(mouse.clicked||mouse.justClicked){
+      ctx.beginPath(); ctx.arc(mouse.x,mouse.y,12,0,TAU);
+      ctx.fillStyle='rgba(255,0,0,0.7)'; ctx.fill();
+    }
   }
 
   renderBackground(){
