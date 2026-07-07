@@ -326,10 +326,11 @@ const ENEMY_TYPES = [
 const keys={}, mouse={x:0,y:0,clicked:false,justClicked:false};
 
 function toCanvasCoords(clientX,clientY){
-  const rect=canvas.getBoundingClientRect();
+  const cv=document.getElementById('gc');
+  const rect=cv.getBoundingClientRect();
   return {
-    x:(clientX-rect.left)*(canvas.width/rect.width),
-    y:(clientY-rect.top)*(canvas.height/rect.height)
+    x:(clientX-rect.left)*(cv.width/rect.width),
+    y:(clientY-rect.top)*(cv.height/rect.height)
   };
 }
 
