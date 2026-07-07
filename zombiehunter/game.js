@@ -3,10 +3,24 @@
 // ============================================================
 
 // ─── 설정 ───
-const W = 960, H = 640;
+let W = window.innerWidth, H = window.innerHeight;
 const MAP_W = 4000, MAP_H = 4000;
 const FIXED_DT = 1/60;
 const PI = Math.PI, TAU = PI*2;
+
+// 캔버스 크기 동적 조절
+function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  const gc = document.getElementById('gc');
+  gc.width = W;
+  gc.height = H;
+  if(game) {
+    game.camX = game.player.x - W/2;
+    game.camY = game.player.y - H/2;
+  }
+}
+window.addEventListener('resize', resize);
 
 // ─── 유틸 ───
 const rand = (a,b) => Math.random()*(b-a)+a;
@@ -1333,7 +1347,7 @@ function loop(timestamp){
 
 // ─── 시작 ───
 window.onload=function(){
+  resize();
   game=new Game();
-  lastTime=performance.now();
-  loop(lastTime);
+  loop(performance.now());
 };
