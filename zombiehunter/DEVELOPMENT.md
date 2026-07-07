@@ -57,3 +57,12 @@
   - `resize()` 조건을 `if(game)` → `if(game && game.player)`로 변경하여 메뉴 상태에서 크래시 방지.
   - 메뉴 화면 상단에 디버그 정보(`W/H/mouse 좌표`) 표시 추가 (진단용, 추후 제거 가능).
   - 터치 시 위치에 빨간 점 표시 추가 (터치 좌표 정확도 확인용).
+
+### 2026-07-07 20:30 (약) — 터치 이벤트 차단 문제 해결 (근본 원인)
+- **증상**: 메뉴 화면 진입 후 터치 좌표가 1초 정도 업데이트되다가 멈춤 → 이후 터치 입력完全 무시.
+- **원인 분석**: 모바일 브라우저(Chrome Android)에서 `touchstart`/`touchmove`에 JS `e.preventDefault()`를 호출하면, 브라우저의 스크롤 억제 휴리스틱이 개입하여 일정 시간 후 터치 이벤트 처리 자체를 차단하는 현상 확인.
+- **수정 사항**:
+  - JS `e.preventDefault()`를 모든 터치 핸들러에서 제거 (passive:true로 변경).
+  - CSS `touch-action:none` 속성을 캔버스에 적용하여 브라우저 레벨에서 스크롤/줌 방지.
+  - 추가 CSS: `-webkit-touch-callout:none; -webkit-user-select:none;` (.getSelection 방지).
+- **검증**: 모바일 환경에서 터치 좌표가 지속적으로 업데이트되고, 메뉴 선택이 정상 동작하는지 확인 필요.
