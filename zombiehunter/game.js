@@ -1339,7 +1339,6 @@ function loop(timestamp){
     );
   }
 
-  mouse.justClicked=false;
   animId=requestAnimationFrame(loop);
 }
 
