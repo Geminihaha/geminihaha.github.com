@@ -3,20 +3,22 @@
 // ============================================================
 
 // ─── 설정 ───
-const W = 960, H = 640;
+let W = window.innerWidth, H = window.innerHeight;
 const MAP_W = 4000, MAP_H = 4000;
 const FIXED_DT = 1/60;
 const PI = Math.PI, TAU = PI*2;
 
-// 캔버스 크기 동적 조절 (CSS 조절 방식 유지)
+// 캔버스 크기 동적 조절
 function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
   const gc = document.getElementById('gc');
-  const maxW = window.innerWidth, maxH = window.innerHeight;
-  const ratio = 960/640; // 1.5
-  let w, h;
-  if(maxW/maxH > ratio){ h=maxH; w=h*ratio; }
-  else{ w=maxW; h=w/ratio; }
-  gc.style.width = w+'px'; gc.style.height = h+'px';
+  gc.width = W;
+  gc.height = H;
+  if(game) {
+    game.camX = game.player.x - W/2;
+    game.camY = game.player.y - H/2;
+  }
 }
 window.addEventListener('resize', resize);
 
