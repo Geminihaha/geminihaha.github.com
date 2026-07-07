@@ -347,13 +347,12 @@ document.addEventListener('touchstart',e=>{
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
   mouse.x=c.x; mouse.y=c.y; mouse.clicked=true; mouse.justClicked=true;
   handleMenuClick(c.x,c.y); // 메뉴 직접 처리
-  e.preventDefault();
-},{passive:false});
+},{passive:true});
 document.addEventListener('touchmove',e=>{
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
-  mouse.x=c.x; mouse.y=c.y; e.preventDefault();
-},{passive:false});
-document.addEventListener('touchend',e=>{mouse.clicked=false; e.preventDefault();},{passive:false});
+  mouse.x=c.x; mouse.y=c.y;
+},{passive:true});
+document.addEventListener('touchend',e=>{mouse.clicked=false;},{passive:true});
 
 // 메뉴 클릭/터치 직접 처리 — 게임 루프 타이밍과 무관하게 즉시 반응
 function handleMenuClick(cx,cy){
