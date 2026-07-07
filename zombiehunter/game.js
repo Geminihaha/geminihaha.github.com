@@ -678,11 +678,12 @@ class Game {
   updateMenu(dt){
     // handle character selection
     const total=CHARACTERS.length;
-    const itemH=80, startY=200;
+    const menuBoxW = Math.min(440, W * 0.9);
+    const itemH=60, startY=160;
     this.menuHover=-1;
     for(let i=0;i<total;i++){
       const y=startY+i*itemH;
-      if(mouse.y>=y&&mouse.y<y+itemH&&mouse.x>W/2-200&&mouse.x<W/2+200){
+      if(mouse.y>=y&&mouse.y<y+itemH&&mouse.x>W/2-menuBoxW/2&&mouse.x<W/2+menuBoxW/2){
         this.menuHover=i;
         if(mouse.justClicked){ this.startGame(i); mouse.justClicked=false; return; }
       }
@@ -1033,26 +1034,26 @@ class Game {
     if(this.state==='menu'){ this.renderMenu(); ctx.restore(); return; }
 
     this.renderBackground();
-    const menuBoxW = Math.min(440, W * 0.9);
-    const itemH=70, startY=200;
-    this.menuHover=-1;
-    for(let i=0;i<total;i++){
-      const y=startY+i*itemH;
-      if(mouse.y>=y&&mouse.y<y+itemH&&mouse.x>W/2-menuBoxW/2&&mouse.x<W/2+menuBoxW/2){
-        this.menuHover=i;
-        if(mouse.justClicked){ this.startGame(i); mouse.justClicked=false; return; }
-      }
-    }
-    // keyboard selection
-    for(let i=0;i<total;i++){
-      if(keys[String(i+1)]){
-        this.startGame(i); keys[String(i+1)]=false; return;
-      }
-    }
+    this.renderEntities();
+
+    // player
+    this.renderPlayer();
+
+    // damage numbers
+    for(const d of this.damageNums) if(d.draw) d.draw(ctx);
+
+    ctx.restore();
+
+    // HUD (not affected by shake)
+    this.renderHUD();
+
+    if(this.state==='levelUp') this.renderLevelUp();
+    if(this.state==='gameOver') this.renderGameOver();
   }
 
   // 메뉴 화면 렌더링
   renderMenu(){
+    const total=CHARACTERS.length;
     // background
     ctx.fillStyle='#0a0a12';
     ctx.fillRect(0,0,W,H);
