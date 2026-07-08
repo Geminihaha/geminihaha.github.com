@@ -334,7 +334,7 @@ const ENEMY_TYPES = [
 ];
 
 // ─── 입력 ───
-const keys={}, mouse={x:0,y:0,clicked:false,justClicked:false};
+const keys={}, mouse={x:0,y:0,clicked:false};
 // 가상 스틱: 터치/클릭 시작 지점(base)을 중심으로 현재 포인터(cur) 방향에 따라 이동
 const joystick={active:false,baseX:0,baseY:0,curX:0,curY:0};
 
@@ -355,11 +355,15 @@ document.addEventListener('mousemove',e=>{
   if(joystick.active){ joystick.curX=c.x; joystick.curY=c.y; }
 });
 document.addEventListener('mousedown',e=>{
-  mouse.clicked=true;mouse.justClicked=true;
+  mouse.clicked=true;
   const c=toCanvasCoords(e.clientX,e.clientY);
   mouse.x=c.x; mouse.y=c.y;
   if(game&&game.state==='menu'){
     handleMenuClick(c.x,c.y);
+  } else if(game&&game.state==='levelUp'){
+    handleLevelUpClick(c.x,c.y);
+  } else if(game&&game.state==='gameOver'){
+    handleGameOverClick(c.x,c.y);
   } else if(game&&game.state==='playing'){
     joystick.active=true; joystick.baseX=joystick.curX=c.x; joystick.baseY=joystick.curY=c.y;
   }
@@ -368,8 +372,10 @@ document.addEventListener('mouseup',e=>{mouse.clicked=false; joystick.active=fal
 document.addEventListener('touchstart',e=>{
   touchCount++; lastTouchTime=Date.now();
   const t=e.touches[0], c=toCanvasCoords(t.clientX,t.clientY);
-  mouse.x=c.x; mouse.y=c.y; mouse.clicked=true; mouse.justClicked=true;
+  mouse.x=c.x; mouse.y=c.y; mouse.clicked=true;
   handleMenuClick(c.x,c.y);
+  handleLevelUpClick(c.x,c.y);
+  handleGameOverClick(c.x,c.y);
   if(game&&game.state==='playing'){
     joystick.active=true; joystick.baseX=joystick.curX=c.x; joystick.baseY=joystick.curY=c.y;
   }
@@ -395,10 +401,36 @@ function handleMenuClick(cx,cy){
     }
   }
 }
+// 레벨업 카드 클릭/터치 직접 처리 — hover 상태와 무관하게, 실제 클릭/터치 시점의
+// 좌표로만 판정 (마우스/손가락이 카드 위를 스쳐 지나가기만 해도 선택되는 문제 방지)
+function handleLevelUpClick(cx,cy){
+  if(!game||game.state!=='levelUp') return;
+  const count=game.upgradeChoices.length;
+  const boxW = Math.min(250, (W - 40) / count);
+  const boxH = 200, gap = 10, totalW = count * boxW + (count - 1) * gap;
+  const startX = (W - totalW) / 2, by=200;
+  for(let i=0;i<count;i++){
+    const bx=startX+i*(boxW+gap);
+    if(cx>=bx&&cx<=bx+boxW&&cy>=by&&cy<=by+boxH){
+      game.applyUpgrade(i);
+      return;
+    }
+  }
+}
+// 게임오버 "다시 시작" 버튼 클릭/터치 직접 처리 (levelUp과 동일한 이유)
+function handleGameOverClick(cx,cy){
+  if(!game||game.state!=='gameOver') return;
+  const by=400, bw=220, bh=50;
+  if(cx>=W/2-bw/2&&cx<=W/2+bw/2&&cy>=by&&cy<=by+bh){
+    game.state='menu';
+  }
+}
 document.addEventListener('click',e=>{
-  if(!game||game.state!=='menu') return;
+  if(!game) return;
   const c=toCanvasCoords(e.clientX,e.clientY);
   handleMenuClick(c.x,c.y);
+  handleLevelUpClick(c.x,c.y);
+  handleGameOverClick(c.x,c.y);
 });
 
 // ─── 게임 메인 ───
@@ -1149,7 +1181,7 @@ class Game {
     ctx.fillText(`state=${game.state} W=${W} H=${H}`,10,16);
     ctx.fillText(`mouse=(${Math.round(mouse.x)},${Math.round(mouse.y)}) touch#=${touchCount} last=${ago}`,10,30);
     // 터치 위치 빨간 점
-    if(mouse.clicked||mouse.justClicked){
+    if(mouse.clicked){
       ctx.beginPath(); ctx.arc(mouse.x,mouse.y,12,0,TAU);
       ctx.fillStyle='rgba(255,0,0,0.7)'; ctx.fill();
     }
@@ -1340,9 +1372,6 @@ class Game {
       ctx.fillText(up.desc,bx+boxW/2,by+100);
       ctx.fillStyle='#888'; ctx.font='11px sans-serif';
       ctx.fillText(`[${i+1}]`,bx+boxW/2,by+180);
-
-      // handle click
-      if(hover&&mouse.justClicked){this.applyUpgrade(i); mouse.justClicked=false; return;}
     }
 
     // keyboard selection
@@ -1374,7 +1403,6 @@ class Game {
     ctx.fillStyle='#fff'; ctx.font='bold 22px sans-serif';
     ctx.fillText('다시 시작',W/2,by+33);
 
-    if(hover&&mouse.justClicked){ mouse.justClicked=false; this.state='menu'; return; }
     if(keys['r']||keys['R']||keys['Enter']){ keys['r']=false; this.state='menu'; }
   }
 }
