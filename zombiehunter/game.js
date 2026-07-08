@@ -32,15 +32,274 @@ const lerp = (a,b,t) => a+(b-a)*t;
 
 // ─── 캐릭터 정의 ───
 const CHARACTERS = [
-  { id:'antonio',  name:'안토니오', weapon:'whip',         desc:'채찍 전사',       bonus:'공격력 +20%',   bonusFn:s=>{s.dmgMul*=1.2} },
-  { id:'imelda',   name:'이멜다',   weapon:'magicWand',    desc:'마법사',         bonus:'경험치 +30%',   bonusFn:s=>{s.xpMul*=1.3} },
-  { id:'gennaro',  name:'제나로',   weapon:'knife',        desc:'도적',           bonus:'발사체 +1',     bonusFn:s=>{s.projectileBonus++} },
-  { id:'porta',    name:'포르타',   weapon:'lightningRing', desc:'전기 마법사',    bonus:'범위 +30%',     bonusFn:s=>{s.areaMul*=1.3} },
-  { id:'arca',     name:'아르카',   weapon:'fireWand',     desc:'화염 마법사',    bonus:'지속시간 +30%', bonusFn:s=>{s.durationMul*=1.3} },
-  { id:'mortaccio',name:'모르타치오',weapon:'axe',         desc:'사냥꾼',        bonus:'공격속도 +20%', bonusFn:s=>{s.speedMul*=1.2} },
-  { id:'poppea',   name:'포페아',   weapon:'garlic',       desc:'마늘장수',       bonus:'방어력 +1',     bonusFn:s=>{s.armor++} },
-  { id:'pasqualina',name:'파스퀄리나',weapon:'kingBible',  desc:'수녀',           bonus:'체력 재생 +0.5/s', bonusFn:s=>{s.regen+=0.5} },
+  { id:'antonio',  name:'안토니오', weapon:'whip',         desc:'채찍 전사',       bonus:'공격력 +20%',   bonusFn:s=>{s.dmgMul*=1.2},   color:'#48f', accent:'#99ccff', draw:'warrior' },
+  { id:'imelda',   name:'이멜다',   weapon:'magicWand',    desc:'마법사',         bonus:'경험치 +30%',   bonusFn:s=>{s.xpMul*=1.3},   color:'#84f', accent:'#d0a0ff', draw:'mage' },
+  { id:'gennaro',  name:'제나로',   weapon:'knife',        desc:'도적',           bonus:'발사체 +1',     bonusFn:s=>{s.projectileBonus++}, color:'#f84', accent:'#ffcc88', draw:'rogue' },
+  { id:'porta',    name:'포르타',   weapon:'lightningRing', desc:'전기 마법사',    bonus:'범위 +30%',     bonusFn:s=>{s.areaMul*=1.3}, color:'#ff8', accent:'#ffffaa', draw:'electrician' },
+  { id:'arca',     name:'아르카',   weapon:'fireWand',     desc:'화염 마법사',    bonus:'지속시간 +30%', bonusFn:s=>{s.durationMul*=1.3}, color:'#f48', accent:'#ffaa66', draw:'pyromancer' },
+  { id:'mortaccio',name:'모르타치오',weapon:'axe',         desc:'사냥꾼',        bonus:'공격속도 +20%', bonusFn:s=>{s.speedMul*=1.2}, color:'#8f8', accent:'#a0d0a0', draw:'hunter' },
+  { id:'poppea',   name:'포페아',   weapon:'garlic',       desc:'마늘장수',       bonus:'방어력 +1',     bonusFn:s=>{s.armor++},       color:'#f8c', accent:'#dda0dd', draw:'cleric' },
+  { id:'pasqualina',name:'파스퀄리나',weapon:'kingBible',  desc:'수녀',           bonus:'체력 재생 +0.5/s', bonusFn:s=>{s.regen+=0.5}, color:'#cfa', accent:'#ffffff', draw:'priest' },
 ];
+
+// 직업별 캐릭터 그림 (Canvas 도트 그리기)
+// ctx, sx, sy: 그릴 위치 (화면 좌표), dir: {x,y} 방향, size: 크기(기본 14)
+// ch: 선택된 캐릭터 정보 (color, accent)
+// 작은 미리보기 모드는 size를 작게 줘서 동일한 코드로 그릴 수 있도록 함
+function drawCharacter(ctx, sx, sy, dir, size, ch, opts={}){
+  const fx = dir ? dir.x : 0;
+  const fy = dir ? dir.y : 0;
+  const accent = ch.accent || ch.color;
+  const bodyCol = ch.color;
+
+  // ─── 공통: 그림자 ───
+  if(!opts.noShadow){
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(sx+2, sy+size*0.36, size*1.1, size*0.55, 0, 0, TAU);
+    ctx.fill();
+  }
+
+  // ─── 본체 (공통 원형 바디) ───
+  ctx.fillStyle = bodyCol;
+  if(!opts.noGlow){ ctx.shadowColor=bodyCol; ctx.shadowBlur=opts.glowBlur!=null?opts.glowBlur:12; }
+  ctx.beginPath(); ctx.arc(sx, sy, size, 0, TAU); ctx.fill();
+  ctx.shadowBlur=0;
+
+  // ─── 직업별 외형 특징 ───
+  const t = ch.draw;
+
+  if(t==='warrior'){
+    // 투구 (상단 반원)
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(sx, sy-size*0.2, size*1.05, PI, TAU); ctx.fill();
+    // 투구 앞면 (콧가리)
+    ctx.fillRect(sx - size*0.85, sy - size*0.4, size*1.7, size*0.3);
+    // 눈 슬릿
+    ctx.fillStyle = '#111';
+    ctx.fillRect(sx - size*0.55, sy - size*0.28, size*0.45, size*0.14);
+    ctx.fillRect(sx + size*0.1,  sy - size*0.28, size*0.45, size*0.14);
+    // 오른쪽 어깨 보호구
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(sx + size*0.9, sy + size*0.5, size*0.45, 0, TAU); ctx.fill();
+    // 작은 검 (등 뒤에 비스듬히)
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth = Math.max(2, size*0.16);
+    ctx.beginPath();
+    ctx.moveTo(sx - size*0.7, sy - size*1.1);
+    ctx.lineTo(sx - size*1.25, sy - size*0.3);
+    ctx.stroke();
+    ctx.fillStyle = '#8a5'; // 손잡이
+    ctx.fillRect(sx - size*1.32, sy - size*0.3, size*0.18, size*0.3);
+  }
+  else if(t==='mage'){
+    // 큰 마법사 모자 (원뿔)
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.moveTo(sx - size*1.0, sy - size*0.7);
+    ctx.lineTo(sx + size*1.0, sy - size*0.7);
+    ctx.lineTo(sx, sy - size*2.4);
+    ctx.closePath(); ctx.fill();
+    // 모자 챙
+    ctx.fillRect(sx - size*1.4, sy - size*0.8, size*2.8, size*0.22);
+    // 모자 별장식
+    ctx.fillStyle = '#fd2';
+    ctx.beginPath(); ctx.arc(sx + size*0.3, sy - size*1.3, size*0.32, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(sx + size*0.2, sy - size*1.4, size*0.1, 0, TAU); ctx.fill();
+    // 두 눈
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(sx - size*0.32, sy - size*0.1, size*0.22, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.32, sy - size*0.1, size*0.22, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#33a';
+    ctx.beginPath(); ctx.arc(sx - size*0.27 + fx*size*0.12, sy - size*0.1 + fy*size*0.12, size*0.11, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.37 + fx*size*0.12, sy - size*0.1 + fy*size*0.12, size*0.11, 0, TAU); ctx.fill();
+    // 마법봉 (오른쪽 위에 작은 구체)
+    ctx.strokeStyle = '#a86'; ctx.lineWidth = Math.max(2, size*0.15);
+    ctx.beginPath();
+    ctx.moveTo(sx + size*0.9, sy + size*0.3);
+    ctx.lineTo(sx + size*1.2, sy - size*1.0);
+    ctx.stroke();
+    ctx.fillStyle = '#f8f'; ctx.shadowColor='#f8f';
+    if(!opts.noGlow){ ctx.shadowBlur=10; }
+    ctx.beginPath(); ctx.arc(sx + size*1.2, sy - size*1.0, size*0.28, 0, TAU); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  else if(t==='rogue'){
+    // 머리 후드 (겨드랑이)
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.moveTo(sx - size*1.0, sy + size*0.2);
+    ctx.quadraticCurveTo(sx - size*1.1, sy - size*0.9, sx, sy - size*1.3);
+    ctx.quadraticCurveTo(sx + size*1.1, sy - size*0.9, sx + size*1.0, sy + size*0.2);
+    ctx.closePath(); ctx.fill();
+    // 얼굴 어두운 부분 (후드 안쪽)
+    ctx.fillStyle = '#1a1010';
+    ctx.beginPath(); ctx.arc(sx, sy, size*0.72, 0, TAU); ctx.fill();
+    // 후드 테두리
+    ctx.strokeStyle = '#753'; ctx.lineWidth = Math.max(1, size*0.08);
+    ctx.beginPath();
+    ctx.moveTo(sx - size*1.0, sy + size*0.2);
+    ctx.quadraticCurveTo(sx - size*1.1, sy - size*0.9, sx, sy - size*1.3);
+    ctx.quadraticCurveTo(sx + size*1.1, sy - size*0.9, sx + size*1.0, sy + size*0.2);
+    ctx.stroke();
+    // 눈 (붉은색)
+    ctx.fillStyle = '#f40';
+    ctx.beginPath(); ctx.arc(sx - size*0.28, sy - size*0.1, size*0.16, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.28, sy - size*0.1, size*0.16, 0, TAU); ctx.fill();
+    // 단검 (오른쪽 손)
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth = Math.max(2, size*0.17);
+    ctx.beginPath();
+    ctx.moveTo(sx + size*1.0, sy + size*0.3);
+    ctx.lineTo(sx + size*1.5, sy - size*0.3);
+    ctx.stroke();
+    ctx.fillStyle = '#542';
+    ctx.fillRect(sx + size*0.92, sy + size*0.25, size*0.2, size*0.18);
+  }
+  else if(t==='electrician'){
+    // 마법사 모자 (작은 버전)
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.moveTo(sx - size*0.85, sy - size*0.55);
+    ctx.lineTo(sx + size*0.85, sy - size*0.55);
+    ctx.lineTo(sx, sy - size*1.7);
+    ctx.closePath(); ctx.fill();
+    ctx.fillRect(sx - size*1.1, sy - size*0.65, size*2.2, size*0.18);
+    // 번개 장식
+    ctx.strokeStyle = '#fd2'; ctx.lineWidth = Math.max(1, size*0.13);
+    ctx.beginPath();
+    ctx.moveTo(sx + size*0.15, sy - size*1.3);
+    ctx.lineTo(sx - size*0.1, sy - size*1.0);
+    ctx.lineTo(sx + size*0.1, sy - size*0.8);
+    ctx.lineTo(sx - size*0.1, sy - size*0.65);
+    ctx.stroke();
+    // 두 눈 (전기 빛)
+    ctx.fillStyle = '#fdf';
+    ctx.beginPath(); ctx.arc(sx - size*0.32, sy - size*0.05, size*0.2, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.32, sy - size*0.05, size*0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#04a';
+    ctx.beginPath(); ctx.arc(sx - size*0.27 + fx*size*0.12, sy - size*0.05 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.37 + fx*size*0.12, sy - size*0.05 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    // 양손에 작은 전기 구체
+    ctx.fillStyle = accent; ctx.shadowColor = accent;
+    if(!opts.noGlow){ ctx.shadowBlur=10; }
+    ctx.beginPath(); ctx.arc(sx - size*1.0, sy + size*0.4, size*0.28, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*1.0, sy + size*0.4, size*0.28, 0, TAU); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  else if(t==='pyromancer'){
+    // 머리카락/장식 (불꽃 모양 - 상단)
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.moveTo(sx - size*1.1, sy - size*0.5);
+    ctx.quadraticCurveTo(sx - size*0.7, sy - size*1.6, sx - size*0.5, sy - size*0.7);
+    ctx.quadraticCurveTo(sx, sy - size*1.8, sx, sy - size*0.7);
+    ctx.quadraticCurveTo(sx + size*0.5, sy - size*1.6, sx + size*1.1, sy - size*0.5);
+    ctx.closePath(); ctx.fill();
+    // 내부 작은 불꽃
+    ctx.fillStyle = '#fd2';
+    ctx.beginPath();
+    ctx.moveTo(sx - size*0.55, sy - size*0.55);
+    ctx.quadraticCurveTo(sx, sy - size*1.25, sx + size*0.55, sy - size*0.55);
+    ctx.closePath(); ctx.fill();
+    // 두 눈 (불빛 붉은색)
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(sx - size*0.32, sy - size*0.1, size*0.2, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.32, sy - size*0.1, size*0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f30';
+    ctx.beginPath(); ctx.arc(sx - size*0.28 + fx*size*0.12, sy - size*0.1 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.36 + fx*size*0.12, sy - size*0.1 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    // 화염봉 끝의 불덩어리 (오른쪽)
+    ctx.strokeStyle = '#a86'; ctx.lineWidth = Math.max(2, size*0.15);
+    ctx.beginPath();
+    ctx.moveTo(sx + size*0.9, sy + size*0.3);
+    ctx.lineTo(sx + size*1.3, sy - size*0.5);
+    ctx.stroke();
+    ctx.fillStyle = accent; ctx.shadowColor = accent;
+    if(!opts.noGlow){ ctx.shadowBlur=10; }
+    ctx.beginPath(); ctx.arc(sx + size*1.3, sy - size*0.5, size*0.3, 0, TAU); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+  else if(t==='hunter'){
+    // 통모자 (사냥꾼 챙넓은모자)
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(sx, sy - size*0.3, size*1.05, 0, TAU); ctx.fill();
+    // 챙 넓은 원형
+    ctx.beginPath(); ctx.ellipse(sx, sy - size*0.7, size*1.55, size*0.45, 0, 0, TAU); ctx.fill();
+    // 모자 띠
+    ctx.fillStyle = '#5a3';
+    ctx.fillRect(sx - size*1.05, sy - size*0.5, size*2.1, size*0.18);
+    // 눈 (결연한 표정)
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(sx - size*0.32, sy + size*0.05, size*0.2, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.32, sy + size*0.05, size*0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#362';
+    ctx.beginPath(); ctx.arc(sx - size*0.28 + fx*size*0.12, sy + size*0.05 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.36 + fx*size*0.12, sy + size*0.05 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    // 활 (오른쪽에 반달형)
+    ctx.strokeStyle = '#a73'; ctx.lineWidth = Math.max(2, size*0.14);
+    ctx.beginPath();
+    ctx.arc(sx + size*1.25, sy + size*0.2, size*0.9, -PI*0.35, PI*0.35);
+    ctx.stroke();
+    // 활시줄
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth = Math.max(1, size*0.07);
+    ctx.beginPath();
+    ctx.moveTo(sx + size*1.6, sy - size*0.1);
+    ctx.lineTo(sx + size*1.6, sy + size*0.5);
+    ctx.stroke();
+  }
+  else if(t==='cleric'){
+    // 머리 스카프/두건 (상단)
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(sx, sy - size*0.2, size*1.05, PI, TAU); ctx.fill();
+    ctx.fillRect(sx - size*1.05, sy - size*0.4, size*0.35, size*0.9);
+    ctx.fillRect(sx + size*0.7,  sy - size*0.4, size*0.35, size*0.9);
+    // 두건 장식 - 십자가 작은
+    ctx.fillStyle = '#ffd';
+    ctx.fillRect(sx - size*0.08, sy - size*0.95, size*0.16, size*0.4);
+    ctx.fillRect(sx - size*0.2,  sy - size*0.78, size*0.4, size*0.13);
+    // 두 눈
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(sx - size*0.32, sy + size*0.08, size*0.2, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.32, sy + size*0.08, size*0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#622';
+    ctx.beginPath(); ctx.arc(sx - size*0.28 + fx*size*0.12, sy + size*0.08 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.36 + fx*size*0.12, sy + size*0.08 + fy*size*0.12, size*0.1, 0, TAU); ctx.fill();
+    // 마늘 장식 (손에 작은 흰색 알)
+    ctx.fillStyle = '#fef';
+    ctx.beginPath(); ctx.ellipse(sx - size*1.0, sy + size*0.55, size*0.36, size*0.32, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#9a6';
+    ctx.fillRect(sx - size*1.08, sy + size*0.18, size*0.16, size*0.22);
+  }
+  else if(t==='priest'){
+    // 수녀 모자 - 베일 (상단에서 전체적으로 덮음)
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(sx, sy - size*0.1, size*1.2, PI, 0); ctx.fill();
+    ctx.fillRect(sx - size*1.1, sy - size*0.6, size*2.2, size*1.0);
+    // 베일 아래 곡선 끝
+    ctx.beginPath();
+    ctx.moveTo(sx - size*1.1, sy + size*0.4);
+    ctx.quadraticCurveTo(sx - size*1.25, sy + size*0.7, sx - size*1.4, sy + size*0.8);
+    ctx.lineTo(sx + size*1.4, sy + size*0.8);
+    ctx.quadraticCurveTo(sx + size*1.25, sy + size*0.7, sx + size*1.1, sy + size*0.4);
+    ctx.closePath(); ctx.fill();
+    // 얼굴 (흰 피부)
+    ctx.fillStyle = '#fde';
+    ctx.beginPath(); ctx.arc(sx, sy + size*0.1, size*0.72, 0, TAU); ctx.fill();
+    // 두 눈
+    ctx.fillStyle = '#525';
+    ctx.beginPath(); ctx.arc(sx - size*0.28, sy + size*0.05, size*0.12, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx + size*0.28, sy + size*0.05, size*0.12, 0, TAU); ctx.fill();
+    // 작은 십자가 목걸이
+    ctx.fillStyle = '#ffd';
+    ctx.fillRect(sx - size*0.06, sy + size*0.7,  size*0.12, size*0.35);
+    ctx.fillRect(sx - size*0.18, sy + size*0.8,  size*0.36, size*0.12);
+    // 성경 (손에 있는 책장)
+    ctx.fillStyle = '#945';
+    ctx.fillRect(sx + size*0.6, sy + size*0.55, size*0.5, size*0.4);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(sx + size*0.68, sy + size*0.62, size*0.34, size*0.32);
+  }
+}
 
 // ─── 무기 정의 ───
 const WEAPON_DEFS = {
@@ -1166,22 +1425,30 @@ class Game {
     const scale = Math.min(1, itemH/60);
     const nameFont = Math.max(12, Math.round(16*scale));
     const bonusFont = Math.max(10, Math.round(12*scale));
+    const previewR = Math.max(8, Math.min(itemH*0.36, 20)); // 직업별 미리보기 반지름
+    const textOffset = previewR*2 + 18; // 텍스트 시작 위치 (미리보기 옆)
     for(let i=0;i<CHARACTERS.length;i++){
       const ch=CHARACTERS[i];
       const y=startY+i*itemH;
       const hover=i===this.menuHover;
+      const boxX=W/2-menuBoxW/2;
 
       ctx.fillStyle=hover?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.05)';
-      ctx.fillRect(W/2-menuBoxW/2,y,menuBoxW,itemH-6);
+      ctx.fillRect(boxX,y,menuBoxW,itemH-6);
       if(hover){
         ctx.strokeStyle='#f44'; ctx.lineWidth=2;
-        ctx.strokeRect(W/2-menuBoxW/2,y,menuBoxW,itemH-6);
+        ctx.strokeRect(boxX,y,menuBoxW,itemH-6);
       }
 
+      // 직업별 캐릭터 미리보기 그림 (왼쪽)
+      const previewX = boxX + previewR + 10;
+      const previewY = y + (itemH-6)/2;
+      drawCharacter(ctx, previewX, previewY, {x:0,y:0}, previewR, ch, {noGlow:true});
+
       ctx.fillStyle='#fff'; ctx.font=`${nameFont}px sans-serif`; ctx.textAlign='left';
-      ctx.fillText(`${i+1}. ${ch.name} · ${ch.desc}`, W/2-menuBoxW/2+20, y+itemH*0.42);
+      ctx.fillText(`${i+1}. ${ch.name} · ${ch.desc}`, boxX+textOffset, y+itemH*0.42);
       ctx.fillStyle='#aaa'; ctx.font=`${bonusFont}px sans-serif`;
-      ctx.fillText(ch.bonus, W/2-menuBoxW/2+20, y+itemH*0.75);
+      ctx.fillText(ch.bonus, boxX+textOffset, y+itemH*0.75);
     }
 
     // bottom
@@ -1238,44 +1505,30 @@ class Game {
   renderPlayer(){
     const p=this.player;
     const sx=p.x-this.camX, sy=p.y-this.camY;
-    if(sx<-30||sx>W+30||sy<-30||sy>H+30) return;
+    if(sx<-40||sx>W+40||sy<-40||sy>H+40) return;
 
     // invincibility shield effect (always show player)
     const shielded=p.invTimer>0;
 
-    // shadow
-    ctx.fillStyle='rgba(0,0,0,0.3)';
-    ctx.beginPath(); ctx.ellipse(sx+2,sy+5,16,8,0,0,TAU); ctx.fill();
-
-    // body
-    const col=this.selectedChar===0?'#48f':this.selectedChar===1?'#84f':this.selectedChar===2?'#f84':this.selectedChar===3?'#ff8':this.selectedChar===4?'#f48':'#8f8';
-    ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=15;
-    ctx.beginPath(); ctx.arc(sx,sy,14,0,TAU); ctx.fill();
-    ctx.shadowBlur=0;
-
-    // direction indicator
-    ctx.fillStyle='#fff';
-    const dx=p.fx*18, dy=p.fy*18;
-    ctx.beginPath();
-    ctx.moveTo(sx+dx,sy+dy);
-    ctx.lineTo(sx+dx-p.fy*6-p.fx*4,sy+dy+p.fx*6-p.fy*4);
-    ctx.lineTo(sx+dx+p.fy*6-p.fx*4,sy+dy-p.fx*6-p.fy*4);
-    ctx.closePath(); ctx.fill();
-
-    // eyes
-    ctx.fillStyle='#fff';
-    ctx.beginPath(); ctx.arc(sx-4,sy-3,3,0,TAU); ctx.fill();
-    ctx.beginPath(); ctx.arc(sx+4,sy-3,3,0,TAU); ctx.fill();
-    ctx.fillStyle='#111';
-    ctx.beginPath(); ctx.arc(sx-3+p.fx*1.5,sy-3+p.fy*1.5,1.5,0,TAU); ctx.fill();
-    ctx.beginPath(); ctx.arc(sx+5+p.fx*1.5,sy-3+p.fy*1.5,1.5,0,TAU); ctx.fill();
+    // 직업별 캐릭터 그림 (drawCharacter 통합 함수 사용)
+    const ch=CHARACTERS[this.selectedChar]||CHARACTERS[0];
+    drawCharacter(ctx, sx, sy, {x:p.fx, y:p.fy}, 14, ch, {glowBlur:15});
 
     // HP bar
     const bw=36, bh=4;
     ctx.fillStyle='#400';
-    ctx.fillRect(sx-bw/2,sy-26,bw,bh);
+    ctx.fillRect(sx-bw/2,sy-30,bw,bh);
     ctx.fillStyle='#4f4';
-    ctx.fillRect(sx-bw/2,sy-26,bw*(p.hp/p.maxHp),bh);
+    ctx.fillRect(sx-bw/2,sy-30,bw*(p.hp/p.maxHp),bh);
+
+    // direction indicator (캐릭터 위에 작은 핑 포인터)
+    ctx.fillStyle='#fff';
+    const dx=p.fx*18, dy=p.fy*18;
+    ctx.beginPath();
+    ctx.moveTo(sx+dx,sy-40+dy);
+    ctx.lineTo(sx+dx-p.fy*4-p.fx*3,sy-40+dy+p.fx*4-p.fy*3);
+    ctx.lineTo(sx+dx+p.fy*4-p.fx*3,sy-40+dy-p.fx*4-p.fy*3);
+    ctx.closePath(); ctx.fill();
 
     // shield visual during invincibility
     if(shielded){
