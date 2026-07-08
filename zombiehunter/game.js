@@ -857,6 +857,19 @@ class Game {
   checkCollisions(){
     const p=this.player;
 
+    // garlic/lightningRing 등은 checkCollisions 밖(updateWeapons)에서 e.hp를 직접 깎기 때문에,
+    // 여기서 죽은 몬스터를 먼저 정리하지 않으면 hp<=0 상태로 배열에 남아 이후 모든 타겟팅
+    // 로직(e.hp<=0 필터)에서 영구히 제외된 채 캐릭터 주변을 계속 떠다니며 쌓이게 됨.
+    for(let i=this.entities.length-1;i>=0;i--){
+      const e=this.entities[i];
+      if(e.type==='enemy'&&e.hp<=0){
+        this.kills++;
+        this.spawnXPGem(e.x,e.y,e.xp);
+        this.spawnParticles(e.x,e.y,e.color,12);
+        this.entities.splice(i,1);
+      }
+    }
+
     for(let i=0;i<this.entities.length;i++){
       const e=this.entities[i];
       if(!e||e.hp===undefined||e.hp<=0) continue;
