@@ -38,6 +38,8 @@ const CHARACTERS = [
   { id:'porta',    name:'포르타',   weapon:'lightningRing', desc:'전기 마법사',    bonus:'범위 +30%',     bonusFn:s=>{s.areaMul*=1.3} },
   { id:'arca',     name:'아르카',   weapon:'fireWand',     desc:'화염 마법사',    bonus:'지속시간 +30%', bonusFn:s=>{s.durationMul*=1.3} },
   { id:'mortaccio',name:'모르타치오',weapon:'axe',         desc:'사냥꾼',        bonus:'공격속도 +20%', bonusFn:s=>{s.speedMul*=1.2} },
+  { id:'poppea',   name:'포페아',   weapon:'garlic',       desc:'마늘장수',       bonus:'방어력 +1',     bonusFn:s=>{s.armor++} },
+  { id:'pasqualina',name:'파스퀄리나',weapon:'kingBible',  desc:'수녀',           bonus:'체력 재생 +0.5/s', bonusFn:s=>{s.regen+=0.5} },
 ];
 
 // ─── 무기 정의 ───
@@ -388,11 +390,20 @@ document.addEventListener('touchmove',e=>{
 },{passive:true});
 document.addEventListener('touchend',e=>{mouse.clicked=false; joystick.active=false;},{passive:true});
 
+// 캐릭터 목록 박스 배치 계산 - renderMenu()와 handleMenuClick()이 동일한 값을
+// 써야 클릭 판정과 화면 표시가 어긋나지 않으므로 한 곳에서만 계산한다.
+function getMenuLayout(){
+  const menuBoxW = Math.min(440, W * 0.9);
+  const startY = 160, bottomMargin = 60;
+  const availH = Math.max(200, H - startY - bottomMargin);
+  const itemH = Math.min(60, availH / CHARACTERS.length);
+  return {menuBoxW, itemH, startY};
+}
+
 // 메뉴 클릭/터치 직접 처리 — 게임 루프 타이밍과 무관하게 즉시 반응
 function handleMenuClick(cx,cy){
   if(!game||game.state!=='menu') return;
-  const menuBoxW = Math.min(440, W * 0.9);
-  const itemH=60, startY=160;
+  const {menuBoxW, itemH, startY} = getMenuLayout();
   for(let i=0;i<CHARACTERS.length;i++){
     const y=startY+i*itemH;
     if(cy>=y&&cy<y+itemH&&cx>W/2-menuBoxW/2&&cx<W/2+menuBoxW/2){
@@ -485,7 +496,7 @@ class Game {
     };
     this.entities=[];
     this.weapons=[];
-    this.level=1; this.xp=0; this.kills=0; this.time=0;
+    this.level=1; this.xp=0; this.xpToNext=10; this.kills=0; this.time=0;
     this.screenshake=0; this.damageNums=[];
     this.camX=this.player.x-W/2; this.camY=this.player.y-H/2;
     this.difficulty=1;
@@ -1151,8 +1162,10 @@ class Game {
     ctx.fillStyle='#fff'; ctx.font='bold 18px sans-serif';
     ctx.fillText('— 캐릭터 선택 —',W/2,140);
 
-    const menuBoxW = Math.min(440, W * 0.9);
-    const itemH=60, startY=160;
+    const {menuBoxW, itemH, startY} = getMenuLayout();
+    const scale = Math.min(1, itemH/60);
+    const nameFont = Math.max(12, Math.round(16*scale));
+    const bonusFont = Math.max(10, Math.round(12*scale));
     for(let i=0;i<CHARACTERS.length;i++){
       const ch=CHARACTERS[i];
       const y=startY+i*itemH;
@@ -1165,10 +1178,10 @@ class Game {
         ctx.strokeRect(W/2-menuBoxW/2,y,menuBoxW,itemH-6);
       }
 
-      ctx.fillStyle='#fff'; ctx.font='16px sans-serif'; ctx.textAlign='left';
-      ctx.fillText(`${i+1}. ${ch.name}`, W/2-menuBoxW/2+20, y+25);
-      ctx.fillStyle='#aaa'; ctx.font='12px sans-serif';
-      ctx.fillText(ch.bonus, W/2-menuBoxW/2+20, y+45);
+      ctx.fillStyle='#fff'; ctx.font=`${nameFont}px sans-serif`; ctx.textAlign='left';
+      ctx.fillText(`${i+1}. ${ch.name} · ${ch.desc}`, W/2-menuBoxW/2+20, y+itemH*0.42);
+      ctx.fillStyle='#aaa'; ctx.font=`${bonusFont}px sans-serif`;
+      ctx.fillText(ch.bonus, W/2-menuBoxW/2+20, y+itemH*0.75);
     }
 
     // bottom
