@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   defaultImg.onload = () => {
     engine.setTemplateImage(defaultImg);
   };
-  defaultImg.src = '/templates/dinosaur.jpg';
+  defaultImg.src = './templates/dinosaur.jpg';
 
   // Render Color Palette
   COLORS.forEach((color, index) => {
