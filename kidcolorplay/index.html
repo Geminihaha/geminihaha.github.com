@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>알록달록 색칠놀이 - Kid Color Sandbox</title>
+  <meta name="description" content="아이들을 위한 재미있고 직관적인 반응형 색칠놀이 웹 앱" />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Fredoka:wght@400;600;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/style.css" />
+
+  <!-- ES Module Import Map -->
+  <script type="importmap">
+    {
+      "imports": {
+        "lucide": "https://esm.sh/lucide@0.344.0",
+        "canvas-confetti": "https://esm.sh/canvas-confetti@1.9.4"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- Header / Top Bar -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">🎨</span>
+        <h1 class="app-title">알록달록 <span class="highlight">색칠놀이</span></h1>
+      </div>
+
+      <!-- Action Utilities -->
+      <div class="top-actions">
+        <button id="btn-sound" class="icon-btn action-btn sound-btn" title="소리 켜기/끄기" aria-label="소리 토글">
+          <i data-lucide="volume-2" id="sound-icon"></i>
+        </button>
+        <button id="btn-undo" class="icon-btn action-btn" title="되돌리기" aria-label="되돌리기" disabled>
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button id="btn-redo" class="icon-btn action-btn" title="다시 실행" aria-label="다시 실행" disabled>
+          <i data-lucide="redo-2"></i>
+        </button>
+        <button id="btn-clear" class="icon-btn action-btn danger-btn" title="전체 지우기" aria-label="전체 지우기">
+          <i data-lucide="trash-2"></i>
+        </button>
+        <button id="btn-save" class="btn primary-btn save-btn" title="저장하기">
+          <i data-lucide="download"></i>
+          <span>저장하기</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <!-- Left / Side Toolbar (Brushes & Images) -->
+      <aside class="sidebar tools-sidebar">
+        <!-- Template & Import Group -->
+        <div class="tool-section">
+          <span class="section-label">도안 선택</span>
+          <div class="tool-group flex-col">
+            <button id="btn-open-templates" class="tool-btn special-btn" title="도안 모음">
+              <i data-lucide="image"></i>
+              <span>도안 선택</span>
+            </button>
+            <label id="btn-upload-label" class="tool-btn file-upload-label" title="내 사진 업로드">
+              <i data-lucide="camera"></i>
+              <span>사진/도안 불러오기</span>
+              <input type="file" id="image-loader" accept="image/*" class="sr-only" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Tool Selection (Pen, Brush, Crayon, Fill, Eraser) -->
+        <div class="tool-section">
+          <span class="section-label">도구 선택</span>
+          <div class="tool-group grid-tools">
+            <button class="tool-btn tool-mode active" data-tool="pen" title="펜 (선명함)">
+              <span class="tool-badge">🖊️</span>
+              <span>펜</span>
+            </button>
+            <button class="tool-btn tool-mode" data-tool="brush" title="붓 (수채화)">
+              <span class="tool-badge">🖌️</span>
+              <span>붓</span>
+            </button>
+            <button class="tool-btn tool-mode" data-tool="crayon" title="크레파스 (거침)">
+              <span class="tool-badge">🖍️</span>
+              <span>크레파스</span>
+            </button>
+            <button class="tool-btn tool-mode" data-tool="fill" title="색 채우기">
+              <span class="tool-badge">🪣</span>
+              <span>채우기</span>
+            </button>
+            <button class="tool-btn tool-mode" data-tool="eraser" title="지우개">
+              <span class="tool-badge">🧽</span>
+              <span>지우개</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Line Size Slider -->
+        <div class="tool-section size-section">
+          <span class="section-label">굵기</span>
+          <div class="size-controls">
+            <div class="size-indicator" id="size-preview"></div>
+            <input type="range" id="size-slider" min="3" max="50" value="12" class="custom-slider" />
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Canvas Container -->
+      <section class="canvas-viewport" id="canvas-container">
+        <!-- Background Image Canvas (Line art layer) -->
+        <canvas id="bg-canvas"></canvas>
+        <!-- User Drawing Canvas (Coloring layer) -->
+        <canvas id="draw-canvas"></canvas>
+        
+        <!-- Brush Cursor Preview -->
+        <div id="brush-cursor" class="brush-cursor hidden"></div>
+      </section>
+    </main>
+
+    <!-- Bottom Color Palette Bar -->
+    <footer class="app-footer">
+      <div class="palette-container">
+        <div class="palette-scroll" id="color-palette">
+          <!-- Standard 16 colors populated via JS + Custom color picker -->
+        </div>
+        <div class="custom-color-wrapper">
+          <label class="color-btn custom-color-btn" title="직접 색상 선택">
+            <input type="color" id="custom-color-picker" value="#FF3B30" />
+            <span class="custom-color-icon">🌈</span>
+          </label>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Template Selection Modal -->
+    <div id="modal-templates" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🎨 칠하고 싶은 도안을 선택하세요</h2>
+          <button class="modal-close-btn" id="btn-close-templates">&times;</button>
+        </div>
+        <div class="modal-body template-grid">
+          <div class="template-card" data-src="/templates/dinosaur.jpg">
+            <img src="/templates/dinosaur.jpg" alt="귀여운 공룡" />
+            <span>아기 공룡 🦕</span>
+          </div>
+          <div class="template-card" data-src="/templates/car.jpg">
+            <img src="/templates/car.jpg" alt="신나는 자동차" />
+            <span>신나는 자동차 🚗</span>
+          </div>
+          <div class="template-card" data-src="/templates/unicorn.jpg">
+            <img src="/templates/unicorn.jpg" alt="신비한 유니콘" />
+            <span>무지개 유니콘 🦄</span>
+          </div>
+          <div class="template-card blank-card" data-src="blank">
+            <div class="blank-icon">📄</div>
+            <span>하얀 스케치북 ✏️</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edge Detection Filter Modal for Uploaded Photos -->
+    <div id="modal-filter" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>📷 사진을 색칠 도안으로 만들기</h2>
+          <button class="modal-close-btn" id="btn-close-filter">&times;</button>
+        </div>
+        <div class="modal-body filter-preview-body">
+          <div class="filter-canvas-wrapper">
+            <canvas id="filter-preview-canvas"></canvas>
+          </div>
+          <div class="filter-controls">
+            <label>
+              <span>선명도 (테두리 굵기)</span>
+              <input type="range" id="filter-threshold" min="20" max="150" value="70" class="custom-slider" />
+            </label>
+            <div class="filter-actions">
+              <button id="btn-apply-original" class="btn secondary-btn">원본 사진으로 사용</button>
+              <button id="btn-apply-filter" class="btn primary-btn">도안으로 변환하여 색칠하기 ✨</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
