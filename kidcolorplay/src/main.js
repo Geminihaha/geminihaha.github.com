@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const toolBtns = document.querySelectorAll('.tool-mode');
   const sizeSlider = document.getElementById('size-slider');
   const sizePreview = document.getElementById('size-preview');
+  const opacitySlider = document.getElementById('opacity-slider');
+  const opacityValLabel = document.getElementById('opacity-val-label');
   const colorPalette = document.getElementById('color-palette');
   const customColorPicker = document.getElementById('custom-color-picker');
 
@@ -154,6 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSizePreview();
   });
 
+  // Opacity Slider
+  opacitySlider.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    engine.opacity = val / 100;
+    opacityValLabel.textContent = `${val}%`;
+    updateSizePreview();
+  });
+
   function updateSizePreview() {
     const size = engine.brushSize;
     sizePreview.style.setProperty('--preview-size', `${size}px`);
@@ -166,11 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
-    styleEl.innerHTML = `#size-preview::after { width: ${size}px; height: ${size}px; background-color: ${engine.tool === 'eraser' ? '#aaa' : engine.color}; }`;
+    styleEl.innerHTML = `#size-preview::after { width: ${size}px; height: ${size}px; background-color: ${engine.tool === 'eraser' ? '#aaa' : engine.color}; opacity: ${engine.opacity}; }`;
 
     // Cursor update
     brushCursor.style.width = `${size}px`;
     brushCursor.style.height = `${size}px`;
+    brushCursor.style.opacity = engine.tool === 'eraser' ? '1' : `${engine.opacity}`;
   }
   updateSizePreview();
 

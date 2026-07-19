@@ -12,6 +12,7 @@ export class CanvasEngine {
     this.tool = 'pen'; // pen, brush, crayon, fill, eraser
     this.color = '#FF3B30';
     this.brushSize = 12;
+    this.opacity = 1.0;
     this.isDrawing = false;
 
     // Line smoothing coordinates
@@ -241,6 +242,7 @@ export class CanvasEngine {
       ctx.strokeStyle = 'rgba(0,0,0,1)';
     } else {
       ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = this.opacity;
       ctx.strokeStyle = this.color;
     }
 
@@ -270,10 +272,11 @@ export class CanvasEngine {
     const radius = this.brushSize * 1.2;
     const radgrad = ctx.createRadialGradient(pt.x, pt.y, radius * 0.1, pt.x, pt.y, radius);
     
-    // Hex to RGBA
+    // Hex to RGBA with opacity
     const rgb = this.hexToRgb(this.color);
-    radgrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`);
-    radgrad.addColorStop(0.6, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`);
+    const baseAlpha = this.opacity;
+    radgrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.25 * baseAlpha})`);
+    radgrad.addColorStop(0.6, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.12 * baseAlpha})`);
     radgrad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
 
     ctx.fillStyle = radgrad;
@@ -301,9 +304,9 @@ export class CanvasEngine {
       const px = pt.x + r * Math.cos(angle);
       const py = pt.y + r * Math.sin(angle);
 
-      // Random particle size & alpha for textured effect
+      // Random particle size & alpha with opacity factor
       const pSize = 1 + Math.random() * 2.5;
-      ctx.globalAlpha = 0.4 + Math.random() * 0.5;
+      ctx.globalAlpha = (0.4 + Math.random() * 0.5) * this.opacity;
 
       ctx.beginPath();
       ctx.arc(px, py, pSize, 0, Math.PI * 2);
@@ -320,6 +323,8 @@ export class CanvasEngine {
       ctx.fillStyle = this.color;
       if (this.tool === 'eraser') {
         ctx.globalCompositeOperation = 'destination-out';
+      } else {
+        ctx.globalAlpha = this.opacity;
       }
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, this.brushSize / 2, 0, Math.PI * 2);
@@ -450,7 +455,7 @@ export class CanvasEngine {
     data[idx] = rgb.r;
     data[idx + 1] = rgb.g;
     data[idx + 2] = rgb.b;
-    data[idx + 3] = 255;
+    data[idx + 3] = Math.round(this.opacity * 255);
   }
 
   hexToRgb(hex) {
@@ -472,7 +477,8 @@ export class CanvasEngine {
     const mCtx = mergedCanvas.getContext('2d');
     // Draw background
     mCtx.drawImage(this.bgCanvas, 0, 0);
-    // Draw user artwork on top
+    // Draw user artwork with multiply blend mode so background lines stay clear and sharp
+    mCtx.globalCompositeOperation = 'multiply';
     mCtx.drawImage(this.drawCanvas, 0, 0);
 
     return mergedCanvas.toDataURL('image/png');

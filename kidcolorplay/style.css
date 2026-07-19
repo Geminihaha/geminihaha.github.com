@@ -322,6 +322,11 @@ html, body {
 #draw-canvas {
   z-index: 2;
   cursor: crosshair;
+  mix-blend-mode: multiply;
+}
+
+.opacity-icon {
+  font-size: 1.1rem;
 }
 
 .brush-cursor {
