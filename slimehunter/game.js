@@ -1,5 +1,5 @@
 // ============================================================
-// ZOMBIE HUNTER — 뱀파이어 서바이버 스타일 웹 게임
+// SLIME HUNTER — 뱀파이어 서바이버 스타일 웹 게임
 // ============================================================
 
 // ─── 설정 ───
@@ -9,14 +9,19 @@ const MAP_W = 4000, MAP_H = 4000;
 const FIXED_DT = 1/60;
 const PI = Math.PI, TAU = PI*2;
 
+let game = null;
+let animId = null;
+
 // 캔버스 크기 동적 조절
 function resize() {
   W = window.innerWidth;
   H = window.innerHeight;
   const gc = document.getElementById('gc');
-  gc.width = W;
-  gc.height = H;
-  if(game && game.player) {
+  if (gc) {
+    gc.width = W;
+    gc.height = H;
+  }
+  if(typeof game !== 'undefined' && game && game.player) {
     game.camX = game.player.x - W/2;
     game.camY = game.player.y - H/2;
   }
@@ -720,8 +725,87 @@ function resizeCanvas(){
 window.addEventListener('resize',resizeCanvas);
 resizeCanvas();
 
-let game=null;
-let animId=null;
+// ─── 숲속 배경 헬퍼 ───
+function forestHash(x, y) {
+  let n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return n - Math.floor(n);
+}
+
+function drawForestTree(ctx, x, y, scale = 1, seed = 0.5) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = 'rgba(5, 20, 10, 0.45)';
+  ctx.beginPath(); ctx.ellipse(0, 12 * scale, 22 * scale, 10 * scale, 0, 0, TAU); ctx.fill();
+
+  ctx.fillStyle = '#4a3319'; ctx.fillRect(-5 * scale, -10 * scale, 10 * scale, 22 * scale);
+  ctx.fillStyle = '#362411'; ctx.fillRect(-2 * scale, -10 * scale, 4 * scale, 22 * scale);
+
+  if (seed > 0.5) {
+    const layers = [
+      { y: -10 * scale, r: 24 * scale, color: '#16381e' },
+      { y: -24 * scale, r: 19 * scale, color: '#214d2a' },
+      { y: -36 * scale, r: 14 * scale, color: '#2f693b' },
+      { y: -46 * scale, r: 8 * scale,  color: '#3d874d' },
+    ];
+    for (const l of layers) {
+      ctx.fillStyle = l.color;
+      ctx.beginPath();
+      ctx.moveTo(0, l.y - l.r * 0.8);
+      ctx.lineTo(l.r, l.y + l.r * 0.4);
+      ctx.lineTo(-l.r, l.y + l.r * 0.4);
+      ctx.closePath(); ctx.fill();
+    }
+  } else {
+    const circles = [
+      { x: -10 * scale, y: -20 * scale, r: 16 * scale, color: '#16381e' },
+      { x: 10 * scale,  y: -20 * scale, r: 16 * scale, color: '#1a4224' },
+      { x: 0,           y: -30 * scale, r: 18 * scale, color: '#255931' },
+      { x: -7 * scale,  y: -32 * scale, r: 13 * scale, color: '#2f6e3d' },
+      { x: 6 * scale,   y: -34 * scale, r: 12 * scale, color: '#3c854c' },
+    ];
+    for (const c of circles) {
+      ctx.fillStyle = c.color;
+      ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, TAU); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawGlowingMushroom(ctx, x, y, seed) {
+  ctx.save();
+  ctx.translate(x, y);
+  const colorHue = seed > 0.5 ? 'rgba(100, 255, 180,' : 'rgba(255, 150, 220,';
+  ctx.fillStyle = colorHue + '0.25)'; ctx.beginPath(); ctx.arc(0, -4, 12, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#e8f5e9'; ctx.fillRect(-2, -6, 4, 8);
+  ctx.fillStyle = seed > 0.5 ? '#2ecc71' : '#e74c3c'; ctx.beginPath(); ctx.arc(0, -6, 7, PI, 0); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(-3, -9, 1.2, 0, TAU); ctx.arc(2, -10, 1, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+
+function drawMossyRock(ctx, x, y, seed) {
+  ctx.save();
+  ctx.translate(x, y);
+  const r = 8 + seed * 6;
+  ctx.fillStyle = '#3a443c'; ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.7, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#4d7c43'; ctx.beginPath(); ctx.ellipse(-2, -2, r * 0.6, r * 0.4, -0.3, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+
+function drawGrassTuft(ctx, x, y, seed) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = seed > 0.5 ? '#387642' : '#275830';
+  ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+  const blades = 4;
+  for (let i = 0; i < blades; i++) {
+    const angle = -PI / 2 + (i - (blades - 1) / 2) * 0.35 + (seed - 0.5) * 0.2;
+    const len = 8 + (i % 2) * 4;
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(Math.cos(angle) * len * 0.5, Math.sin(angle) * len * 0.5, Math.cos(angle) * len, Math.sin(angle) * len);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 
 class Game {
   constructor(){
@@ -1407,13 +1491,29 @@ class Game {
   // 메뉴 화면 렌더링
   renderMenu(){
     const total=CHARACTERS.length;
-    // background
-    ctx.fillStyle='#0a0a12';
-    ctx.fillRect(0,0,W,H);
+    // 숲속 메뉴 배경
+    const menuGrad = ctx.createRadialGradient(W/2, H/2, 50, W/2, H/2, Math.max(W, H));
+    menuGrad.addColorStop(0, '#102414');
+    menuGrad.addColorStop(0.7, '#09150b');
+    menuGrad.addColorStop(1, '#040905');
+    ctx.fillStyle = menuGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // 반딧불이 효과
+    const menuTime = Date.now() / 1000;
+    ctx.save();
+    for (let i = 0; i < 20; i++) {
+      const fx = ((i * 149.3 + menuTime * 15) % (W + 100)) - 50;
+      const fy = ((i * 281.7 + Math.sin(menuTime * 1.5 + i) * 25) % (H + 100)) - 50;
+      const pulse = 0.3 + 0.7 * Math.abs(Math.sin(menuTime * 2 + i));
+      ctx.fillStyle = `rgba(160, 255, 140, ${0.4 * pulse})`;
+      ctx.beginPath(); ctx.arc(fx, fy, (2 + i % 3) * pulse * 2, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
 
     // title
-    ctx.fillStyle='#f44'; ctx.font='bold 40px sans-serif'; ctx.textAlign='center';
-    ctx.fillText('🧟 ZOMBIE HUNTER',W/2,70);
+    ctx.fillStyle='#4f4'; ctx.font='bold 40px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('🧪 SLIME HUNTER',W/2,70);
     ctx.fillStyle='#aaa'; ctx.font='16px sans-serif';
     ctx.fillText('뱀파이어 서바이버 스타일',W/2,100);
 
@@ -1468,30 +1568,116 @@ class Game {
   }
 
   renderBackground(){
-    // map background
-    const grad=ctx.createRadialGradient(this.camX+W/2,this.camY+H/2,0,this.camX+W/2,this.camY+H/2,800);
-    grad.addColorStop(0,'#1a1a2e');
-    grad.addColorStop(1,'#0f0f1a');
-    ctx.fillStyle=grad;
-    ctx.fillRect(0,0,W,H);
+    const t = this.time || (Date.now() / 1000);
+    const camX = this.camX, camY = this.camY;
 
-    // grid
-    ctx.strokeStyle='rgba(60,60,120,0.15)'; ctx.lineWidth=1;
-    const gridSize=80;
-    const startX=-(this.camX%gridSize);
-    const startY=-(this.camY%gridSize);
-    for(let x=startX;x<W;x+=gridSize){
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
-    }
-    for(let y=startY;y<H;y+=gridSize){
-      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+    // 1. 딥 포레스트 베이스 그라데이션
+    const centerX = W / 2, centerY = H / 2;
+    const grad = ctx.createRadialGradient(centerX, centerY, 50, centerX, centerY, Math.max(W, H));
+    grad.addColorStop(0, '#152919');
+    grad.addColorStop(0.6, '#0d1a10');
+    grad.addColorStop(1, '#060d07');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // 2. 타일 기반 숲 바닥 및 요소 (그리드 100px)
+    const tileSize = 100;
+    const minGX = Math.floor(camX / tileSize) - 1;
+    const maxGX = Math.floor((camX + W) / tileSize) + 1;
+    const minGY = Math.floor(camY / tileSize) - 1;
+    const maxGY = Math.floor((camY + H) / tileSize) + 1;
+
+    ctx.strokeStyle = 'rgba(70, 160, 90, 0.07)';
+    ctx.lineWidth = 1;
+
+    for (let gy = minGY; gy <= maxGY; gy++) {
+      for (let gx = minGX; gx <= maxGX; gx++) {
+        const worldX = gx * tileSize;
+        const worldY = gy * tileSize;
+        const screenX = worldX - camX;
+        const screenY = worldY - camY;
+
+        const h1 = forestHash(gx, gy);
+        const h2 = forestHash(gx * 7, gy * 13);
+        const h3 = forestHash(gx * 3, gy * 11);
+
+        if (h1 > 0.4) {
+          ctx.fillStyle = h1 > 0.7 ? 'rgba(40, 90, 50, 0.12)' : 'rgba(25, 60, 30, 0.15)';
+          ctx.fillRect(screenX, screenY, tileSize, tileSize);
+        }
+
+        ctx.strokeRect(screenX, screenY, tileSize, tileSize);
+
+        const objX = screenX + h2 * (tileSize - 20) + 10;
+        const objY = screenY + h3 * (tileSize - 20) + 10;
+
+        if (h1 < 0.18) {
+          drawGrassTuft(ctx, objX, objY, h2);
+        } else if (h1 > 0.28 && h1 < 0.35) {
+          drawMossyRock(ctx, objX, objY, h3);
+        } else if (h1 > 0.48 && h1 < 0.52) {
+          drawGlowingMushroom(ctx, objX, objY, h2);
+        } else if (h1 > 0.76) {
+          const treeScale = 0.85 + h3 * 0.4;
+          drawForestTree(ctx, objX, objY, treeScale, h2);
+        }
+      }
     }
 
-    // map border
-    if(this.camX<0){ctx.fillStyle='rgba(255,0,0,0.3)'; ctx.fillRect(0,0,-this.camX,H);}
-    if(this.camY<0){ctx.fillStyle='rgba(255,0,0,0.3)'; ctx.fillRect(0,0,W,-this.camY);}
-    if(this.camX+W>MAP_W){ctx.fillStyle='rgba(255,0,0,0.3)'; ctx.fillRect(MAP_W-this.camX,0,W-(MAP_W-this.camX),H);}
-    if(this.camY+H>MAP_H){ctx.fillStyle='rgba(255,0,0,0.3)'; ctx.fillRect(0,MAP_H-this.camY,W,H-(MAP_H-this.camY));}
+    // 3. 숲 반딧불이 & 빛 입자 효과 (Fireflies)
+    ctx.save();
+    for (let i = 0; i < 30; i++) {
+      const fx = ((i * 137.5 + t * 20) % (W + 200)) - 100;
+      const fy = ((i * 219.3 + Math.sin(t + i) * 35) % (H + 200)) - 100;
+      const pulse = 0.4 + 0.6 * Math.abs(Math.sin(t * 2 + i));
+      const size = (2 + (i % 3)) * pulse;
+
+      ctx.fillStyle = i % 2 === 0 ? `rgba(160, 255, 120, ${0.4 * pulse})` : `rgba(255, 230, 110, ${0.45 * pulse})`;
+      ctx.beginPath(); ctx.arc(fx, fy, size * 2.5, 0, TAU); ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(fx, fy, size * 0.7, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+
+    // 4. 나뭇잎 사이 숲속 햇살/달빛 광선 (God Rays)
+    ctx.save();
+    ctx.fillStyle = 'rgba(180, 255, 210, 0.025)';
+    for (let r = 0; r < 3; r++) {
+      const rayX = (W * 0.2 + r * W * 0.3 + Math.sin(t * 0.5 + r) * 30);
+      ctx.beginPath();
+      ctx.moveTo(rayX, 0);
+      ctx.lineTo(rayX + 120, 0);
+      ctx.lineTo(rayX - 80 + H * 0.3, H);
+      ctx.lineTo(rayX - 200 + H * 0.3, H);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 5. 숲 경계 (Map border)
+    ctx.save();
+    if (camX < 0) {
+      const w = -camX;
+      ctx.fillStyle = 'rgba(5, 15, 8, 0.9)'; ctx.fillRect(0, 0, w, H);
+      ctx.fillStyle = 'rgba(255, 60, 60, 0.25)'; ctx.fillRect(w - 6, 0, 6, H);
+    }
+    if (camY < 0) {
+      const h = -camY;
+      ctx.fillStyle = 'rgba(5, 15, 8, 0.9)'; ctx.fillRect(0, 0, W, h);
+      ctx.fillStyle = 'rgba(255, 60, 60, 0.25)'; ctx.fillRect(0, h - 6, W, 6);
+    }
+    if (camX + W > MAP_W) {
+      const x = MAP_W - camX;
+      ctx.fillStyle = 'rgba(5, 15, 8, 0.9)'; ctx.fillRect(x, 0, W - x, H);
+      ctx.fillStyle = 'rgba(255, 60, 60, 0.25)'; ctx.fillRect(x, 0, 6, H);
+    }
+    if (camY + H > MAP_H) {
+      const y = MAP_H - camY;
+      ctx.fillStyle = 'rgba(5, 15, 8, 0.9)'; ctx.fillRect(0, y, W, H - y);
+      ctx.fillStyle = 'rgba(255, 60, 60, 0.25)'; ctx.fillRect(0, y, W, 6);
+    }
+    ctx.restore();
   }
 
   renderEntities(){
@@ -1691,7 +1877,7 @@ function loop(timestamp){
 
   if(game){
     try{ game.update(dt); game.render(); }
-    catch(e){ console.warn('[ZOMBIE] frame error:',e); }
+    catch(e){ console.warn('[SLIME] frame error:',e); }
   }
 
   // 디버그 로그 — 1초 간격
@@ -1703,7 +1889,7 @@ function loop(timestamp){
     logTimer=0;
     const avgFps=Math.round(fpsHistory.reduce((a,b)=>a+b,0)/fpsHistory.length);
     console.log(
-      `[ZOMBIE] time=${game?Math.floor(game.time):'-'}s `+
+      `[SLIME] time=${game?Math.floor(game.time):'-'}s `+
       `state=${game?game.state:'-'} `+
       `fps=${avgFps} `+
       `dt=${(dt*1000).toFixed(1)}ms `+
@@ -1718,7 +1904,7 @@ function loop(timestamp){
 
 // ─── 시작 ───
 window.onload=function(){
-  resize();
   game=new Game();
+  resize();
   loop(performance.now());
 };
