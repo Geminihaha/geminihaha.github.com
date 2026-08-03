@@ -1,0 +1,66 @@
+{
+  "name": "MountWalker 마운트워커",
+  "short_name": "MountWalker",
+  "description": "대한민국 명산 등산코스, 지도, 산행정보를 한눈에! 지리산, 설악산, 한라산, 북한산 등 전국 명산 등산 정보",
+  "lang": "ko",
+  "dir": "auto",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "background_color": "#1b4332",
+  "theme_color": "#2d6a4f",
+  "categories": ["travel", "navigation", "lifestyle", "sports"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "🏔️ 명산 목록",
+      "short_name": "명산",
+      "description": "대한민국 주요 명산 정보",
+      "url": "./index.html#mountains",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "🗺️ 등산 지도",
+      "short_name": "지도",
+      "description": "명산 위치 지도",
+      "url": "./index.html#map-section",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "🎒 등산 준비물",
+      "short_name": "준비물",
+      "description": "등산 준비물 체크리스트",
+      "url": "./index.html#gear",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
