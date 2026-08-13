@@ -179,7 +179,6 @@ export class CubeModel {
         cubiesInLayer.forEach(c => pivot.add(c));
 
         const targetAngle = dir * (Math.PI / 2);
-        const startRotation = 0;
         const startTime = performance.now();
 
         sounds.playRotate();
@@ -200,17 +199,24 @@ export class CubeModel {
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
                 } else {
-                    // Finalize transform
-                    pivot.updateMatrixWorld(true);
+                    // Update pivot's LOCAL transform matrix relative to this.group
+                    pivot.updateMatrix();
                     
                     const children = [...pivot.children];
+                    const offset = (this.size - 1) / 2;
+
                     children.forEach(c => {
-                        c.applyMatrix4(pivot.matrixWorld);
-                        // Round positions to avoid cumulative floating point drift
-                        c.position.x = Math.round(c.position.x * 100) / 100;
-                        c.position.y = Math.round(c.position.y * 100) / 100;
-                        c.position.z = Math.round(c.position.z * 100) / 100;
+                        // Apply pivot's LOCAL matrix (NOT matrixWorld) to avoid double group transform!
+                        c.applyMatrix4(pivot.matrix);
                         
+                        // Snap position to exact grid coordinates for 2x2 and 3x3
+                        c.position.x = this.snapToGrid(c.position.x, offset);
+                        c.position.y = this.snapToGrid(c.position.y, offset);
+                        c.position.z = this.snapToGrid(c.position.z, offset);
+
+                        // Snap orientation quaternion to exact 90-degree alignment
+                        this.snapQuaternion(c.quaternion);
+
                         this.group.add(c);
                     });
 
@@ -227,6 +233,41 @@ export class CubeModel {
             };
             requestAnimationFrame(animate);
         });
+    }
+
+    snapToGrid(val, offset) {
+        let minDiff = Infinity;
+        let bestVal = val;
+        for (let i = 0; i < this.size; i++) {
+            const gridVal = (i - offset) * this.spacing;
+            const diff = Math.abs(val - gridVal);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestVal = gridVal;
+            }
+        }
+        return bestVal;
+    }
+
+    snapQuaternion(q) {
+        const snapVal = (v) => {
+            const targets = [0, 0.70710678, -0.70710678, 1, -1];
+            let minD = Infinity;
+            let best = v;
+            for (const t of targets) {
+                const d = Math.abs(v - t);
+                if (d < minD) {
+                    minD = d;
+                    best = t;
+                }
+            }
+            return best;
+        };
+        q.x = snapVal(q.x);
+        q.y = snapVal(q.y);
+        q.z = snapVal(q.z);
+        q.w = snapVal(q.w);
+        q.normalize();
     }
 
     async undo() {

@@ -273,8 +273,9 @@ export class CubeController {
             return false;
         }
 
-        // Determine layer position along selected rotation axis
-        const layerPos = Math.round(pos[bestAxis] * 100) / 100;
+        // Determine layer position along selected rotation axis with exact grid snapping
+        const offset = (this.cubeModel.size - 1) / 2;
+        const layerPos = this.cubeModel.snapToGrid(pos[bestAxis], offset);
 
         // Execute rotation
         this.cubeModel.rotateLayer(bestAxis, layerPos, finalDir).then(success => {
