@@ -133,22 +133,23 @@ export class CubeController {
         }
     }
 
-    rotateCameraFree(deltaX, deltaY) {
-        const rotateSpeed = 0.005;
+    rotateCubeFree(deltaX, deltaY) {
+        const rotateSpeed = 0.006;
 
-        // Horizontal rotation around world Y axis
-        const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * rotateSpeed);
+        // Camera local Right and Up vectors in world space
+        const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion).normalize();
+        const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion).normalize();
 
-        // Vertical rotation around camera local Right vector (Unlimited 360 Pitch - No 180 deg lock!)
-        const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion).normalize();
-        const qX = new THREE.Quaternion().setFromAxisAngle(rightVec, -deltaY * rotateSpeed);
+        // Quaternion for horizontal drag (rotate around camera Up vector)
+        const qY = new THREE.Quaternion().setFromAxisAngle(camUp, deltaX * rotateSpeed);
+        
+        // Quaternion for vertical drag (rotate around camera Right vector - 100% Pole-Lock Free!)
+        const qX = new THREE.Quaternion().setFromAxisAngle(camRight, deltaY * rotateSpeed);
 
-        const qCombined = new THREE.Quaternion().multiplyQuaternions(qY, qX);
+        const qCombined = new THREE.Quaternion().multiplyQuaternions(qX, qY);
 
-        this.camera.position.applyQuaternion(qCombined);
-        this.camera.up.applyQuaternion(qCombined);
-        this.camera.lookAt(0, 0, 0);
-        this.orbitControls.update();
+        // Premultiply quaternion to cube group for 100% singularity-free unlimited 3D rotation
+        this.cubeModel.group.quaternion.premultiply(qCombined);
     }
 
     onPointerMove(e) {
@@ -161,9 +162,9 @@ export class CubeController {
         const moveY = e.movementY || (currentPointerPos.y - (this.lastPos ? this.lastPos.y : currentPointerPos.y));
         this.lastPos = currentPointerPos.clone();
 
-        // If Inspect mode or Long-press hold mode or no cubie selected, perform UNLIMITED 360 camera rotation
+        // If Inspect mode or Long-press hold mode or no cubie selected, perform UNLIMITED 360 cube rotation
         if (this.isInspectMode || this.isHoldForOrbit || !this.selectedCubie) {
-            this.rotateCameraFree(moveX, moveY);
+            this.rotateCubeFree(moveX, moveY);
             return;
         }
 
