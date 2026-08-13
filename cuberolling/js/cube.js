@@ -323,6 +323,43 @@ export class CubeModel {
         }
     }
 
+    // Apply a scanned pattern (6 faces x NxN color keys: 'U','D','L','R','F','B')
+    // to the cube, reproducing the exact state of the user's physical cube.
+    // Sticker notation follows the standard face view (row 0 = top / far side).
+    applyPattern(pattern) {
+        // Start from a solved cube
+        this.initCube();
+        const n = this.size;
+        const offset = (n - 1) / 2;
+
+        for (const cubie of this.cubies) {
+            const ix = Math.round(cubie.position.x + offset);
+            const iy = Math.round(cubie.position.y + offset);
+            const iz = Math.round(cubie.position.z + offset);
+
+            // Replace a sticker material with the scanned color
+            const setFace = (faceIndex, colorKey) => {
+                const hex = CUBE_COLORS[colorKey];
+                if (hex === undefined) return;
+                const old = cubie.material[faceIndex];
+                if (old.map) old.map.dispose();
+                cubie.material[faceIndex] = new THREE.MeshStandardMaterial({
+                    map: this.createFaceTexture(hex),
+                    roughness: 0.3,
+                    metalness: 0.1
+                });
+            };
+
+            // Local face indices: 0:+X(R) 1:-X(L) 2:+Y(U) 3:-Y(D) 4:+Z(F) 5:-Z(B)
+            if (ix === n - 1) setFace(0, pattern.R[n - 1 - iy][iz]);      // Right
+            if (ix === 0)     setFace(1, pattern.L[n - 1 - iy][iz]);      // Left
+            if (iy === n - 1) setFace(2, pattern.U[n - 1 - iz][ix]);      // Up
+            if (iy === 0)     setFace(3, pattern.D[n - 1 - iz][ix]);      // Down
+            if (iz === n - 1) setFace(4, pattern.F[n - 1 - iy][ix]);      // Front
+            if (iz === 0)     setFace(5, pattern.B[n - 1 - iy][n - 1 - ix]); // Back
+        }
+    }
+
     isSolved() {
         if (this.isAnimating) return false;
         const eps = 0.05;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CubeModel } from './cube.js';
 import { CubeController } from './controls.js';
+import { CubeScanner } from './scanner.js';
 import { ParticleSystem } from './particles.js';
 import { sounds } from './audio.js';
 
@@ -324,6 +325,25 @@ class GameApp {
             mode2x2Btn.classList.remove('active');
             this.currentSize = 3;
             this.initGame();
+        });
+
+        // Scan button: open the camera scanner to import a real cube's pattern
+        document.getElementById('btn-scan').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            sounds.playClick();
+            if (this.scanner) {
+                this.scanner.close();
+            }
+            this.scanner = new CubeScanner(this.currentSize, (pattern) => {
+                // Apply the scanned pattern as the starting state
+                this.cube.applyPattern(pattern);
+                this.resetStats();
+                this.hasScrambled = true;
+                this.setFinishButtonState(true);
+                sounds.playClick();
+                this.scanner.close();
+            });
+            await this.scanner.open();
         });
 
         // Finish button: confirm the solve (stops the timer & saves the record)

@@ -91,6 +91,9 @@
             <button id="btn-scramble" class="btn btn-primary">
                 <span>🔀</span> 섞기
             </button>
+            <button id="btn-scan" class="btn" title="실제 큐브를 촬영해 패턴 가져오기">
+                <span>📷</span> 촬영
+            </button>
             <button id="btn-inspect" class="btn" title="큐브 시점 자유 둘러보기 모드">
                 <span>🔍</span> 둘러보기
             </button>
@@ -119,6 +122,49 @@
                 🔊
             </button>
         </footer>
+    </div>
+
+    <!-- Cube Scanner Modal (semi-automatic pattern input) -->
+    <div id="scanner-modal" class="scanner-overlay">
+        <div class="scanner-card">
+            <div class="scanner-header">
+                <h2>📷 큐브 패턴 가져오기</h2>
+                <button id="btn-scanner-close" class="btn btn-icon" title="닫기">✕</button>
+            </div>
+
+            <div class="scanner-stage">
+                <video id="scanner-video" autoplay playsinline muted></video>
+                <div id="scanner-grid" class="scanner-grid"></div>
+                <div class="scanner-face-hint" id="scanner-face-hint"></div>
+            </div>
+
+            <div class="scanner-controls">
+                <div class="scanner-row">
+                    <span class="scanner-label">면 선택</span>
+                    <div class="face-tabs" id="scanner-face-tabs">
+                        <button class="face-tab" data-face="U">U</button>
+                        <button class="face-tab" data-face="D">D</button>
+                        <button class="face-tab" data-face="L">L</button>
+                        <button class="face-tab" data-face="R">R</button>
+                        <button class="face-tab" data-face="F">F</button>
+                        <button class="face-tab" data-face="B">B</button>
+                    </div>
+                </div>
+
+                <div class="scanner-row">
+                    <span class="scanner-label">색 선택</span>
+                    <div class="palette" id="scanner-palette"></div>
+                </div>
+
+                <div class="scanner-status" id="scanner-status"></div>
+
+                <div class="scanner-actions">
+                    <button id="btn-scanner-capture" class="btn">📷 캡처</button>
+                    <button id="btn-scanner-clear" class="btn">🗑 면 지우기</button>
+                    <button id="btn-scanner-start" class="btn btn-primary" disabled>✅ 이 패턴으로 시작</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Win Celebration Modal -->
