@@ -87,6 +87,7 @@ export class CubeController {
         this.isHoldForOrbit = false;
         this.pointerDownTime = performance.now();
         this.startPointerPos = this.getPointerPos(e);
+        this.lastPos = this.startPointerPos.clone();
         this.mouse = this.getNormalizedMousePos(e);
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -132,18 +133,43 @@ export class CubeController {
         }
     }
 
+    rotateCameraFree(deltaX, deltaY) {
+        const rotateSpeed = 0.005;
+
+        // Horizontal rotation around world Y axis
+        const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * rotateSpeed);
+
+        // Vertical rotation around camera local Right vector (Unlimited 360 Pitch - No 180 deg lock!)
+        const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion).normalize();
+        const qX = new THREE.Quaternion().setFromAxisAngle(rightVec, -deltaY * rotateSpeed);
+
+        const qCombined = new THREE.Quaternion().multiplyQuaternions(qY, qX);
+
+        this.camera.position.applyQuaternion(qCombined);
+        this.camera.up.applyQuaternion(qCombined);
+        this.camera.lookAt(0, 0, 0);
+        this.orbitControls.update();
+    }
+
     onPointerMove(e) {
         if (!this.isPointerDown) return;
 
-        // If long press hold mode or inspect mode is active, let OrbitControls handle camera rotation
-        if (this.isInspectMode || this.isHoldForOrbit || !this.selectedCubie || this.cubeModel.isAnimating) {
+        // Track pointer movement delta for free camera rotation
+        const currentPointerPos = this.getPointerPos(e);
+        const screenDelta = currentPointerPos.clone().sub(this.startPointerPos);
+        const moveX = e.movementX || (currentPointerPos.x - (this.lastPos ? this.lastPos.x : currentPointerPos.x));
+        const moveY = e.movementY || (currentPointerPos.y - (this.lastPos ? this.lastPos.y : currentPointerPos.y));
+        this.lastPos = currentPointerPos.clone();
+
+        // If Inspect mode or Long-press hold mode or no cubie selected, perform UNLIMITED 360 camera rotation
+        if (this.isInspectMode || this.isHoldForOrbit || !this.selectedCubie) {
+            this.rotateCameraFree(moveX, moveY);
             return;
         }
 
-        const currentPointerPos = this.getPointerPos(e);
-        const delta = currentPointerPos.clone().sub(this.startPointerPos);
+        if (this.cubeModel.isAnimating) return;
 
-        if (delta.length() > this.dragThreshold) {
+        if (screenDelta.length() > this.dragThreshold) {
             const elapsedTime = performance.now() - this.pointerDownTime;
             
             // Clear timer once movement exceeds threshold
@@ -154,7 +180,6 @@ export class CubeController {
                 this.isHoldForOrbit = true;
                 this.selectedCubie = null;
                 this.selectedNormal = null;
-                this.orbitControls.enabled = true;
                 if (this.onInspectStateChange) {
                     this.onInspectStateChange(true);
                 }
@@ -162,7 +187,7 @@ export class CubeController {
             }
 
             // Attempt layer drag. If swipe direction doesn't match grid alignment well, fallback to orbit
-            const handled = this.handleLayerDrag(delta);
+            const handled = this.handleLayerDrag(screenDelta);
             
             this.isPointerDown = false; // Trigger once per drag
             this.selectedCubie = null;
@@ -170,7 +195,7 @@ export class CubeController {
             if (handled) {
                 this.orbitControls.enabled = false;
             } else {
-                this.orbitControls.enabled = true;
+                this.isHoldForOrbit = true;
                 if (this.onInspectStateChange) {
                     this.onInspectStateChange(true);
                 }
@@ -184,6 +209,7 @@ export class CubeController {
         this.isHoldForOrbit = false;
         this.selectedCubie = null;
         this.selectedNormal = null;
+        this.lastPos = null;
         this.orbitControls.enabled = true;
 
         // If not in manual toggle inspect mode, unhighlight inspect button on touch release
