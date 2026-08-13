@@ -37,7 +37,8 @@ export class CubeController {
         // Keep OrbitControls disabled to avoid double-rotation conflicts.
         this.orbitControls.enabled = !enabled;
         if (this.onInspectStateChange) {
-            this.onInspectStateChange(this.isInspectMode);
+            // fromHold = false -> manual toggle, reflect on the inspect button
+            this.onInspectStateChange(this.isInspectMode, false);
         }
     }
 
@@ -128,7 +129,8 @@ export class CubeController {
                     // so OrbitControls must NOT also grab the same drag (would double-rotate).
                     this.orbitControls.enabled = false;
                     if (this.onInspectStateChange) {
-                        this.onInspectStateChange(true); // Highlight Inspect button!
+                        // fromHold = true -> long-press free-look, show a floating indicator
+                        this.onInspectStateChange(true, true);
                     }
                 }
             }, 350);
@@ -216,6 +218,7 @@ export class CubeController {
 
     onPointerUp() {
         if (this.longPressTimer) clearTimeout(this.longPressTimer);
+        const wasHolding = this.isHoldForOrbit;
         this.isPointerDown = false;
         this.isHoldForOrbit = false;
         this.selectedCubie = null;
@@ -223,9 +226,9 @@ export class CubeController {
         this.lastPos = null;
         this.orbitControls.enabled = !this.isInspectMode;
 
-        // If not in manual toggle inspect mode, unhighlight inspect button on touch release
+        // If not in manual toggle inspect mode, hide the long-press indicator on release
         if (!this.isInspectMode && this.onInspectStateChange) {
-            this.onInspectStateChange(false);
+            this.onInspectStateChange(false, wasHolding);
         }
     }
 

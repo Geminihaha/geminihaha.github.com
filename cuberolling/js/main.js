@@ -155,11 +155,24 @@ class GameApp {
             () => this.onMovePerformed()
         );
 
-        // Register the inspect-state UI callback FIRST so the restore below syncs the button
-        this.cubeController.setInspectStateCallback((isActive) => {
+        // Register the inspect-state UI callback FIRST so the restore below syncs the button.
+        // fromHold=true -> long-press free-look: show the floating indicator only.
+        // fromHold=false -> manual toggle: reflect on the inspect button only.
+        this.cubeController.setInspectStateCallback((isActive, fromHold) => {
             const inspectBtn = document.getElementById('btn-inspect');
-            if (inspectBtn) {
-                inspectBtn.classList.toggle('active', isActive);
+            const indicator = document.getElementById('inspect-indicator');
+
+            if (fromHold) {
+                if (indicator) {
+                    indicator.classList.toggle('visible', isActive);
+                }
+            } else {
+                if (inspectBtn) {
+                    inspectBtn.classList.toggle('active', isActive);
+                }
+                if (indicator) {
+                    indicator.classList.remove('visible');
+                }
             }
         });
 
