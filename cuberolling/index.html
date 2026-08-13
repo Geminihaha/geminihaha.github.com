@@ -86,14 +86,8 @@
             </div>
         </div>
 
-        <!-- Bottom Action Toolbar -->
+        <!-- Bottom Action Toolbar (frequent actions only) -->
         <footer>
-            <button id="btn-scramble" class="btn btn-primary">
-                <span>🔀</span> 섞기
-            </button>
-            <button id="btn-scan" class="btn" title="실제 큐브를 촬영해 패턴 가져오기">
-                <span>📷</span> 촬영
-            </button>
             <button id="btn-inspect" class="btn" title="큐브 시점 자유 둘러보기 모드">
                 <span>🔍</span> 둘러보기
             </button>
@@ -112,9 +106,6 @@
             <button id="btn-redo" class="btn" title="다시 실행">
                 <span>↪️</span> Redo
             </button>
-            <button id="btn-finish" class="btn" title="큐브를 다 맞추면 누르세요">
-                <span>🏁</span> 마침
-            </button>
             <button id="btn-reset" class="btn" title="리셋">
                 <span>🔄</span> Reset
             </button>
@@ -122,6 +113,16 @@
                 🔊
             </button>
         </footer>
+    </div>
+
+    <!-- Game Menu FAB: scramble / scan / finish live here so they can't be
+         pressed accidentally during play -->
+    <button id="btn-game-menu" class="game-menu-fab" title="게임 메뉴 (섞기 / 촬영 / 마침)">🎮</button>
+    <div id="game-menu" class="game-menu-panel">
+        <div class="game-menu-title">게임</div>
+        <button id="btn-scramble" class="btn btn-primary">🔀 섞기</button>
+        <button id="btn-scan" class="btn" title="실제 큐브를 촬영해 패턴 가져오기">📷 촬영</button>
+        <button id="btn-finish" class="btn" title="큐브를 다 맞추면 누르세요">🏁 마침</button>
     </div>
 
     <!-- Cube Scanner Modal (semi-automatic pattern input) -->

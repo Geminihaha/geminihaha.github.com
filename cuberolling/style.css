@@ -818,3 +818,99 @@ footer {
     color: #fff;
     box-shadow: 0 0 12px rgba(124, 58, 237, 0.6);
 }
+
+/* ===== Game Menu FAB (scramble / scan / finish) ===== */
+.game-menu-fab {
+    position: fixed;
+    right: 16px;
+    bottom: calc(96px + var(--safe-bottom));
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: 1px solid #60a5fa;
+    color: #fff;
+    font-size: 1.5rem;
+    box-shadow: 0 6px 22px rgba(59, 130, 246, 0.55);
+    z-index: 80;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    touch-action: manipulation;
+}
+
+.game-menu-fab:active {
+    transform: scale(0.92);
+}
+
+.game-menu-fab.active {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #fbbf24;
+    box-shadow: 0 6px 22px rgba(245, 158, 11, 0.55);
+}
+
+/* Highlighted when the cube is detected as solved - open to press Finish */
+.game-menu-fab.ready {
+    background: linear-gradient(135deg, #059669, #10b981);
+    border-color: #34d399;
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.85);
+    animation: finishPulse 1.2s ease-in-out infinite;
+}
+
+.game-menu-panel {
+    position: fixed;
+    right: 16px;
+    bottom: calc(160px + var(--safe-bottom));
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 79;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: var(--shadow-main);
+}
+
+.game-menu-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.game-menu-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-align: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    letter-spacing: 0.5px;
+}
+
+.game-menu-panel .btn {
+    min-width: 132px;
+    justify-content: flex-start;
+    padding: 11px 14px;
+}
+
+.game-menu-panel .btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.game-menu-panel #btn-finish.ready {
+    background: linear-gradient(135deg, #059669, #10b981);
+    border-color: #34d399;
+    color: #fff;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+    animation: finishPulse 1.2s ease-in-out infinite;
+}

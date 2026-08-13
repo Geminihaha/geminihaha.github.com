@@ -219,6 +219,9 @@ class GameApp {
         if (!btn) return;
         btn.disabled = !enabled;
         btn.classList.toggle('ready', enabled);
+        // Also highlight the game menu FAB so the user knows to open it for Finish
+        const fab = document.getElementById('btn-game-menu');
+        if (fab) fab.classList.toggle('ready', enabled);
     }
 
     resetStats() {
@@ -326,6 +329,31 @@ class GameApp {
             this.currentSize = 3;
             this.initGame();
         });
+
+        // Game menu FAB: hosts scramble / scan / finish in a separate menu so
+        // they can't be pressed accidentally during play
+        const gameMenuBtn = document.getElementById('btn-game-menu');
+        const gameMenu = document.getElementById('game-menu');
+        if (gameMenuBtn && gameMenu) {
+            const setMenuOpen = (open) => {
+                gameMenu.classList.toggle('open', open);
+                gameMenuBtn.classList.toggle('active', open);
+            };
+            gameMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sounds.playClick();
+                setMenuOpen(!gameMenu.classList.contains('open'));
+            });
+            // Close when tapping outside
+            document.addEventListener('pointerdown', (e) => {
+                if (gameMenu.classList.contains('open') &&
+                    !gameMenu.contains(e.target) && !gameMenuBtn.contains(e.target)) {
+                    setMenuOpen(false);
+                }
+            });
+            // Close after choosing an action inside the menu
+            gameMenu.addEventListener('click', () => setMenuOpen(false));
+        }
 
         // Scan button: open the camera scanner to import a real cube's pattern
         document.getElementById('btn-scan').addEventListener('click', async (e) => {
