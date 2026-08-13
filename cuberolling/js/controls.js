@@ -33,7 +33,9 @@ export class CubeController {
 
     setInspectMode(enabled) {
         this.isInspectMode = enabled;
-        this.orbitControls.enabled = true;
+        // In inspect mode we rotate the cube group directly (rotateCubeFree).
+        // Keep OrbitControls disabled to avoid double-rotation conflicts.
+        this.orbitControls.enabled = !enabled;
         if (this.onInspectStateChange) {
             this.onInspectStateChange(this.isInspectMode);
         }
@@ -75,14 +77,14 @@ export class CubeController {
             return;
         }
 
-        // If Inspect mode is manually toggled ON, force OrbitControls and bypass layer selection
+        // If Inspect mode is manually toggled ON, rotate the cube group directly and bypass layer selection
         if (this.isInspectMode) {
             this.isPointerDown = true;
             this.startPointerPos = this.getPointerPos(e);
             this.lastPos = this.startPointerPos.clone();
             this.selectedCubie = null;
             this.selectedNormal = null;
-            this.orbitControls.enabled = true;
+            this.orbitControls.enabled = false;
             return;
         }
 
@@ -116,18 +118,20 @@ export class CubeController {
             this.selectedNormal = normal;
             
             // Long Press / Hold Detection:
-            // If user holds for > 180ms, switch to camera orbit view and highlight Inspect button
+            // If user holds for > 350ms, switch to free cube rotation and highlight Inspect button
             this.longPressTimer = setTimeout(() => {
                 if (this.isPointerDown) {
                     this.isHoldForOrbit = true;
                     this.selectedCubie = null;
                     this.selectedNormal = null;
-                    this.orbitControls.enabled = true; // Handover to OrbitControls for camera view
+                    // Keep OrbitControls disabled: free-look rotates the cube group directly,
+                    // so OrbitControls must NOT also grab the same drag (would double-rotate).
+                    this.orbitControls.enabled = false;
                     if (this.onInspectStateChange) {
                         this.onInspectStateChange(true); // Highlight Inspect button!
                     }
                 }
-            }, 180);
+            }, 350);
 
         } else {
             this.selectedCubie = null;
@@ -158,16 +162,21 @@ export class CubeController {
     onPointerMove(e) {
         if (!this.isPointerDown) return;
 
-        // Track pointer movement delta for free camera rotation
+        // Track pointer movement delta for free cube rotation
         const currentPointerPos = this.getPointerPos(e);
         const screenDelta = currentPointerPos.clone().sub(this.startPointerPos);
         const moveX = e.movementX || (currentPointerPos.x - (this.lastPos ? this.lastPos.x : currentPointerPos.x));
         const moveY = e.movementY || (currentPointerPos.y - (this.lastPos ? this.lastPos.y : currentPointerPos.y));
         this.lastPos = currentPointerPos.clone();
 
-        // If Inspect mode or Long-press hold mode or no cubie selected, perform UNLIMITED 360 cube rotation
-        if (this.isInspectMode || this.isHoldForOrbit || !this.selectedCubie) {
+        // Inspect mode / long-press hold: rotate the cube group directly (OrbitControls stays disabled)
+        if (this.isInspectMode || this.isHoldForOrbit) {
             this.rotateCubeFree(moveX, moveY);
+            return;
+        }
+
+        // No cubie selected (touched empty space): let OrbitControls handle the camera orbit alone
+        if (!this.selectedCubie) {
             return;
         }
 
@@ -179,30 +188,28 @@ export class CubeController {
             // Clear timer once movement exceeds threshold
             if (this.longPressTimer) clearTimeout(this.longPressTimer);
 
-            // If drag took too long (> 220ms), switch to orbit view instead of layer rotate
+            // If drag took too long (> 220ms), switch to free cube rotation instead of layer rotate
             if (elapsedTime > 220) {
                 this.isHoldForOrbit = true;
                 this.selectedCubie = null;
                 this.selectedNormal = null;
-                if (this.onInspectStateChange) {
-                    this.onInspectStateChange(true);
-                }
+                this.orbitControls.enabled = false;
                 return;
             }
 
-            // Attempt layer drag. If swipe direction doesn't match grid alignment well, fallback to orbit
+            // Attempt layer drag. If the swipe direction doesn't match a layer rotation well,
+            // continue the SAME drag as free cube rotation (no inspect-button flash).
             const handled = this.handleLayerDrag(screenDelta);
-            
-            this.isPointerDown = false; // Trigger once per drag
-            this.selectedCubie = null;
-            
+
             if (handled) {
+                this.isPointerDown = false; // Trigger once per drag
+                this.selectedCubie = null;
                 this.orbitControls.enabled = false;
             } else {
                 this.isHoldForOrbit = true;
-                if (this.onInspectStateChange) {
-                    this.onInspectStateChange(true);
-                }
+                this.selectedCubie = null;
+                this.selectedNormal = null;
+                this.orbitControls.enabled = false;
             }
         }
     }
@@ -214,7 +221,7 @@ export class CubeController {
         this.selectedCubie = null;
         this.selectedNormal = null;
         this.lastPos = null;
-        this.orbitControls.enabled = true;
+        this.orbitControls.enabled = !this.isInspectMode;
 
         // If not in manual toggle inspect mode, unhighlight inspect button on touch release
         if (!this.isInspectMode && this.onInspectStateChange) {
@@ -225,10 +232,23 @@ export class CubeController {
     handleLayerDrag(screenDelta) {
         if (!this.selectedCubie || !this.selectedNormal) return false;
 
-        const normal = this.selectedNormal;
-        const pos = this.selectedCubie.position;
+        // Make sure the cube group's world matrix is up to date (free-look rotation may have changed it)
+        this.cubeModel.group.updateMatrixWorld(true);
 
-        // Possible rotation axes must be perpendicular to the hit face normal
+        // Work in the cube's LOCAL coordinate space:
+        // 1) Convert the world-space hit normal to group-local space so the rotation-axis
+        //    selection matches the faces the user actually sees on the (possibly rotated) cube.
+        const localNormal = this.selectedNormal.clone().transformDirection(
+            this.cubeModel.group.matrixWorld.clone().invert()
+        );
+        localNormal.x = Math.round(localNormal.x);
+        localNormal.y = Math.round(localNormal.y);
+        localNormal.z = Math.round(localNormal.z);
+
+        const normal = localNormal;
+        const pos = this.selectedCubie.position; // already in group-local space
+
+        // Possible rotation axes must be perpendicular to the hit face normal (local axes)
         let possibleAxes = [];
         if (Math.abs(normal.x) > 0.9) possibleAxes = ['y', 'z'];
         else if (Math.abs(normal.y) > 0.9) possibleAxes = ['x', 'z'];
@@ -238,19 +258,24 @@ export class CubeController {
         let maxDot = -1;
         let finalDir = 1;
 
-        // Use selected point if available, or cubie position
-        const refPoint = this.selectedPoint ? this.selectedPoint.clone() : pos.clone();
+        // Use selected point if available (world space), else cubie position converted to world
+        let refPoint = this.selectedPoint
+            ? this.selectedPoint.clone()
+            : pos.clone().applyMatrix4(this.cubeModel.group.matrixWorld);
         const startScreenPos = this.projectToScreen(refPoint);
         const currentDragVec = screenDelta.clone().normalize();
 
         possibleAxes.forEach(axis => {
-            const axisVec = new THREE.Vector3();
-            if (axis === 'x') axisVec.set(1, 0, 0);
-            if (axis === 'y') axisVec.set(0, 1, 0);
-            if (axis === 'z') axisVec.set(0, 0, 1);
+            const localAxisVec = new THREE.Vector3();
+            if (axis === 'x') localAxisVec.set(1, 0, 0);
+            if (axis === 'y') localAxisVec.set(0, 1, 0);
+            if (axis === 'z') localAxisVec.set(0, 0, 1);
 
-            // 3D velocity vector on face surface caused by +1 positive rotation around 'axis'
-            const vel3D = new THREE.Vector3().crossVectors(axisVec, normal).normalize();
+            // Convert the local rotation axis into world space so screen projection stays correct
+            const axisVec = localAxisVec.clone().transformDirection(this.cubeModel.group.matrixWorld).normalize();
+
+            // 3D velocity vector on face surface caused by +1 positive rotation around 'axis' (world space)
+            const vel3D = new THREE.Vector3().crossVectors(axisVec, this.selectedNormal).normalize();
             
             // Project the 3D velocity displacement to 2D screen space
             const movedPoint3D = refPoint.clone().add(vel3D);
@@ -276,7 +301,7 @@ export class CubeController {
             return false;
         }
 
-        // Determine layer position along selected rotation axis with exact grid snapping
+        // Determine layer position along selected rotation axis with exact grid snapping (group-local)
         const offset = (this.cubeModel.size - 1) / 2;
         const layerPos = this.cubeModel.snapToGrid(pos[bestAxis], offset);
 

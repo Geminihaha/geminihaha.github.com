@@ -96,8 +96,20 @@ class GameApp {
 
     updateCameraDistance() {
         const dist = this.currentSize === 2 ? 6.5 : 8.5;
-        this.camera.position.set(dist * 0.7, dist * 0.6, dist);
+        const len = this.camera.position.length();
+
+        if (len > 0.01) {
+            // Preserve the current viewing angle; only scale the distance for the new cube size
+            this.camera.position.normalize().multiplyScalar(dist);
+        } else {
+            this.camera.position.set(dist * 0.7, dist * 0.6, dist);
+        }
+
         this.camera.lookAt(0, 0, 0);
+        if (this.controls) {
+            this.controls.target.set(0, 0, 0);
+            this.controls.update();
+        }
     }
 
     initGame() {
@@ -105,10 +117,15 @@ class GameApp {
             this.cube.clear();
         }
 
-        this.cube = new CubeModel(this.scene, this.currentSize);
-        this.updateCameraDistance();
-
+        // Keep the free-look rotation (cube group orientation) across mode switches
+        const prevGroupQuat = this.cube ? this.cube.group.quaternion.clone() : null;
         const prevInspectState = this.cubeController ? this.cubeController.isInspectMode : false;
+
+        this.cube = new CubeModel(this.scene, this.currentSize);
+        if (prevGroupQuat) {
+            this.cube.group.quaternion.copy(prevGroupQuat);
+        }
+        this.updateCameraDistance();
 
         this.cubeController = new CubeController(
             this.camera,
@@ -118,18 +135,18 @@ class GameApp {
             () => this.onMovePerformed()
         );
 
-        // Restore inspect mode state if previously enabled before reset/mode switch
-        if (prevInspectState) {
-            this.cubeController.setInspectMode(true);
-        }
-
-        // Sync Inspect button UI active state with controller state (long-press or toggle)
+        // Register the inspect-state UI callback FIRST so the restore below syncs the button
         this.cubeController.setInspectStateCallback((isActive) => {
             const inspectBtn = document.getElementById('btn-inspect');
             if (inspectBtn) {
                 inspectBtn.classList.toggle('active', isActive);
             }
         });
+
+        // Restore inspect mode state if previously enabled before reset/mode switch
+        if (prevInspectState) {
+            this.cubeController.setInspectMode(true);
+        }
 
         this.resetStats();
     }
