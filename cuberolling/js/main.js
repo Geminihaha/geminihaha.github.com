@@ -199,12 +199,25 @@ class GameApp {
             this.startTimer();
         }
 
-        // Check if cube is solved after move
+        // Detect a solved cube after the move settles:
+        // stop the timer and enable the Finish button so the user confirms completion.
         setTimeout(() => {
-            if (this.hasScrambled && this.cube.isSolved()) {
-                this.onGameWin();
+            if (!this.hasScrambled) return;
+            if (this.cube.isSolved()) {
+                this.stopTimer();
+                this.setFinishButtonState(true);
+            } else {
+                this.setFinishButtonState(false);
             }
         }, 300);
+    }
+
+    // Enable/disable the Finish button; 'ready' highlights it when the cube is solved
+    setFinishButtonState(enabled) {
+        const btn = document.getElementById('btn-finish');
+        if (!btn) return;
+        btn.disabled = !enabled;
+        btn.classList.toggle('ready', enabled);
     }
 
     resetStats() {
@@ -212,6 +225,7 @@ class GameApp {
         this.timerSeconds = 0;
         this.moveCount = 0;
         this.hasScrambled = false;
+        this.setFinishButtonState(false);
         this.updateStatsUI();
         this.updateBestRecordUI();
     }
@@ -270,6 +284,7 @@ class GameApp {
 
     onGameWin() {
         this.stopTimer();
+        this.setFinishButtonState(false);
         sounds.playWin();
         this.particles.triggerWinConfetti();
 
@@ -311,6 +326,24 @@ class GameApp {
             this.initGame();
         });
 
+        // Finish button: confirm the solve (stops the timer & saves the record)
+        document.getElementById('btn-finish').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!this.hasScrambled) return;
+            if (this.cube.isSolved()) {
+                sounds.playClick();
+                this.onGameWin();
+            } else {
+                // Not solved yet - shake the button as gentle feedback
+                const btn = document.getElementById('btn-finish');
+                if (btn) {
+                    btn.classList.remove('shake');
+                    void btn.offsetWidth; // restart the animation
+                    btn.classList.add('shake');
+                }
+            }
+        });
+
         // Zoom buttons (cube zoom in/out)
         document.getElementById('btn-zoom-in').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -330,6 +363,7 @@ class GameApp {
             this.resetStats();
             this.cube.scramble(this.currentSize === 2 ? 10 : 18).then(() => {
                 this.hasScrambled = true;
+                this.setFinishButtonState(true);
             });
         });
 

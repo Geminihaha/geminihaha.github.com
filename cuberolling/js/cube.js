@@ -68,6 +68,9 @@ export class CubeModel {
         ctx.fill();
 
         const texture = new THREE.CanvasTexture(canvas);
+        // Store the sticker color so solve-detection can compare by color value
+        // (each call creates a new texture instance, so uuid comparison would always fail)
+        texture.userData.colorHex = colorHex;
         return texture;
     }
 
@@ -355,7 +358,7 @@ export class CubeModel {
 
         for (const face of faces) {
             const layerCubies = this.getLayerCubies(face.axis, face.val);
-            let firstColorMapIndex = null;
+            let firstColor = null;
 
             for (const cubie of layerCubies) {
                 // Find which material index points outward along face.normal
@@ -384,14 +387,14 @@ export class CubeModel {
                 if (matchedIndex === -1) return false;
                 const mat = cubie.material[matchedIndex];
 
-                // If map is canvas texture, compare its canvas or color tag
-                if (!firstColorMapIndex) {
-                    firstColorMapIndex = mat.map ? mat.map.uuid : 'inner';
-                } else {
-                    const currentUuid = mat.map ? mat.map.uuid : 'inner';
-                    if (currentUuid !== firstColorMapIndex) {
-                        return false;
-                    }
+                // Compare by sticker color value (texture.userData.colorHex), not texture uuid,
+                // since every texture is a separate instance even for the same color.
+                const color = mat.map ? mat.map.userData.colorHex : CUBE_COLORS.INNER;
+
+                if (firstColor === null) {
+                    firstColor = color;
+                } else if (color !== firstColor) {
+                    return false;
                 }
             }
         }

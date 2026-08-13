@@ -296,6 +296,44 @@ footer {
     50% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 10px rgba(52, 211, 153, 0); }
 }
 
+/* Finish button (confirm solve) */
+#btn-finish {
+    transition: all 0.2s ease;
+}
+
+#btn-finish:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Highlighted when the cube is detected as solved - press to finish */
+#btn-finish.ready {
+    background: linear-gradient(135deg, #059669, #10b981);
+    border-color: #34d399;
+    color: white;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+    animation: finishPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes finishPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+    50% { box-shadow: 0 0 22px rgba(16, 185, 129, 0.95); }
+}
+
+#btn-finish.shake {
+    animation: finishShake 0.45s ease;
+}
+
+@keyframes finishShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
 .btn-primary {
     background: var(--accent-color);
     border-color: var(--accent-color);
