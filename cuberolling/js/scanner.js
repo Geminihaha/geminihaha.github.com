@@ -136,6 +136,7 @@ export class CubeScanner {
         this.el.video.srcObject = null;
         this.el.video.classList.remove('has-stream');
         this.el.modal.classList.remove('active');
+        this.clearCapture();
     }
 
     setFace(face) {
@@ -144,6 +145,9 @@ export class CubeScanner {
         this.el.tabs.querySelectorAll('.face-tab').forEach(t =>
             t.classList.toggle('active', t.dataset.face === face)
         );
+        // A captured frame belongs to the previously selected face - clear it
+        // so the live camera feed is visible for the new face.
+        this.clearCapture();
         this.renderGrid();
     }
 
@@ -196,18 +200,48 @@ export class CubeScanner {
         this.updateStatus();
     }
 
-    // Capture the current camera frame as a reference behind the grid
+    // Capture the current camera frame as a reference behind the grid,
+    // or go back to the live camera feed if a capture is already shown.
     captureFrame() {
         const video = this.el.video;
-        if (!video.videoWidth) return;
+        const grid = this.el.grid;
+
+        // Already showing a captured frame -> return to live view
+        if (grid.classList.contains('has-capture')) {
+            this.clearCapture();
+            return;
+        }
+
+        if (!video.videoWidth) {
+            // No camera frame available yet; still allow entering capture mode
+            grid.classList.add('has-capture');
+            grid.style.backgroundImage = '';
+            this.updateCaptureUI();
+            return;
+        }
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        this.el.grid.style.backgroundImage = `url(${dataUrl})`;
-        this.el.grid.classList.add('has-capture');
+        grid.style.backgroundImage = `url(${dataUrl})`;
+        grid.classList.add('has-capture');
+        this.updateCaptureUI();
+    }
+
+    // Drop the captured frame and show the live camera feed again
+    clearCapture() {
+        const grid = this.el.grid;
+        grid.style.backgroundImage = '';
+        grid.classList.remove('has-capture');
+        this.updateCaptureUI();
+    }
+
+    updateCaptureUI() {
+        const captured = this.el.grid.classList.contains('has-capture');
+        this.el.captureBtn.innerHTML = captured ? '🔄 다시 촬영' : '📷 캡처';
+        this.el.captureBtn.classList.toggle('active', captured);
     }
 
     buildPalette() {

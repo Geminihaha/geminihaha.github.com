@@ -801,3 +801,11 @@ footer {
     box-shadow: 0 0 16px rgba(16, 185, 129, 0.7);
     animation: finishPulse 1.2s ease-in-out infinite;
 }
+
+/* Capture button state (live feed vs captured frame) */
+#btn-scanner-capture.active {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #fbbf24;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
