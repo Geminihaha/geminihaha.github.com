@@ -237,9 +237,24 @@ footer {
 }
 
 .btn.active {
-    background: var(--accent-color);
-    border-color: var(--accent-hover);
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-color: #60a5fa;
     color: white;
+    box-shadow: 0 0 14px rgba(59, 130, 246, 0.75);
+}
+
+#btn-inspect.active {
+    background: linear-gradient(135deg, #059669, #10b981);
+    border-color: #34d399;
+    color: white;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.75);
+    animation: inspectPulse 2s infinite;
+}
+
+@keyframes inspectPulse {
+    0% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+    50% { box-shadow: 0 0 18px rgba(16, 185, 129, 0.9); }
+    100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
 }
 
 .btn-primary {

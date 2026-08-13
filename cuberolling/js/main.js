@@ -96,6 +96,14 @@ class GameApp {
             () => this.onMovePerformed()
         );
 
+        // Sync Inspect button UI active state with controller state (long-press or toggle)
+        this.cubeController.setInspectStateCallback((isActive) => {
+            const inspectBtn = document.getElementById('btn-inspect');
+            if (inspectBtn) {
+                inspectBtn.classList.toggle('active', isActive);
+            }
+        });
+
         this.resetStats();
     }
 
@@ -220,13 +228,26 @@ class GameApp {
         });
 
         // Toolbar buttons
-        document.getElementById('btn-scramble').addEventListener('click', () => {
+        document.getElementById('btn-scramble').addEventListener('click', (e) => {
+            e.stopPropagation();
             sounds.playClick();
             this.resetStats();
             this.cube.scramble(this.currentSize === 2 ? 10 : 18).then(() => {
                 this.hasScrambled = true;
             });
         });
+
+        const inspectBtn = document.getElementById('btn-inspect');
+        if (inspectBtn) {
+            inspectBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sounds.playClick();
+                if (this.cubeController) {
+                    this.cubeController.toggleInspectMode();
+                }
+            });
+            inspectBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        }
 
         const quickToggleBtn = document.getElementById('btn-toggle-quick');
         const controlsHint = document.querySelector('.controls-hint');

@@ -21,8 +21,27 @@ export class CubeController {
         this.longPressTimer = null;
         this.pointerDownTime = 0;
         this.isHoldForOrbit = false;
+        this.isInspectMode = false;
+        this.onInspectStateChange = null;
 
         this.initEvents();
+    }
+
+    setInspectStateCallback(callback) {
+        this.onInspectStateChange = callback;
+    }
+
+    setInspectMode(enabled) {
+        this.isInspectMode = enabled;
+        this.orbitControls.enabled = true;
+        if (this.onInspectStateChange) {
+            this.onInspectStateChange(this.isInspectMode);
+        }
+    }
+
+    toggleInspectMode() {
+        this.setInspectMode(!this.isInspectMode);
+        return this.isInspectMode;
     }
 
     initEvents() {
@@ -56,6 +75,14 @@ export class CubeController {
             return;
         }
 
+        // If Inspect mode is manually toggled ON, force OrbitControls and bypass layer selection
+        if (this.isInspectMode) {
+            this.selectedCubie = null;
+            this.selectedNormal = null;
+            this.orbitControls.enabled = true;
+            return;
+        }
+
         this.isPointerDown = true;
         this.isHoldForOrbit = false;
         this.pointerDownTime = performance.now();
@@ -82,13 +109,16 @@ export class CubeController {
             this.selectedNormal = normal;
             
             // Long Press / Hold Detection:
-            // If user holds for > 180ms, assume user wants to orbit view instead of layer rotate
+            // If user holds for > 180ms, switch to camera orbit view and highlight Inspect button
             this.longPressTimer = setTimeout(() => {
                 if (this.isPointerDown) {
                     this.isHoldForOrbit = true;
                     this.selectedCubie = null;
                     this.selectedNormal = null;
                     this.orbitControls.enabled = true; // Handover to OrbitControls for camera view
+                    if (this.onInspectStateChange) {
+                        this.onInspectStateChange(true); // Highlight Inspect button!
+                    }
                 }
             }, 180);
 
@@ -102,8 +132,8 @@ export class CubeController {
     onPointerMove(e) {
         if (!this.isPointerDown) return;
 
-        // If long press hold mode was activated, let OrbitControls handle camera rotation
-        if (this.isHoldForOrbit || !this.selectedCubie || this.cubeModel.isAnimating) {
+        // If long press hold mode or inspect mode is active, let OrbitControls handle camera rotation
+        if (this.isInspectMode || this.isHoldForOrbit || !this.selectedCubie || this.cubeModel.isAnimating) {
             return;
         }
 
@@ -122,6 +152,9 @@ export class CubeController {
                 this.selectedCubie = null;
                 this.selectedNormal = null;
                 this.orbitControls.enabled = true;
+                if (this.onInspectStateChange) {
+                    this.onInspectStateChange(true);
+                }
                 return;
             }
 
@@ -131,12 +164,13 @@ export class CubeController {
             this.isPointerDown = false; // Trigger once per drag
             this.selectedCubie = null;
             
-            // If layer swipe succeeded, keep orbitControls DISABLED until finger is lifted (onPointerUp)
-            // This prevents entire cube camera from rotating during quick layer swipe!
             if (handled) {
                 this.orbitControls.enabled = false;
             } else {
                 this.orbitControls.enabled = true;
+                if (this.onInspectStateChange) {
+                    this.onInspectStateChange(true);
+                }
             }
         }
     }
@@ -147,7 +181,12 @@ export class CubeController {
         this.isHoldForOrbit = false;
         this.selectedCubie = null;
         this.selectedNormal = null;
-        this.orbitControls.enabled = true; // Re-enable orbit controls on touch release
+        this.orbitControls.enabled = true;
+
+        // If not in manual toggle inspect mode, unhighlight inspect button on touch release
+        if (!this.isInspectMode && this.onInspectStateChange) {
+            this.onInspectStateChange(false);
+        }
     }
 
     handleLayerDrag(screenDelta) {
