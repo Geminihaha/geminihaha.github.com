@@ -130,7 +130,14 @@ export class CubeController {
             
             this.isPointerDown = false; // Trigger once per drag
             this.selectedCubie = null;
-            this.orbitControls.enabled = true;
+            
+            // If layer swipe succeeded, keep orbitControls DISABLED until finger is lifted (onPointerUp)
+            // This prevents entire cube camera from rotating during quick layer swipe!
+            if (handled) {
+                this.orbitControls.enabled = false;
+            } else {
+                this.orbitControls.enabled = true;
+            }
         }
     }
 
@@ -140,11 +147,11 @@ export class CubeController {
         this.isHoldForOrbit = false;
         this.selectedCubie = null;
         this.selectedNormal = null;
-        this.orbitControls.enabled = true;
+        this.orbitControls.enabled = true; // Re-enable orbit controls on touch release
     }
 
     handleLayerDrag(screenDelta) {
-        if (!this.selectedCubie || !this.selectedNormal) return;
+        if (!this.selectedCubie || !this.selectedNormal) return false;
 
         const normal = this.selectedNormal;
         const pos = this.selectedCubie.position;
@@ -165,22 +172,22 @@ export class CubeController {
 
         possibleAxes.forEach(axis => {
             // Check rotation around this axis
-            // Rotating around 'axis' moves tangent vectors along the remaining 3D directions
             const tangentUnit = this.getTangentDirection(normal, axis);
             const tangent3D = center3D.clone().add(tangentUnit);
             const tangentScreen = this.projectToScreen(tangent3D);
 
+            // Screen space tangent vector (X: right positive, Y: down positive)
             const screenTangentVec = tangentScreen.sub(centerScreen).normalize();
+            // Screen space drag vector (X: right positive, Y: down positive)
             const currentDragVec = screenDelta.clone().normalize();
 
-            // Invert Y for screen space dot product calculation
-            currentDragVec.y = -currentDragVec.y;
-
+            // Calculate dot product directly in consistent 2D screen space
             const dot = Math.abs(currentDragVec.dot(screenTangentVec));
             if (dot > maxDot) {
                 maxDot = dot;
                 bestAxis = axis;
-                const sign = currentDragVec.dot(screenTangentVec) >= 0 ? 1 : -1;
+                // Sign mapping for intuitive swipe direction (swiping down moves layer down)
+                const sign = currentDragVec.dot(screenTangentVec) >= 0 ? -1 : 1;
                 finalDir = sign;
             }
         });
