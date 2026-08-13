@@ -54,7 +54,7 @@ class GameApp {
         this.controls.enableZoom = true;
         this.controls.enablePan = false;
         this.controls.minDistance = 3;
-        this.controls.maxDistance = 15;
+        this.controls.maxDistance = 25;
         this.controls.minPolarAngle = 0.0001;
         this.controls.maxPolarAngle = Math.PI - 0.0001;
 
@@ -95,19 +95,39 @@ class GameApp {
     }
 
     updateCameraDistance() {
-        const dist = this.currentSize === 2 ? 6.5 : 8.5;
-        const len = this.camera.position.length();
+        // Auto-fit: compute the camera distance so the cube always fits fully on screen,
+        // regardless of screen aspect ratio (portrait phones included).
+        const cubeMaxRadius = (this.currentSize * Math.sqrt(3)) / 2; // half of the cube's space diagonal
+        const aspect = window.innerWidth / window.innerHeight;
+        const fovHalf = (this.camera.fov * Math.PI) / 360; // FOV/2 in radians
+        const horizHalf = Math.atan(Math.tan(fovHalf) * aspect); // horizontal half-angle
+        const minHalf = Math.min(fovHalf, horizHalf); // narrower half-angle limits the fit
+        const dist = (cubeMaxRadius / Math.tan(minHalf)) * 1.15; // 15% margin so it never clips
+        const clamped = Math.max(3, Math.min(25, dist));
 
+        const len = this.camera.position.length();
         if (len > 0.01) {
-            // Preserve the current viewing angle; only scale the distance for the new cube size
-            this.camera.position.normalize().multiplyScalar(dist);
+            // Preserve the current viewing angle; only adjust the distance
+            this.camera.position.normalize().multiplyScalar(clamped);
         } else {
-            this.camera.position.set(dist * 0.7, dist * 0.6, dist);
+            const dir = new THREE.Vector3(0.7, 0.6, 1).normalize();
+            this.camera.position.copy(dir).multiplyScalar(clamped);
         }
 
         this.camera.lookAt(0, 0, 0);
         if (this.controls) {
             this.controls.target.set(0, 0, 0);
+            this.controls.update();
+        }
+    }
+
+    // Zoom the cube in/out by scaling the camera distance (keeps the current viewing angle)
+    zoomBy(factor) {
+        const len = this.camera.position.length();
+        const newDist = THREE.MathUtils.clamp(len * factor, 3, 25);
+        this.camera.position.normalize().multiplyScalar(newDist);
+        this.camera.lookAt(0, 0, 0);
+        if (this.controls) {
             this.controls.update();
         }
     }
@@ -271,6 +291,18 @@ class GameApp {
             this.initGame();
         });
 
+        // Zoom buttons (cube zoom in/out)
+        document.getElementById('btn-zoom-in').addEventListener('click', (e) => {
+            e.stopPropagation();
+            sounds.playClick();
+            this.zoomBy(0.85); // move camera closer => zoom in
+        });
+        document.getElementById('btn-zoom-out').addEventListener('click', (e) => {
+            e.stopPropagation();
+            sounds.playClick();
+            this.zoomBy(1.18); // move camera farther => zoom out
+        });
+
         // Toolbar buttons
         document.getElementById('btn-scramble').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -398,6 +430,8 @@ class GameApp {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        // Re-fit the camera so the cube stays fully visible after orientation changes
+        this.updateCameraDistance();
     }
 
     animate(now) {
