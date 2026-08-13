@@ -97,6 +97,9 @@ export class CubeController {
             this.selectedCubie = hit.object;
             this.selectedPoint = hit.point;
 
+            // Lock orbit camera view IMMEDIATELY on touch down to prevent camera jitter during swipe!
+            this.orbitControls.enabled = false;
+
             // Get hit face normal in world space
             const normal = hit.face.normal.clone();
             normal.transformDirection(hit.object.matrixWorld).normalize();
