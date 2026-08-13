@@ -141,6 +141,13 @@ class GameApp {
         const prevGroupQuat = this.cube ? this.cube.group.quaternion.clone() : null;
         const prevInspectState = this.cubeController ? this.cubeController.isInspectMode : false;
 
+        // Detach the previous controller's event listeners BEFORE replacing it,
+        // otherwise the stale controller keeps handling events with outdated flags
+        // (e.g. turning off the inspect button or double-rotating the cube).
+        if (this.cubeController) {
+            this.cubeController.dispose();
+        }
+
         this.cube = new CubeModel(this.scene, this.currentSize);
         if (prevGroupQuat) {
             this.cube.group.quaternion.copy(prevGroupQuat);

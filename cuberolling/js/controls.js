@@ -48,10 +48,35 @@ export class CubeController {
     }
 
     initEvents() {
-        this.domElement.addEventListener('pointerdown', this.onPointerDown.bind(this));
-        window.addEventListener('pointermove', this.onPointerMove.bind(this));
-        window.addEventListener('pointerup', this.onPointerUp.bind(this));
-        window.addEventListener('pointercancel', this.onPointerUp.bind(this));
+        // Keep bound references so dispose() can remove them later
+        this.onPointerDownBound = this.onPointerDown.bind(this);
+        this.onPointerMoveBound = this.onPointerMove.bind(this);
+        this.onPointerUpBound = this.onPointerUp.bind(this);
+
+        this.domElement.addEventListener('pointerdown', this.onPointerDownBound);
+        window.addEventListener('pointermove', this.onPointerMoveBound);
+        window.addEventListener('pointerup', this.onPointerUpBound);
+        window.addEventListener('pointercancel', this.onPointerUpBound);
+    }
+
+    // Detach all event listeners and cancel timers.
+    // MUST be called before creating a new controller, otherwise the stale
+    // controller keeps receiving events (and its stale flags/state) and can
+    // override the UI state, e.g. turning off the inspect button.
+    dispose() {
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+        if (this.onPointerDownBound) {
+            this.domElement.removeEventListener('pointerdown', this.onPointerDownBound);
+            window.removeEventListener('pointermove', this.onPointerMoveBound);
+            window.removeEventListener('pointerup', this.onPointerUpBound);
+            window.removeEventListener('pointercancel', this.onPointerUpBound);
+            this.onPointerDownBound = null;
+            this.onPointerMoveBound = null;
+            this.onPointerUpBound = null;
+        }
     }
 
     getPointerPos(e) {
