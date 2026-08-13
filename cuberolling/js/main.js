@@ -108,6 +108,8 @@ class GameApp {
         this.cube = new CubeModel(this.scene, this.currentSize);
         this.updateCameraDistance();
 
+        const prevInspectState = this.cubeController ? this.cubeController.isInspectMode : false;
+
         this.cubeController = new CubeController(
             this.camera,
             this.renderer.domElement,
@@ -115,6 +117,11 @@ class GameApp {
             this.controls,
             () => this.onMovePerformed()
         );
+
+        // Restore inspect mode state if previously enabled before reset/mode switch
+        if (prevInspectState) {
+            this.cubeController.setInspectMode(true);
+        }
 
         // Sync Inspect button UI active state with controller state (long-press or toggle)
         this.cubeController.setInspectStateCallback((isActive) => {

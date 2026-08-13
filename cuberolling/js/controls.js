@@ -77,6 +77,9 @@ export class CubeController {
 
         // If Inspect mode is manually toggled ON, force OrbitControls and bypass layer selection
         if (this.isInspectMode) {
+            this.isPointerDown = true;
+            this.startPointerPos = this.getPointerPos(e);
+            this.lastPos = this.startPointerPos.clone();
             this.selectedCubie = null;
             this.selectedNormal = null;
             this.orbitControls.enabled = true;
