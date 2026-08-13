@@ -162,38 +162,45 @@ export class CubeController {
         else if (Math.abs(normal.y) > 0.9) possibleAxes = ['x', 'z'];
         else if (Math.abs(normal.z) > 0.9) possibleAxes = ['x', 'y'];
 
-        // Determine 3D motion vector projected onto camera 2D screen space
         let bestAxis = possibleAxes[0];
         let maxDot = -1;
         let finalDir = 1;
 
-        const center3D = this.selectedCubie.position.clone();
-        const centerScreen = this.projectToScreen(center3D);
+        // Use selected point if available, or cubie position
+        const refPoint = this.selectedPoint ? this.selectedPoint.clone() : pos.clone();
+        const startScreenPos = this.projectToScreen(refPoint);
+        const currentDragVec = screenDelta.clone().normalize();
 
         possibleAxes.forEach(axis => {
-            // Check rotation around this axis
-            const tangentUnit = this.getTangentDirection(normal, axis);
-            const tangent3D = center3D.clone().add(tangentUnit);
-            const tangentScreen = this.projectToScreen(tangent3D);
+            const axisVec = new THREE.Vector3();
+            if (axis === 'x') axisVec.set(1, 0, 0);
+            if (axis === 'y') axisVec.set(0, 1, 0);
+            if (axis === 'z') axisVec.set(0, 0, 1);
 
-            // Screen space tangent vector (X: right positive, Y: down positive)
-            const screenTangentVec = tangentScreen.sub(centerScreen).normalize();
-            // Screen space drag vector (X: right positive, Y: down positive)
-            const currentDragVec = screenDelta.clone().normalize();
+            // 3D velocity vector on face surface caused by +1 positive rotation around 'axis'
+            const vel3D = new THREE.Vector3().crossVectors(axisVec, normal).normalize();
+            
+            // Project the 3D velocity displacement to 2D screen space
+            const movedPoint3D = refPoint.clone().add(vel3D);
+            const movedScreenPos = this.projectToScreen(movedPoint3D);
 
-            // Calculate dot product directly in consistent 2D screen space
-            const dot = Math.abs(currentDragVec.dot(screenTangentVec));
+            // Screen space motion vector caused by +1 rotation around 'axis' (X: right, Y: down)
+            const screenVelVec = movedScreenPos.sub(startScreenPos).normalize();
+
+            // Calculate dot product between user 2D swipe vector and +1 rotation 2D screen velocity
+            const rawDot = currentDragVec.dot(screenVelVec);
+            const dot = Math.abs(rawDot);
+
             if (dot > maxDot) {
                 maxDot = dot;
                 bestAxis = axis;
-                // Sign mapping for intuitive swipe direction (swiping down moves layer down)
-                const sign = currentDragVec.dot(screenTangentVec) >= 0 ? -1 : 1;
-                finalDir = sign;
+                // If user swipe aligns with +1 rotation screen velocity, finalDir is 1, else -1
+                finalDir = rawDot >= 0 ? 1 : -1;
             }
         });
 
-        // If swipe direction doesn't align cleanly with layer rotation tangent (maxDot < 0.60), cancel layer rotate
-        if (maxDot < 0.60) {
+        // If swipe direction doesn't align cleanly with layer rotation tangent (maxDot < 0.55), cancel layer rotate
+        if (maxDot < 0.55) {
             return false;
         }
 
