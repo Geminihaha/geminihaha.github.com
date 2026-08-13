@@ -24,6 +24,23 @@ const FACE_HINTS = {
 
 const hexToCss = (hex) => '#' + hex.toString(16).padStart(6, '0');
 
+// Convert RGB (0-1) to HSV
+function rgbToHsv(r, g, b) {
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const d = max - min;
+    let h = 0;
+    if (d !== 0) {
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h *= 60;
+        if (h < 0) h += 360;
+    }
+    const s = max === 0 ? 0 : d / max;
+    const v = max;
+    return [h, s, v];
+}
+
 /**
  * Semi-automatic cube scanner:
  * shows the camera feed, overlays an NxN sticker grid, and lets the user
@@ -36,6 +53,8 @@ export class CubeScanner {
         this.onStart = onStart; // callback(pattern)
         this.currentFace = 'U';
         this.selectedColor = 'R';
+        this.autoDetect = true; // auto-fill sticker colors on capture
+        this.capturedCanvas = null; // square-cropped capture for color detection
         this.stream = null;
         this.pattern = {};
         FACE_ORDER.forEach(f => { this.pattern[f] = null; });
@@ -49,6 +68,7 @@ export class CubeScanner {
             palette: document.getElementById('scanner-palette'),
             startBtn: document.getElementById('btn-scanner-start'),
             captureBtn: document.getElementById('btn-scanner-capture'),
+            autoBtn: document.getElementById('btn-scanner-auto'),
             clearBtn: document.getElementById('btn-scanner-clear'),
             status: document.getElementById('scanner-status'),
         };
@@ -92,6 +112,10 @@ export class CubeScanner {
         });
 
         this.el.captureBtn.addEventListener('click', () => this.captureFrame());
+        this.el.autoBtn.addEventListener('click', () => {
+            this.autoDetect = !this.autoDetect;
+            this.updateAutoUI();
+        });
         this.el.clearBtn.addEventListener('click', () => this.clearCurrentFace());
         this.el.startBtn.addEventListener('click', () => this.finish());
 
@@ -113,6 +137,7 @@ export class CubeScanner {
         this.buildPalette();
         this.setFace('U');
         this.updateStatus();
+        this.updateAutoUI();
 
         // Start the rear camera (best-effort; manual entry still works without it)
         try {
@@ -219,15 +244,25 @@ export class CubeScanner {
             this.updateCaptureUI();
             return;
         }
+
+        // Square center-crop of the frame so it maps 1:1 onto the square grid
+        const vw = video.videoWidth, vh = video.videoHeight;
+        const size = Math.min(vw, vh);
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = size;
+        canvas.height = size;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        grid.style.backgroundImage = `url(${dataUrl})`;
+        ctx.drawImage(video, (vw - size) / 2, (vh - size) / 2, size, size, 0, 0, size, size);
+
+        this.capturedCanvas = canvas;
+        grid.style.backgroundImage = `url(${canvas.toDataURL('image/jpeg', 0.85)})`;
         grid.classList.add('has-capture');
         this.updateCaptureUI();
+
+        // Auto-fill sticker colors if the toggle is on
+        if (this.autoDetect) {
+            this.detectColors();
+        }
     }
 
     // Drop the captured frame and show the live camera feed again
@@ -235,6 +270,7 @@ export class CubeScanner {
         const grid = this.el.grid;
         grid.style.backgroundImage = '';
         grid.classList.remove('has-capture');
+        this.capturedCanvas = null;
         this.updateCaptureUI();
     }
 
@@ -242,6 +278,62 @@ export class CubeScanner {
         const captured = this.el.grid.classList.contains('has-capture');
         this.el.captureBtn.innerHTML = captured ? '🔄 다시 촬영' : '📷 캡처';
         this.el.captureBtn.classList.toggle('active', captured);
+    }
+
+    updateAutoUI() {
+        this.el.autoBtn.classList.toggle('active', this.autoDetect);
+    }
+
+    // Sample each sticker cell of the captured frame and assign the nearest
+    // palette color (HSV-based so it tolerates lighting differences).
+    detectColors() {
+        if (!this.capturedCanvas) return;
+        const n = this.size;
+        const ctx = this.capturedCanvas.getContext('2d');
+        const cell = this.capturedCanvas.width / n;
+        // Sample the inner 45% of each cell to avoid sticker borders
+        const pad = cell * 0.275;
+        const sample = cell * 0.45;
+
+        if (!this.pattern[this.currentFace]) {
+            this.pattern[this.currentFace] = Array.from({ length: n }, () => Array(n).fill(null));
+        }
+
+        for (let r = 0; r < n; r++) {
+            for (let c = 0; c < n; c++) {
+                const x = c * cell + pad;
+                const y = r * cell + pad;
+                const data = ctx.getImageData(x, y, sample, sample).data;
+                let R = 0, G = 0, B = 0, cnt = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    R += data[i]; G += data[i + 1]; B += data[i + 2]; cnt++;
+                }
+                R /= cnt; G /= cnt; B /= cnt;
+
+                const key = this.nearestColorKey(R, G, B);
+                if (key) this.pattern[this.currentFace][r][c] = key;
+            }
+        }
+        this.renderGrid();
+        this.updateStatus();
+    }
+
+    nearestColorKey(r, g, b) {
+        const [h, s, v] = rgbToHsv(r / 255, g / 255, b / 255);
+        // Too dark -> ignore (leave the cell as-is)
+        if (v < 0.16) return null;
+        // Low saturation: bright -> white (U), otherwise grey -> ignore
+        if (s < 0.22) return v > 0.55 ? 'U' : null;
+
+        // Representative hues for the colored stickers (red, orange, yellow, green, blue)
+        const hues = { R: 0, L: 28, D: 52, F: 125, B: 215 };
+        let best = null, bestD = 1e9;
+        for (const [key, hue] of Object.entries(hues)) {
+            let d = Math.abs(h - hue);
+            if (d > 180) d = 360 - d; // wrap around for red near 0°
+            if (d < bestD) { bestD = d; best = key; }
+        }
+        return bestD < 42 ? best : null;
     }
 
     buildPalette() {

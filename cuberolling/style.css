@@ -781,6 +781,7 @@ footer {
 .scanner-actions {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .scanner-actions .btn {
@@ -808,4 +809,12 @@ footer {
     border-color: #fbbf24;
     color: #fff;
     box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+/* Auto color-detect toggle */
+#btn-scanner-auto.active {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    border-color: #a78bfa;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.6);
 }
