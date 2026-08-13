@@ -1,0 +1,476 @@
+/* Cuberolling - PWA Responsive Web App Styles */
+
+:root {
+    --bg-gradient: radial-gradient(circle at 50% 30%, #1e2430 0%, #0d1117 100%);
+    --panel-bg: rgba(22, 27, 34, 0.82);
+    --panel-border: rgba(255, 255, 255, 0.15);
+    --accent-color: #3b82f6;
+    --accent-hover: #60a5fa;
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --gold: #fbbf24;
+    --radius-lg: 16px;
+    --radius-md: 10px;
+    --shadow-main: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+    --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-gradient);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    position: fixed; /* Prevent mobile bounce scrolling */
+}
+
+#canvas-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    touch-action: none;
+}
+
+/* UI Overlay Container */
+.ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: calc(12px + var(--safe-top)) 16px calc(12px + var(--safe-bottom)) 16px;
+}
+
+.ui-layer * {
+    pointer-events: auto;
+}
+
+/* Header Bar */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    padding: 10px 20px;
+    box-shadow: var(--shadow-main);
+    gap: 12px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-icon {
+    font-size: 1.5rem;
+}
+
+.brand h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    white-space: nowrap;
+}
+
+/* Mode Switcher Tabs */
+.mode-selector {
+    display: flex;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 3px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+    background: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Stats Display */
+.stats-panel {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--text-primary);
+}
+
+.stat-value.gold {
+    color: var(--gold);
+}
+
+/* Install PWA Prompt Button */
+#btn-pwa-install {
+    display: none;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Bottom Toolbar */
+footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    padding: 8px 14px;
+    box-shadow: var(--shadow-main);
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 42px;
+    touch-action: manipulation;
+    position: relative;
+    z-index: 35;
+    transition: all 0.2s ease;
+}
+
+.btn * {
+    pointer-events: none; /* Ensure full button element catches 100% touch hit */
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn.active {
+    background: var(--accent-color);
+    border-color: var(--accent-hover);
+    color: white;
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-icon {
+    padding: 8px;
+    min-width: 40px;
+    border-radius: 50%;
+}
+
+/* Quick Rotation Controls Panel */
+.controls-hint {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: var(--shadow-main);
+    z-index: 25;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
+}
+
+.controls-title {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.key-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.key-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    transition: all 0.15s ease;
+}
+
+.key-btn * {
+    pointer-events: none;
+}
+
+.key-btn:active, .key-btn:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+/* Modal Popup */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-card {
+    background: #161b22;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    padding: 28px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1);
+}
+
+.modal-card h2 {
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.modal-card p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.modal-stats {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 20px;
+}
+
+/* Mobile Responsive Optimizations - No Footer Collision */
+@media (max-width: 768px) {
+    header {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .brand h1 {
+        font-size: 0.95rem;
+    }
+
+    .stats-panel {
+        gap: 10px;
+    }
+
+    .stat-value {
+        font-size: 0.9rem;
+    }
+
+    /* Floating Quick Rotation Bar above footer */
+    .controls-hint {
+        display: none; /* Hide by default on mobile so it doesn't block touch hits */
+        top: auto;
+        bottom: calc(80px + var(--safe-bottom));
+        right: 50%;
+        transform: translateX(50%) translateY(12px);
+        opacity: 0;
+        pointer-events: none;
+        width: calc(100% - 32px);
+        max-width: 440px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+        padding: 8px 12px;
+        z-index: 40;
+    }
+
+    .controls-hint.visible-mobile {
+        display: flex;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(50%) translateY(0);
+    }
+
+    .controls-title {
+        display: none;
+    }
+
+    .key-grid {
+        grid-template-columns: repeat(6, 1fr);
+        width: 100%;
+        gap: 6px;
+    }
+
+    .key-btn {
+        width: 100%;
+        height: 40px;
+        font-size: 0.85rem;
+    }
+
+    footer {
+        padding: 8px 10px;
+        gap: 6px;
+        position: relative;
+        z-index: 30;
+    }
+
+    .btn {
+        padding: 8px 10px;
+        font-size: 0.82rem;
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand h1 {
+        display: none; /* Hide text on small screens */
+    }
+
+    header {
+        padding: 6px 10px;
+    }
+
+    .btn {
+        padding: 5px 8px;
+        font-size: 0.78rem;
+    }
+}
+

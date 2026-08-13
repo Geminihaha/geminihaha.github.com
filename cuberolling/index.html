@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Cube Rolling 3D - 2x2 & 3x3 루빅스 큐브 웹 퍼즐 게임 PWA">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#161b22">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CubeRolling">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="manifest" href="./manifest.json">
+
+    <title>Cube Rolling 3D - 2x2 & 3x3 루빅스 큐브 퍼즐 PWA</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- ES Modules Import Map for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/examples/jsm/controls/OrbitControls.js": "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div class="ui-layer">
+        <!-- Top Navigation Header -->
+        <header>
+            <div class="brand">
+                <span class="brand-icon">🧊</span>
+                <h1>Cube Rolling 3D</h1>
+            </div>
+
+            <!-- PWA Install Button (Appears if installable) -->
+            <button id="btn-pwa-install" title="앱으로 설치하기">
+                📲 앱 설치
+            </button>
+
+            <!-- Mode Selector (2x2 vs 3x3) -->
+            <div class="mode-selector">
+                <button id="mode-2x2" class="mode-btn">2x2</button>
+                <button id="mode-3x3" class="mode-btn active">3x3</button>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="stats-panel">
+                <div class="stat-box">
+                    <span class="stat-label">TIME</span>
+                    <span id="timer-display" class="stat-value">00:00</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">MOVES</span>
+                    <span id="moves-display" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">BEST</span>
+                    <span id="best-display" class="stat-value gold">--:--</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Rotation Quick Buttons Panel (Desktop & Mobile) -->
+        <div class="controls-hint">
+            <div class="controls-title">QUICK ROTATE</div>
+            <div class="key-grid">
+                <button class="key-btn" data-key="U" title="Up Face (U)">U</button>
+                <button class="key-btn" data-key="D" title="Down Face (D)">D</button>
+                <button class="key-btn" data-key="L" title="Left Face (L)">L</button>
+                <button class="key-btn" data-key="R" title="Right Face (R)">R</button>
+                <button class="key-btn" data-key="F" title="Front Face (F)">F</button>
+                <button class="key-btn" data-key="B" title="Back Face (B)">B</button>
+            </div>
+        </div>
+
+        <!-- Bottom Action Toolbar -->
+        <footer>
+            <button id="btn-scramble" class="btn btn-primary">
+                <span>🔀</span> 섞기
+            </button>
+            <button id="btn-toggle-quick" class="btn" title="퀵 회전 버튼 토글">
+                <span>⚡</span> 퀵회전
+            </button>
+            <button id="btn-undo" class="btn" title="되돌리기">
+                <span>↩️</span> Undo
+            </button>
+            <button id="btn-redo" class="btn" title="다시 실행">
+                <span>↪️</span> Redo
+            </button>
+            <button id="btn-reset" class="btn" title="리셋">
+                <span>🔄</span> Reset
+            </button>
+            <button id="btn-mute" class="btn btn-icon" title="소리 토글">
+                🔊
+            </button>
+        </footer>
+    </div>
+
+    <!-- Win Celebration Modal -->
+    <div id="win-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 id="win-title">🎉 축하합니다!</h2>
+            <p>큐브를 성공적으로 완성했습니다!</p>
+            
+            <div class="modal-stats">
+                <div class="stat-box">
+                    <span class="stat-label">소요 시간</span>
+                    <span id="final-time" class="stat-value">00:00</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">회전 횟수</span>
+                    <span id="final-moves" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <button id="btn-modal-close" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+                새 게임 시작하기 ✨
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Script Entry Point -->
+    <script type="module" src="./js/main.js"></script>
+
+    <!-- PWA Service Worker Registration & Install Prompt -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('[PWA] Service Worker registered:', reg.scope))
+                    .catch((err) => console.error('[PWA] Service Worker registration failed:', err));
+            });
+        }
+
+        let deferredPrompt;
+        const installBtn = document.getElementById('btn-pwa-install');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installBtn) {
+                installBtn.style.display = 'inline-block';
+            }
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User response to install prompt: ${outcome}`);
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
