@@ -46,14 +46,34 @@ class GameApp {
         this.renderer.toneMappingExposure = 1.2;
         this.container.appendChild(this.renderer.domElement);
 
-        // OrbitControls setup
+        // OrbitControls setup - Infinite 360 Free Rotation
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.05;
-        this.controls.rotateSpeed = 0.8;
+        this.controls.dampingFactor = 0.08;
+        this.controls.rotateSpeed = 1.1;
         this.controls.enableZoom = true;
+        this.controls.enablePan = false;
         this.controls.minDistance = 3;
         this.controls.maxDistance = 15;
+        this.controls.minPolarAngle = 0.0001;
+        this.controls.maxPolarAngle = Math.PI - 0.0001;
+
+        // Continuous 360-degree vertical flip handler:
+        // Seamlessly rolls over top and bottom poles so camera never locks at 180 degrees!
+        let prevPolar = this.controls.getPolarAngle();
+        this.controls.addEventListener('change', () => {
+            const currentPolar = this.controls.getPolarAngle();
+            const eps = 0.025;
+            
+            // Near North Pole (Top) or South Pole (Bottom) limit
+            if (currentPolar <= eps || currentPolar >= Math.PI - eps) {
+                // Flip camera up vector or azimuthal angle smoothly for continuous 360 flipping
+                if (Math.abs(currentPolar - prevPolar) > 0.001) {
+                    this.controls.setAzimuthalAngle(this.controls.getAzimuthalAngle() + Math.PI);
+                }
+            }
+            prevPolar = currentPolar;
+        });
 
         // Lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
