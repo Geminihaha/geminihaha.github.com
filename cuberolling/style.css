@@ -823,7 +823,7 @@ footer {
 .game-menu-fab {
     position: fixed;
     right: 16px;
-    bottom: calc(96px + var(--safe-bottom));
+    bottom: calc(150px + var(--safe-bottom));
     width: 58px;
     height: 58px;
     border-radius: 50%;
@@ -862,7 +862,7 @@ footer {
 .game-menu-panel {
     position: fixed;
     right: 16px;
-    bottom: calc(160px + var(--safe-bottom));
+    bottom: calc(214px + var(--safe-bottom));
     background: var(--panel-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -913,4 +913,14 @@ footer {
     color: #fff;
     box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
     animation: finishPulse 1.2s ease-in-out infinite;
+}
+
+/* Keep the game menu clear of the (wrapping) bottom toolbar on small screens */
+@media (max-width: 600px) {
+    .game-menu-fab {
+        bottom: calc(172px + var(--safe-bottom));
+    }
+    .game-menu-panel {
+        bottom: calc(236px + var(--safe-bottom));
+    }
 }
