@@ -359,8 +359,10 @@ class GameApp {
         document.getElementById('btn-scan').addEventListener('click', async (e) => {
             e.stopPropagation();
             sounds.playClick();
+            // Dispose the previous scanner so its event listeners don't stack up
+            // and interfere with the new instance (stale pattern overwrites).
             if (this.scanner) {
-                this.scanner.close();
+                this.scanner.dispose();
             }
             this.scanner = new CubeScanner(this.currentSize, (pattern) => {
                 // Apply the scanned pattern as the starting state

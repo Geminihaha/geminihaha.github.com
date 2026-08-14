@@ -77,52 +77,80 @@ export class CubeScanner {
     }
 
     initEvents() {
-        this.el.tabs.addEventListener('click', (e) => {
-            const tab = e.target.closest('.face-tab');
-            if (!tab) return;
-            this.setFace(tab.dataset.face);
-        });
+        // Keep handler references so dispose() can remove them later
+        this._handlers = {
+            onTabClick: (e) => {
+                const tab = e.target.closest('.face-tab');
+                if (!tab) return;
+                this.setFace(tab.dataset.face);
+            },
+            onPaletteClick: (e) => {
+                const swatch = e.target.closest('.palette-swatch');
+                if (!swatch) return;
+                if (swatch.dataset.key === '__clear') {
+                    this.selectedColor = null;
+                } else {
+                    this.selectedColor = swatch.dataset.key;
+                }
+                this.updatePaletteSelection();
+            },
+            onGridClick: (e) => {
+                const cell = e.target.closest('.scanner-cell');
+                if (!cell) return;
+                if (this.selectedColor) {
+                    cell.dataset.key = this.selectedColor;
+                    cell.style.background = this.colorCss(this.selectedColor);
+                    this.updatePatternCell(cell);
+                } else {
+                    // eraser selected: clear the cell
+                    delete cell.dataset.key;
+                    cell.style.background = '';
+                    this.updatePatternCell(cell);
+                }
+                this.updateStatus();
+            },
+            onCapture: () => this.captureFrame(),
+            onAuto: () => {
+                this.autoDetect = !this.autoDetect;
+                this.updateAutoUI();
+            },
+            onClear: () => this.clearCurrentFace(),
+            onStart: () => this.finish(),
+            onClose: () => this.close(),
+            onOverlayClick: (e) => {
+                if (e.target.id === 'scanner-modal') this.close();
+            },
+        };
 
-        this.el.palette.addEventListener('click', (e) => {
-            const swatch = e.target.closest('.palette-swatch');
-            if (!swatch) return;
-            if (swatch.dataset.key === '__clear') {
-                this.selectedColor = null;
-            } else {
-                this.selectedColor = swatch.dataset.key;
-            }
-            this.updatePaletteSelection();
-        });
+        this.el.tabs.addEventListener('click', this._handlers.onTabClick);
+        this.el.palette.addEventListener('click', this._handlers.onPaletteClick);
+        this.el.grid.addEventListener('click', this._handlers.onGridClick);
+        this.el.captureBtn.addEventListener('click', this._handlers.onCapture);
+        this.el.autoBtn.addEventListener('click', this._handlers.onAuto);
+        this.el.clearBtn.addEventListener('click', this._handlers.onClear);
+        this.el.startBtn.addEventListener('click', this._handlers.onStart);
+        document.getElementById('btn-scanner-close').addEventListener('click', this._handlers.onClose);
+        document.getElementById('scanner-modal').addEventListener('click', this._handlers.onOverlayClick);
+    }
 
-        // Sticker grid tap-to-fill (event delegation on the grid)
-        this.el.grid.addEventListener('click', (e) => {
-            const cell = e.target.closest('.scanner-cell');
-            if (!cell) return;
-            if (this.selectedColor) {
-                cell.dataset.key = this.selectedColor;
-                cell.style.background = this.colorCss(this.selectedColor);
-                this.updatePatternCell(cell);
-            } else {
-                // eraser selected: clear the cell
-                delete cell.dataset.key;
-                cell.style.background = '';
-                this.updatePatternCell(cell);
-            }
-            this.updateStatus();
-        });
-
-        this.el.captureBtn.addEventListener('click', () => this.captureFrame());
-        this.el.autoBtn.addEventListener('click', () => {
-            this.autoDetect = !this.autoDetect;
-            this.updateAutoUI();
-        });
-        this.el.clearBtn.addEventListener('click', () => this.clearCurrentFace());
-        this.el.startBtn.addEventListener('click', () => this.finish());
-
-        document.getElementById('btn-scanner-close').addEventListener('click', () => this.close());
-        document.getElementById('scanner-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'scanner-modal') this.close();
-        });
+    // Detach all event listeners and stop the camera.
+    // MUST be called before creating a new scanner, otherwise stale
+    // instances keep reacting to the same DOM events and overwrite the
+    // pattern/grid with their own empty state.
+    dispose() {
+        this.close();
+        if (this._handlers) {
+            this.el.tabs.removeEventListener('click', this._handlers.onTabClick);
+            this.el.palette.removeEventListener('click', this._handlers.onPaletteClick);
+            this.el.grid.removeEventListener('click', this._handlers.onGridClick);
+            this.el.captureBtn.removeEventListener('click', this._handlers.onCapture);
+            this.el.autoBtn.removeEventListener('click', this._handlers.onAuto);
+            this.el.clearBtn.removeEventListener('click', this._handlers.onClear);
+            this.el.startBtn.removeEventListener('click', this._handlers.onStart);
+            document.getElementById('btn-scanner-close').removeEventListener('click', this._handlers.onClose);
+            document.getElementById('scanner-modal').removeEventListener('click', this._handlers.onOverlayClick);
+            this._handlers = null;
+        }
     }
 
     colorCss(key) {
@@ -184,9 +212,19 @@ export class CubeScanner {
         this.renderGrid();
     }
 
+    // Ensure the given face has a complete NxN pattern array and return it
+    ensureFacePattern(face) {
+        const n = this.size;
+        if (!this.pattern[face]) {
+            this.pattern[face] = Array.from({ length: n }, () => Array(n).fill(null));
+        }
+        return this.pattern[face];
+    }
+
     renderGrid() {
         const n = this.size;
         const face = this.currentFace;
+        const pattern = this.ensureFacePattern(face);
         const cells = [];
 
         for (let r = 0; r < n; r++) {
@@ -195,7 +233,7 @@ export class CubeScanner {
                 cell.className = 'scanner-cell';
                 cell.dataset.row = r;
                 cell.dataset.col = c;
-                const key = this.pattern[face] && this.pattern[face][r][c];
+                const key = pattern[r][c];
                 if (key) {
                     cell.dataset.key = key;
                     cell.style.background = this.colorCss(key);
@@ -210,10 +248,8 @@ export class CubeScanner {
         const n = this.size;
         const r = parseInt(cell.dataset.row, 10);
         const c = parseInt(cell.dataset.col, 10);
-        if (!this.pattern[this.currentFace]) {
-            this.pattern[this.currentFace] = Array.from({ length: n }, () => Array(n).fill(null));
-        }
-        this.pattern[this.currentFace][r][c] = cell.dataset.key || null;
+        const pattern = this.ensureFacePattern(this.currentFace);
+        pattern[r][c] = cell.dataset.key || null;
     }
 
     clearCurrentFace() {
@@ -295,9 +331,7 @@ export class CubeScanner {
         const pad = cell * 0.275;
         const sample = cell * 0.45;
 
-        if (!this.pattern[this.currentFace]) {
-            this.pattern[this.currentFace] = Array.from({ length: n }, () => Array(n).fill(null));
-        }
+        const pattern = this.ensureFacePattern(this.currentFace);
 
         for (let r = 0; r < n; r++) {
             for (let c = 0; c < n; c++) {
@@ -311,7 +345,7 @@ export class CubeScanner {
                 R /= cnt; G /= cnt; B /= cnt;
 
                 const key = this.nearestColorKey(R, G, B);
-                if (key) this.pattern[this.currentFace][r][c] = key;
+                if (key) pattern[r][c] = key;
             }
         }
         this.renderGrid();
