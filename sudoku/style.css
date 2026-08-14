@@ -643,6 +643,51 @@ input:checked + .slider:before {
     transform: scale(0.95);
 }
 
+/* 숫자 잠금(선택) 입력 상태 */
+.key-btn.locking {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 0 14px var(--accent-glow);
+}
+
+/* 숫자 잠금 입력 안내 배너 (터치 시 해제) */
+/* 항상 같은 공간을 차지하도록 고정 높이 유지 → 화면 레이아웃 흔들림 방지 */
+.lock-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    background-color: var(--accent);
+    color: #fff;
+    padding: 9px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 10px 0;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    /* 숨김 상태: 공간은 유지하되 보이지 않음 */
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.lock-banner.visible {
+    visibility: visible;
+    opacity: 1;
+    animation: lockBannerPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes lockBannerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.75; }
+}
+
 .key-btn:disabled, .key-btn.completed {
     opacity: 0.25;
     cursor: not-allowed;

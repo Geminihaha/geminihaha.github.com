@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.8.1";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -19,6 +19,17 @@ var gameState = {
 };
 
 var timerInterval = null;
+
+// 숫자 잠금(선택) 입력 상태 (숫자 키 터치 → 셀 터치 입력)
+var numberLock = {
+    active: false,   // 숫자 잠금 모드 활성 여부
+    num: 0           // 잠금된 숫자
+};
+
+// 지우기 잠금 상태 (지우기 버튼 터치 → 셀 터치 지우기)
+var eraseLock = {
+    active: false    // 지우기 잠금 모드 활성 여부
+};
 
 // ==========================================
 // 2. 초기화 (Application Initializer)
@@ -285,6 +296,12 @@ function generateHTMLBoard() {
             cell.onpointerdown = (function(row, col) {
                 return function(e) {
                     e.preventDefault(); // 더블탭 줌 등 브라우저 지연 조작 제어 방지
+                    // 잠금 모드: 잠금된 숫자 입력 또는 지우기 (메모 모드 포함)
+                    if (numberLock.active) {
+                        inputNumberToCell(row, col, numberLock.num);
+                    } else if (eraseLock.active) {
+                        eraseCell(row, col);
+                    }
                     selectCell(row, col);
                 };
             })(r, c);
@@ -438,6 +455,8 @@ function startNewGame(difficulty) {
     gameState.selectedCell = null;
     gameState.pencilMode = false;
     
+    cancelAllLocks(); // 새 게임 시작 시 잠금 상태 초기화
+    
     updateWarningUI();
     document.getElementById("pencil-btn").classList.remove("active");
     document.getElementById("pencil-btn").querySelector("span").innerText = "메모 Off";
@@ -499,6 +518,7 @@ function exitToHome() {
 
 function exitToHomeNoPush() {
     stopTimer();
+    cancelAllLocks(); // 홈 화면 이동 시 잠금 상태 해제
     saveGame();
     checkSavedGame();
     loadBestRecords();
@@ -537,8 +557,11 @@ function pressNumber(num) {
         return;
     }
     
-    var r = gameState.selectedCell.r;
-    var c = gameState.selectedCell.c;
+    inputNumberToCell(gameState.selectedCell.r, gameState.selectedCell.c, num);
+}
+
+// 특정 셀에 숫자 입력 (홀딩 입력 & 기존 입력 공용)
+function inputNumberToCell(r, c, num) {
     var cell = gameState.currentBoard[r][c];
     var isCorrect = (cell.value !== 0 && cell.value === gameState.solutionBoard[r][c]);
     
@@ -597,6 +620,95 @@ function pressNumber(num) {
 }
 
 // ==========================================
+// 6-2. 숫자 잠금 입력 (키패드 숫자 터치 → 셀 터치 입력)
+// ==========================================
+
+// 숫자 키 터치: 같은 숫자를 다시 터치하면 잠금 해제, 다른 숫자를 터치하면 교체
+function toggleNumberLock(num) {
+    if (gameState.isPaused) return;
+    
+    // 같은 숫자 재터치 → 잠금 해제
+    if (numberLock.active && numberLock.num === num) {
+        cancelNumberLock();
+        return;
+    }
+    
+    // 다른 숫자 터치 또는 새 잠금 → 기존 잠금들 해제 후 새 숫자 잠금
+    cancelAllLocks();
+    numberLock.active = true;
+    numberLock.num = num;
+    
+    var btn = getKeyBtn(num);
+    if (btn) btn.classList.add("locking");
+    showLockBanner("숫자 " + num + " 입력 중 — 셀을 터치하세요");
+    playSFX('pencil');
+}
+
+// 지우기 버튼 터치: 다시 터치하면 잠금 해제
+function toggleEraseLock() {
+    if (gameState.isPaused) return;
+    
+    if (eraseLock.active) {
+        cancelEraseLock();
+        return;
+    }
+    
+    cancelAllLocks();
+    eraseLock.active = true;
+    
+    var btn = document.getElementById("erase-btn");
+    if (btn) {
+        btn.classList.add("active");
+        btn.querySelector("span").innerText = "지우는 중";
+    }
+    showLockBanner("지우기 모드 — 셀을 터치하세요");
+    playSFX('pencil');
+}
+
+// 숫자 잠금 상태 해제
+function cancelNumberLock() {
+    var btn = numberLock.num ? getKeyBtn(numberLock.num) : null;
+    if (btn) btn.classList.remove("locking");
+    hideLockBanner();
+    numberLock.active = false;
+    numberLock.num = 0;
+}
+
+// 지우기 잠금 상태 해제
+function cancelEraseLock() {
+    var btn = document.getElementById("erase-btn");
+    if (btn) {
+        btn.classList.remove("active");
+        btn.querySelector("span").innerText = "지우기";
+    }
+    hideLockBanner();
+    eraseLock.active = false;
+}
+
+// 숫자/지우기 잠금 전체 해제
+function cancelAllLocks() {
+    cancelNumberLock();
+    cancelEraseLock();
+}
+
+function getKeyBtn(num) {
+    return document.querySelector('.keypad .key-btn[data-num="' + num + '"]');
+}
+
+function showLockBanner(message) {
+    var banner = document.getElementById("lock-banner");
+    if (banner) {
+        document.getElementById("lock-banner-text").innerText = message;
+        banner.classList.add("visible");
+    }
+}
+
+function hideLockBanner() {
+    var banner = document.getElementById("lock-banner");
+    if (banner) banner.classList.remove("visible");
+}
+
+// ==========================================
 // 7. 유틸리티 액션 (Undo, Erase, Pencil, Hint)
 // ==========================================
 
@@ -627,9 +739,11 @@ function triggerUndo() {
 
 function triggerErase() {
     if (gameState.isPaused || !gameState.selectedCell) return;
-    
-    var r = gameState.selectedCell.r;
-    var c = gameState.selectedCell.c;
+    eraseCell(gameState.selectedCell.r, gameState.selectedCell.c);
+}
+
+// 특정 셀 지우기 (지우기 잠금 입력 & 키보드 지우기 공용)
+function eraseCell(r, c) {
     var cell = gameState.currentBoard[r][c];
     var isCorrect = (cell.value !== 0 && cell.value === gameState.solutionBoard[r][c]);
     
@@ -850,6 +964,7 @@ function togglePause() {
     if (gameState.isPaused) {
         modal.style.display = "flex";
         stopTimer();
+        cancelAllLocks(); // 일시정지 시 잠금 상태 해제
     } else {
         modal.style.display = "none";
         startTimer();

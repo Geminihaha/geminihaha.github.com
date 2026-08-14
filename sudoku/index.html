@@ -11,7 +11,7 @@
     <!-- FontAwesome Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css?v=1.4.0">
+    <link rel="stylesheet" href="style.css?v=1.8.1">
     <!-- PWA 및 iOS 홈 화면 아이콘 설정 -->
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -117,13 +117,19 @@
                 </div>
             </div>
 
+            <!-- Lock Input Banner (tap to release, space always reserved) -->
+            <div id="lock-banner" class="lock-banner" onclick="cancelAllLocks()" title="터치하면 해제">
+                <i class="fa-solid fa-hand-pointer"></i>
+                <span id="lock-banner-text">숫자 입력 중 — 셀을 터치하세요</span>
+            </div>
+
             <!-- Utilities / Control Bar -->
             <div class="game-utils">
                 <button id="undo-btn" class="util-btn" onpointerdown="triggerUndo()" title="실행 취소">
                     <i class="fa-solid fa-rotate-left"></i>
                     <span>실행 취소</span>
                 </button>
-                <button id="erase-btn" class="util-btn" onpointerdown="triggerErase()" title="지우기">
+                <button id="erase-btn" class="util-btn" onpointerdown="toggleEraseLock()" title="지우기">
                     <i class="fa-solid fa-eraser"></i>
                     <span>지우기</span>
                 </button>
@@ -140,15 +146,15 @@
             <!-- Keypad -->
             <div class="keypad-container">
                 <div class="keypad">
-                    <button class="key-btn" onpointerdown="pressNumber(1)">1</button>
-                    <button class="key-btn" onpointerdown="pressNumber(2)">2</button>
-                    <button class="key-btn" onpointerdown="pressNumber(3)">3</button>
-                    <button class="key-btn" onpointerdown="pressNumber(4)">4</button>
-                    <button class="key-btn" onpointerdown="pressNumber(5)">5</button>
-                    <button class="key-btn" onpointerdown="pressNumber(6)">6</button>
-                    <button class="key-btn" onpointerdown="pressNumber(7)">7</button>
-                    <button class="key-btn" onpointerdown="pressNumber(8)">8</button>
-                    <button class="key-btn" onpointerdown="pressNumber(9)">9</button>
+                    <button class="key-btn" data-num="1" onpointerdown="toggleNumberLock(1)">1</button>
+                    <button class="key-btn" data-num="2" onpointerdown="toggleNumberLock(2)">2</button>
+                    <button class="key-btn" data-num="3" onpointerdown="toggleNumberLock(3)">3</button>
+                    <button class="key-btn" data-num="4" onpointerdown="toggleNumberLock(4)">4</button>
+                    <button class="key-btn" data-num="5" onpointerdown="toggleNumberLock(5)">5</button>
+                    <button class="key-btn" data-num="6" onpointerdown="toggleNumberLock(6)">6</button>
+                    <button class="key-btn" data-num="7" onpointerdown="toggleNumberLock(7)">7</button>
+                    <button class="key-btn" data-num="8" onpointerdown="toggleNumberLock(8)">8</button>
+                    <button class="key-btn" data-num="9" onpointerdown="toggleNumberLock(9)">9</button>
                 </div>
             </div>
         </div>
@@ -170,6 +176,7 @@
                     <li>두꺼운 선으로 둘러싸인 <strong>3x3 블록</strong>에 1~9가 중복 없이 들어가야 합니다.</li>
                 </ul>
                 <p class="modal-tip">💡 <strong>꿀팁:</strong> 막힐 때는 '메모(Pencil)' 기능을 활용해 셀에 들어갈 수 있는 후보 숫자들을 얇게 표시할 수 있습니다.</p>
+                <p class="modal-tip">✋ <strong>빠른 입력:</strong> 키패드의 숫자나 지우기 버튼을 터치하면 선택 상태로 유지되고, 셀을 터치하면 바로 입력/지워집니다. 다시 터치하면 해제돼요. 메모 모드에서도 동일하게 사용할 수 있습니다.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary btn-block" onclick="closeHelpModal()">확인</button>
@@ -240,6 +247,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.4.0"></script>
+    <script src="app.js?v=1.8.1"></script>
 </body>
 </html>
