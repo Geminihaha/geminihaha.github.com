@@ -351,9 +351,12 @@ export class CubeModel {
             };
 
             // Local face indices: 0:+X(R) 1:-X(L) 2:+Y(U) 3:-Y(D) 4:+Z(F) 5:-Z(B)
-            if (ix === n - 1) setFace(0, pattern.R[n - 1 - iy][iz]);      // Right
+            // Mapping matches how each face is seen when the camera looks at it
+            // straight on: Up face viewed from above has B at the top, and the
+            // Right face viewed from the right has F on the left.
+            if (ix === n - 1) setFace(0, pattern.R[n - 1 - iy][n - 1 - iz]); // Right
             if (ix === 0)     setFace(1, pattern.L[n - 1 - iy][iz]);      // Left
-            if (iy === n - 1) setFace(2, pattern.U[n - 1 - iz][ix]);      // Up
+            if (iy === n - 1) setFace(2, pattern.U[iz][ix]);              // Up
             if (iy === 0)     setFace(3, pattern.D[n - 1 - iz][ix]);      // Down
             if (iz === n - 1) setFace(4, pattern.F[n - 1 - iy][ix]);      // Front
             if (iz === 0)     setFace(5, pattern.B[n - 1 - iy][n - 1 - ix]); // Back
