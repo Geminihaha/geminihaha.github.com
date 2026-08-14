@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.4.0";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -28,6 +28,7 @@ function init() {
     loadBestRecords();
     checkSavedGame();
     generateHTMLBoard();
+    applyTimerSetting();
     
     // 히스토리 초기 상태 설정
     if (!window.location.hash || window.location.hash !== '#home') {
@@ -739,10 +740,11 @@ function checkWinCondition() {
 }
 
 function handleGameClear() {
-    var timerStr = formatTime(gameState.seconds);
+    var timerOn = isTimerEnabled();
+    var timerStr = timerOn ? formatTime(gameState.seconds) : "--:--";
     document.getElementById("clear-time").innerText = timerStr;
     
-    // 최고 기록 처리
+    // 최고 기록 처리 (타이머를 사용할 때만 기록 갱신)
     var records = JSON.parse(localStorage.getItem("SUDOKU_BEST_RECORDS")) || {
         easy: null,
         medium: null,
@@ -752,7 +754,7 @@ function handleGameClear() {
     var diff = gameState.difficulty;
     var isNewRecord = false;
     
-    if (records[diff] === null || gameState.seconds < records[diff]) {
+    if (timerOn && (records[diff] === null || gameState.seconds < records[diff])) {
         records[diff] = gameState.seconds;
         localStorage.setItem("SUDOKU_BEST_RECORDS", JSON.stringify(records));
         isNewRecord = true;
@@ -780,7 +782,43 @@ function exitToHomeFromClear() {
 // 8. 타이머 및 자동 저장 영속성
 // ==========================================
 
+// 타이머 사용 여부 (기본값: 사용 안 함)
+function isTimerEnabled() {
+    return localStorage.getItem("sudoku_timer_enabled") === "on";
+}
+
+function toggleTimerSetting() {
+    var enabled = !isTimerEnabled();
+    localStorage.setItem("sudoku_timer_enabled", enabled ? "on" : "off");
+    applyTimerSetting();
+}
+
+function applyTimerSetting() {
+    // 홈 화면 토글 스위치 상태 반영
+    var toggle = document.getElementById("timer-toggle");
+    if (toggle) toggle.checked = isTimerEnabled();
+
+    // 게임 화면 타이머 배지 표시/숨김
+    var timerEl = document.getElementById("timerDisplay");
+    if (timerEl) timerEl.style.display = isTimerEnabled() ? "" : "none";
+
+    if (isTimerEnabled()) {
+        // 게임 진행 중에 켠 경우 0부터 다시 시작
+        if (document.getElementById("game-screen").classList.contains("active") && !gameState.isPaused) {
+            gameState.seconds = 0;
+            updateTimerDisplay();
+            startTimer();
+        }
+    } else {
+        // 꺼지면 타이머 정지 및 시간 초기화
+        stopTimer();
+        gameState.seconds = 0;
+        updateTimerDisplay();
+    }
+}
+
 function startTimer() {
+    if (!isTimerEnabled()) return;
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(function() {
         if (!gameState.isPaused) {
@@ -1190,7 +1228,8 @@ function exportBackup() {
             timestamp: new Date().toISOString(),
             records: localStorage.getItem("SUDOKU_BEST_RECORDS"),
             saveGame: localStorage.getItem("SUDOKU_SAVE_GAME"),
-            theme: localStorage.getItem("sudoku_theme")
+            theme: localStorage.getItem("sudoku_theme"),
+            timerEnabled: localStorage.getItem("sudoku_timer_enabled")
         };
         
         var jsonStr = JSON.stringify(backupData, null, 2);
@@ -1236,6 +1275,9 @@ function importBackup(event) {
             }
             if (data.theme) {
                 localStorage.setItem("sudoku_theme", data.theme);
+            }
+            if (data.timerEnabled !== undefined && data.timerEnabled !== null) {
+                localStorage.setItem("sudoku_timer_enabled", data.timerEnabled);
             }
             
             playSFX('input');
