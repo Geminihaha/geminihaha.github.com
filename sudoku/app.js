@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.8.1";
+const APP_VERSION = "1.8.2";
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
@@ -366,6 +366,11 @@ function _renderBoard() {
         var sel = gameState.selectedCell;
         var activeNum = 0;
         
+        // 숫자 잠금 모드에서는 잠금된 숫자를 우선 하이라이트
+        if (numberLock.active) {
+            activeNum = numberLock.num;
+        }
+        
         if (sel) {
             // 3.1 선택 상태
             if (sel.r === r && sel.c === c) {
@@ -375,7 +380,14 @@ function _renderBoard() {
             else if (r === sel.r || c === sel.c || (Math.floor(r/3) === Math.floor(sel.r/3) && Math.floor(c/3) === Math.floor(sel.c/3))) {
                 cellEl.classList.add("highlighted");
             }
-            activeNum = gameState.currentBoard[sel.r][sel.c].value;
+            if (activeNum === 0) {
+                activeNum = gameState.currentBoard[sel.r][sel.c].value;
+            }
+        }
+        
+        // 지우기 잠금 모드에서는 숫자 하이라이트 끔
+        if (eraseLock.active) {
+            activeNum = 0;
         }
         
         // 선택된 셀이 없거나 빈 셀인 경우, 전역 활성화된 selectedNumber를 기준으로 하이라이팅 설정
@@ -638,6 +650,10 @@ function toggleNumberLock(num) {
     numberLock.active = true;
     numberLock.num = num;
     
+    // 잠금된 숫자로 보드 하이라이트 즉시 갱신
+    gameState.selectedNumber = num;
+    renderBoard();
+    
     var btn = getKeyBtn(num);
     if (btn) btn.classList.add("locking");
     showLockBanner("숫자 " + num + " 입력 중 — 셀을 터치하세요");
@@ -655,6 +671,10 @@ function toggleEraseLock() {
     
     cancelAllLocks();
     eraseLock.active = true;
+    
+    // 지우기 모드에서는 숫자 하이라이트 해제
+    gameState.selectedNumber = 0;
+    renderBoard();
     
     var btn = document.getElementById("erase-btn");
     if (btn) {
