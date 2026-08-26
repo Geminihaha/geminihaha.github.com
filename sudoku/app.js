@@ -1,13 +1,18 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "1.8.2";
+const APP_VERSION = "2.0.0";
+
+// 홈 화면에서 선택된 게임 모드 (9: 3x3 블록 9x9, 6: 2x3 블록 6x6)
+var homeSelectedMode = 9;
 
 // 1. 전역 게임 상태 정의 (State Management)
 var gameState = {
+    boardSize: 9,       // 9 (3x3 블록) 또는 6 (2x3 블록)
+    boxRows: 3,         // 6x6일 때 2, 9x9일 때 3
+    boxCols: 3,         // 항상 3 (6x6: 2x3, 9x9: 3x3)
     difficulty: 'easy',
-    solutionBoard: [],  // 9x9 정답판 (완성 보드)
-    initialBoard: [],   // 9x9 최초 퍼즐 보드 (고정값)
-    currentBoard: [],   // 9x9 실시간 플레이어 보드 (객체 배열)
-                        // 각 셀: { value: 0, pencilMarks: [false*9], isHint: false, isError: false }
+    solutionBoard: [],  // 정답판 (완성 보드)
+    initialBoard: [],   // 최초 퍼즐 보드 (고정값)
+    currentBoard: [],   // 실시간 플레이어 보드 (객체 배열)
     history: [],        // 실행 취소(Undo) 히스토리 스택
     hintsLeft: 3,       // 힌트 제한 (게임당 3회)
     seconds: 0,         // 소요 시간 (초)
@@ -40,6 +45,7 @@ function init() {
     checkSavedGame();
     generateHTMLBoard();
     applyTimerSetting();
+    updateSettingsUI();
     
     // 히스토리 초기 상태 설정
     if (!window.location.hash || window.location.hash !== '#home') {
@@ -62,6 +68,24 @@ function init() {
 
 window.onload = init;
 
+// 홈 화면 모드 선택 탭 (9: 3x3 블록 9x9, 6: 2x3 블록 6x6)
+function setHomeMode(size) {
+    homeSelectedMode = size;
+    var tab9 = document.getElementById("mode-tab-9");
+    var tab6 = document.getElementById("mode-tab-6");
+    var titleEl = document.getElementById("new-game-title");
+    
+    if (size === 6) {
+        if (tab6) tab6.classList.add("active");
+        if (tab9) tab9.classList.remove("active");
+        if (titleEl) titleEl.innerText = "새 게임 시작 (2x3 블록 6x6)";
+    } else {
+        if (tab9) tab9.classList.add("active");
+        if (tab6) tab6.classList.remove("active");
+        if (titleEl) titleEl.innerText = "새 게임 시작 (3x3 블록 9x9)";
+    }
+}
+
 // ==========================================
 // 3. 테마 및 최고 기록 매니저
 // ==========================================
@@ -77,6 +101,7 @@ function toggleTheme() {
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("sudoku_theme", next);
     updateThemeIcon(next);
+    updateSettingsUI();
 }
 
 function updateThemeIcon(theme) {
@@ -96,16 +121,26 @@ function loadBestRecords() {
     var records = JSON.parse(localStorage.getItem("SUDOKU_BEST_RECORDS")) || {
         easy: null,
         medium: null,
-        hard: null
+        hard: null,
+        easy6: null,
+        medium6: null,
+        hard6: null
     };
     
+    // 3x3 블록 (9x9) 기록
     updateRecordDisplay("best-easy", records.easy);
     updateRecordDisplay("best-medium", records.medium);
     updateRecordDisplay("best-hard", records.hard);
+    
+    // 2x3 블록 (6x6) 기록
+    updateRecordDisplay("best-easy-6", records.easy6);
+    updateRecordDisplay("best-medium-6", records.medium6);
+    updateRecordDisplay("best-hard-6", records.hard6);
 }
 
 function updateRecordDisplay(elementId, seconds) {
     var el = document.getElementById(elementId);
+    if (!el) return;
     if (seconds === null || seconds === undefined) {
         el.innerText = "--:--";
     } else {
@@ -130,15 +165,22 @@ function checkSavedGame() {
 // ==========================================
 
 // 보드 내 특정 위치에 특정 값을 넣어도 규칙상 안전한지 검사 (솔버용)
-function isValidForSolver(b, r, c, val) {
-    for (var i = 0; i < 9; i++) {
+function isValidForSolver(b, r, c, val, size, boxRows, boxCols) {
+    size = size || b.length;
+    boxRows = boxRows || (size === 6 ? 2 : 3);
+    boxCols = boxCols || 3;
+    
+    // 행 & 열 검사
+    for (var i = 0; i < size; i++) {
         if (b[r][i] === val) return false;
         if (b[i][c] === val) return false;
     }
-    var startRow = Math.floor(r / 3) * 3;
-    var startCol = Math.floor(c / 3) * 3;
-    for (var i = 0; i < 3; i++) {
-        for (var j = 0; j < 3; j++) {
+    
+    // 블록 검사
+    var startRow = Math.floor(r / boxRows) * boxRows;
+    var startCol = Math.floor(c / boxCols) * boxCols;
+    for (var i = 0; i < boxRows; i++) {
+        for (var j = 0; j < boxCols; j++) {
             if (b[startRow + i][startCol + j] === val) return false;
         }
     }
@@ -146,13 +188,17 @@ function isValidForSolver(b, r, c, val) {
 }
 
 // 스도쿠 솔버: 해의 개수를 카운트 (2개 이상 시 조기 종료)
-function countSolutions(board) {
+function countSolutions(board, size, boxRows, boxCols) {
+    size = size || board.length;
+    boxRows = boxRows || (size === 6 ? 2 : 3);
+    boxCols = boxCols || 3;
+    
     var count = 0;
     var tempBoard = board.map(row => [...row]); // 복사본 생성하여 원본 오염 방지
     
     var emptyCells = [];
-    for (var r = 0; r < 9; r++) {
-        for (var c = 0; c < 9; c++) {
+    for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
             if (tempBoard[r][c] === 0) emptyCells.push({ r: r, c: c });
         }
     }
@@ -166,8 +212,8 @@ function countSolutions(board) {
         var r = cell.r;
         var c = cell.c;
         
-        for (var val = 1; val <= 9; val++) {
-            if (isValidForSolver(tempBoard, r, c, val)) {
+        for (var val = 1; val <= size; val++) {
+            if (isValidForSolver(tempBoard, r, c, val, size, boxRows, boxCols)) {
                 tempBoard[r][c] = val;
                 if (!solve(cellIdx + 1)) return false;
                 tempBoard[r][c] = 0;
@@ -180,46 +226,50 @@ function countSolutions(board) {
     return count;
 }
 
-// 스도쿠 제너레이터 객체 (명세 03_Development_2.Core_Algorithm_Specs.md 충족)
+// 스도쿠 제너레이터 객체 (6x6 2x3블록 및 9x9 3x3블록 범용 지원)
 var sudokuGenerator = {
-    // 9x9 정답판 생성 (Backtracking & 대각 박스 최적화)
-    generateSolution: function() {
-        var board = Array.from({ length: 9 }, () => new Array(9).fill(0));
+    // 정답판 생성 (Backtracking)
+    generateSolution: function(size) {
+        size = size || 9;
+        var boxRows = (size === 6) ? 2 : 3;
+        var boxCols = 3;
+        var board = Array.from({ length: size }, () => new Array(size).fill(0));
         
-        // 9x9 대각선 독립 3x3 박스 3개 먼저 채우기 (연산 시간 단축)
-        for (var i = 0; i < 9; i += 3) {
-            var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-            // 셔플
-            for (var idx = nums.length - 1; idx > 0; idx--) {
-                var j = Math.floor(Math.random() * (idx + 1));
-                var t = nums[idx]; nums[idx] = nums[j]; nums[j] = t;
-            }
-            var nIdx = 0;
-            for (var r = 0; r < 3; r++) {
-                for (var c = 0; c < 3; c++) {
-                    board[i + r][i + c] = nums[nIdx++];
+        // 9x9 모드일 경우 대각선 독립 3x3 박스 3개 먼저 채우기 (연산 가속)
+        if (size === 9) {
+            for (var i = 0; i < 9; i += 3) {
+                var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                for (var idx = nums.length - 1; idx > 0; idx--) {
+                    var j = Math.floor(Math.random() * (idx + 1));
+                    var t = nums[idx]; nums[idx] = nums[j]; nums[j] = t;
+                }
+                var nIdx = 0;
+                for (var r = 0; r < 3; r++) {
+                    for (var c = 0; c < 3; c++) {
+                        board[i + r][i + c] = nums[nIdx++];
+                    }
                 }
             }
         }
         
         function solve(r, c) {
-            if (c === 9) {
+            if (c === size) {
                 r++;
                 c = 0;
             }
-            if (r === 9) return true;
+            if (r === size) return true;
             if (board[r][c] !== 0) return solve(r, c + 1);
             
-            var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-            // 셔플
+            var nums = [];
+            for (var n = 1; n <= size; n++) nums.push(n);
             for (var idx = nums.length - 1; idx > 0; idx--) {
                 var j = Math.floor(Math.random() * (idx + 1));
                 var t = nums[idx]; nums[idx] = nums[j]; nums[j] = t;
             }
             
-            for (var i = 0; i < 9; i++) {
+            for (var i = 0; i < size; i++) {
                 var val = nums[i];
-                if (isValidForSolver(board, r, c, val)) {
+                if (isValidForSolver(board, r, c, val, size, boxRows, boxCols)) {
                     board[r][c] = val;
                     if (solve(r, c + 1)) return true;
                     board[r][c] = 0;
@@ -233,15 +283,26 @@ var sudokuGenerator = {
     },
     
     // 유일해 보장 마스킹 알고리즘
-    generatePuzzle: function(solution, difficulty) {
+    generatePuzzle: function(solution, difficulty, size) {
+        size = size || 9;
+        var boxRows = (size === 6) ? 2 : 3;
+        var boxCols = 3;
         var puzzle = solution.map(row => [...row]);
-        var targetHoles = 35; // Easy (초급)
+        var totalCells = size * size;
+        var targetHoles = 35; // 기본값
         
-        if (difficulty === 'medium') targetHoles = 46; // Medium (중급)
-        else if (difficulty === 'hard') targetHoles = 54;   // Hard (고급)
+        if (size === 6) {
+            if (difficulty === 'easy') targetHoles = 13;        // 약 23개 단서
+            else if (difficulty === 'medium') targetHoles = 17;  // 약 19개 단서
+            else if (difficulty === 'hard') targetHoles = 21;    // 약 15개 단서
+        } else {
+            if (difficulty === 'easy') targetHoles = 35;
+            else if (difficulty === 'medium') targetHoles = 46;
+            else if (difficulty === 'hard') targetHoles = 54;
+        }
         
         var cellIndices = [];
-        for (var i = 0; i < 81; i++) cellIndices.push(i);
+        for (var i = 0; i < totalCells; i++) cellIndices.push(i);
         
         // 무작위 셔플
         for (var i = cellIndices.length - 1; i > 0; i--) {
@@ -252,16 +313,16 @@ var sudokuGenerator = {
         }
         
         var holes = 0;
-        for (var i = 0; i < 81; i++) {
+        for (var i = 0; i < totalCells; i++) {
             var idx = cellIndices[i];
-            var r = Math.floor(idx / 9);
-            var c = idx % 9;
+            var r = Math.floor(idx / size);
+            var c = idx % size;
             
             var backup = puzzle[r][c];
             puzzle[r][c] = 0;
             
             // 제거 후 솔버를 돌렸을 때 해의 개수가 유일한지(1개) 검증
-            if (countSolutions(puzzle) === 1) {
+            if (countSolutions(puzzle, size, boxRows, boxCols) === 1) {
                 holes++;
                 if (holes >= targetHoles) break;
             } else {
@@ -278,19 +339,33 @@ var sudokuGenerator = {
 // ==========================================
 
 function generateHTMLBoard() {
+    var size = gameState.boardSize || 9;
     var boardContainer = document.getElementById("sudoku-board");
     boardContainer.innerHTML = "";
     
-    for (var r = 0; r < 9; r++) {
-        for (var c = 0; c < 9; c++) {
+    if (size === 6) {
+        boardContainer.classList.add("size-6");
+    } else {
+        boardContainer.classList.remove("size-6");
+    }
+    
+    for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
             var cell = document.createElement("div");
             cell.className = "sudoku-cell";
             cell.setAttribute("data-row", r);
             cell.setAttribute("data-col", c);
             
-            // 3x3 격자 구분선 적용 (2번째, 5번째 행/열 뒤에 두꺼운 경계선 세팅)
-            if (r === 2 || r === 5) cell.classList.add("border-bottom-thick");
-            if (c === 2 || c === 5) cell.classList.add("border-right-thick");
+            // 경계선 처리
+            if (size === 6) {
+                // 2x3 블록: 가로 2행마다(r=1, r=3), 세로 3열마다(c=2)
+                if (r === 1 || r === 3) cell.classList.add("border-bottom-thick");
+                if (c === 2) cell.classList.add("border-right-thick");
+            } else {
+                // 3x3 블록: 가로 3행마다(r=2, r=5), 세로 3열마다(c=2, c=5)
+                if (r === 2 || r === 5) cell.classList.add("border-bottom-thick");
+                if (c === 2 || c === 5) cell.classList.add("border-right-thick");
+            }
             
             // 포인터 이벤트(즉시 입력) 리스너 연결
             cell.onpointerdown = (function(row, col) {
@@ -311,9 +386,11 @@ function generateHTMLBoard() {
     }
 }
 
-// 보드 상태 그리기 (gameState -> DOM)
 // 보드 상태 그리기 (gameState -> DOM) - 실제 드로잉 로직
 function _renderBoard() {
+    var size = gameState.boardSize || 9;
+    var boxRows = gameState.boxRows || (size === 6 ? 2 : 3);
+    var boxCols = gameState.boxCols || 3;
     var cells = document.querySelectorAll(".sudoku-cell");
     
     cells.forEach(function(cellEl) {
@@ -325,8 +402,13 @@ function _renderBoard() {
         
         // CSS 스타일 초기화
         cellEl.className = "sudoku-cell";
-        if (r === 2 || r === 5) cellEl.classList.add("border-bottom-thick");
-        if (c === 2 || c === 5) cellEl.classList.add("border-right-thick");
+        if (size === 6) {
+            if (r === 1 || r === 3) cellEl.classList.add("border-bottom-thick");
+            if (c === 2) cellEl.classList.add("border-right-thick");
+        } else {
+            if (r === 2 || r === 5) cellEl.classList.add("border-bottom-thick");
+            if (c === 2 || c === 5) cellEl.classList.add("border-right-thick");
+        }
         
         // 1. 값 타입 클래스 부여
         if (stateCell.value !== 0) {
@@ -349,7 +431,10 @@ function _renderBoard() {
             if (hasPencil) {
                 var pencilGrid = document.createElement("div");
                 pencilGrid.className = "pencil-grid";
-                for (var i = 1; i <= 9; i++) {
+                if (size === 6) {
+                    pencilGrid.classList.add("size-6");
+                }
+                for (var i = 1; i <= size; i++) {
                     var pNum = document.createElement("span");
                     pNum.className = "pencil-num";
                     pNum.innerText = i;
@@ -376,8 +461,10 @@ function _renderBoard() {
             if (sel.r === r && sel.c === c) {
                 cellEl.classList.add("selected");
             } 
-            // 3.2 동일 행 / 동일 열 / 동일 3x3 박스 하이라이트
-            else if (r === sel.r || c === sel.c || (Math.floor(r/3) === Math.floor(sel.r/3) && Math.floor(c/3) === Math.floor(sel.c/3))) {
+            // 3.2 동일 행 / 동일 열 / 동일 블록 하이라이트
+            else if (r === sel.r || c === sel.c || 
+                    (Math.floor(r / boxRows) === Math.floor(sel.r / boxRows) && 
+                     Math.floor(c / boxCols) === Math.floor(sel.c / boxCols))) {
                 cellEl.classList.add("highlighted");
             }
             if (activeNum === 0) {
@@ -431,25 +518,29 @@ function renderBoard() {
 // ==========================================
 
 // 게임 시작 및 보드 마스킹 가동
-function startNewGame(difficulty) {
+function startNewGame(difficulty, size) {
+    size = size || homeSelectedMode || 9;
+    gameState.boardSize = size;
+    gameState.boxRows = (size === 6) ? 2 : 3;
+    gameState.boxCols = 3;
     gameState.difficulty = difficulty;
     
     // 1단계: 정답 보드 생성
-    gameState.solutionBoard = sudokuGenerator.generateSolution();
+    gameState.solutionBoard = sudokuGenerator.generateSolution(size);
     
     // 2단계: 유일해 보장 구멍 뚫기
-    var masked = sudokuGenerator.generatePuzzle(gameState.solutionBoard, difficulty);
+    var masked = sudokuGenerator.generatePuzzle(gameState.solutionBoard, difficulty, size);
     gameState.initialBoard = masked;
     
     // 3단계: 플레이 보드 세팅
     gameState.currentBoard = [];
-    for (var r = 0; r < 9; r++) {
+    for (var r = 0; r < size; r++) {
         var row = [];
-        for (var c = 0; c < 9; c++) {
+        for (var c = 0; c < size; c++) {
             var val = masked[r][c];
             row.push({
                 value: val,
-                pencilMarks: new Array(9).fill(false),
+                pencilMarks: new Array(size).fill(false),
                 isHint: false,
                 isError: false
             });
@@ -473,11 +564,14 @@ function startNewGame(difficulty) {
     document.getElementById("pencil-btn").classList.remove("active");
     document.getElementById("pencil-btn").querySelector("span").innerText = "메모 Off";
     document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (3)";
-    document.getElementById("difficulty-badge").innerText = 
-        difficulty === 'easy' ? '초급' : (difficulty === 'medium' ? '중급' : '고급');
+    
+    var diffText = difficulty === 'easy' ? '초급' : (difficulty === 'medium' ? '중급' : '고급');
+    var modeBadgeText = (size === 6) ? ("2x3 " + diffText) : ("3x3 " + diffText);
+    document.getElementById("difficulty-badge").innerText = modeBadgeText;
     
     history.pushState({ screen: 'game' }, '', '#game');
     switchScreen("game-screen");
+    generateHTMLBoard();
     renderBoard();
     startTimer();
     saveGame();
@@ -488,6 +582,9 @@ function continueGame() {
     if (!saved) return;
     
     var data = JSON.parse(saved);
+    gameState.boardSize = data.boardSize || 9;
+    gameState.boxRows = data.boxRows || (gameState.boardSize === 6 ? 2 : 3);
+    gameState.boxCols = data.boxCols || 3;
     gameState.difficulty = data.difficulty;
     gameState.solutionBoard = data.solutionBoard;
     gameState.initialBoard = data.initialBoard;
@@ -505,11 +602,14 @@ function continueGame() {
     document.getElementById("pencil-btn").classList.remove("active");
     document.getElementById("pencil-btn").querySelector("span").innerText = "메모 Off";
     document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (" + gameState.hintsLeft + ")";
-    document.getElementById("difficulty-badge").innerText = 
-        gameState.difficulty === 'easy' ? '초급' : (gameState.difficulty === 'medium' ? '중급' : '고급');
+    
+    var diffText = gameState.difficulty === 'easy' ? '초급' : (gameState.difficulty === 'medium' ? '중급' : '고급');
+    var modeBadgeText = (gameState.boardSize === 6) ? ("2x3 " + diffText) : ("3x3 " + diffText);
+    document.getElementById("difficulty-badge").innerText = modeBadgeText;
     
     history.pushState({ screen: 'game' }, '', '#game');
     switchScreen("game-screen");
+    generateHTMLBoard();
     renderBoard();
     startTimer();
 }
@@ -615,7 +715,7 @@ function inputNumberToCell(r, c, num) {
                     playSFX('input');
                 }
                 
-                // 동일 행, 열, 3x3 박스의 메모에서 입력한 숫자 자동 소거
+                // 동일 행, 열, 블록의 메모에서 입력한 숫자 자동 소거
                 removePencilMarksInScope(r, c, num);
             } else {
                 playSFX('input');
@@ -822,7 +922,7 @@ function triggerHint() {
     cell.pencilMarks.fill(false);
     gameState.selectedNumber = ans;
     
-    // 힌트가 들어갔으므로 동일 행, 열, 3x3 박스의 메모에서 이 정답 소거
+    // 힌트가 들어갔으므로 동일 행, 열, 블록의 메모에서 이 정답 소거
     removePencilMarksInScope(r, c, ans);
     
     gameState.hintsLeft--;
@@ -838,8 +938,9 @@ function triggerHint() {
 
 // 실시간 에러(정답 대조) 마킹
 function updateErrors() {
-    for (var r = 0; r < 9; r++) {
-        for (var c = 0; c < 9; c++) {
+    var size = gameState.boardSize || 9;
+    for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
             var cell = gameState.currentBoard[r][c];
             if (cell.value !== 0 && cell.value !== gameState.solutionBoard[r][c]) {
                 cell.isError = true;
@@ -852,11 +953,12 @@ function updateErrors() {
 
 // 클리어 검증
 function checkWinCondition() {
+    var size = gameState.boardSize || 9;
     var isFull = true;
     var hasError = false;
     
-    for (var r = 0; r < 9; r++) {
-        for (var c = 0; c < 9; c++) {
+    for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
             var cell = gameState.currentBoard[r][c];
             if (cell.value === 0) {
                 isFull = false;
@@ -882,14 +984,18 @@ function handleGameClear() {
     var records = JSON.parse(localStorage.getItem("SUDOKU_BEST_RECORDS")) || {
         easy: null,
         medium: null,
-        hard: null
+        hard: null,
+        easy6: null,
+        medium6: null,
+        hard6: null
     };
     
     var diff = gameState.difficulty;
+    var recordKey = (gameState.boardSize === 6) ? (diff + "6") : diff;
     var isNewRecord = false;
     
-    if (timerOn && (records[diff] === null || gameState.seconds < records[diff])) {
-        records[diff] = gameState.seconds;
+    if (timerOn && (records[recordKey] === null || records[recordKey] === undefined || gameState.seconds < records[recordKey])) {
+        records[recordKey] = gameState.seconds;
         localStorage.setItem("SUDOKU_BEST_RECORDS", JSON.stringify(records));
         isNewRecord = true;
     }
@@ -904,7 +1010,7 @@ function handleGameClear() {
 
 function restartFromClear() {
     document.getElementById("clear-modal").style.display = "none";
-    startNewGame(gameState.difficulty);
+    startNewGame(gameState.difficulty, gameState.boardSize);
 }
 
 function exitToHomeFromClear() {
@@ -925,10 +1031,56 @@ function toggleTimerSetting() {
     var enabled = !isTimerEnabled();
     localStorage.setItem("sudoku_timer_enabled", enabled ? "on" : "off");
     applyTimerSetting();
+    updateSettingsUI();
+}
+
+function isSFXEnabled() {
+    var val = localStorage.getItem("sudoku_sfx_enabled");
+    return val === null ? true : (val === "on");
+}
+
+function toggleSFXSetting() {
+    var enabled = !isSFXEnabled();
+    localStorage.setItem("sudoku_sfx_enabled", enabled ? "on" : "off");
+    updateSettingsUI();
+    if (enabled) playSFX('input');
+}
+
+function isVibrationEnabled() {
+    var val = localStorage.getItem("sudoku_vibration_enabled");
+    return val === null ? true : (val === "on");
+}
+
+function toggleVibrationSetting() {
+    var enabled = !isVibrationEnabled();
+    localStorage.setItem("sudoku_vibration_enabled", enabled ? "on" : "off");
+    updateSettingsUI();
+    if (enabled) triggerVibration('error');
+}
+
+function updateSettingsUI() {
+    var timerToggle = document.getElementById("timer-toggle");
+    if (timerToggle) timerToggle.checked = isTimerEnabled();
+
+    var sfxToggle = document.getElementById("sfx-toggle");
+    if (sfxToggle) sfxToggle.checked = isSFXEnabled();
+
+    var vibToggle = document.getElementById("vibration-toggle");
+    if (vibToggle) vibToggle.checked = isVibrationEnabled();
+
+    var currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    var themeStatusText = document.getElementById("theme-status-text");
+    var themeBtnLabel = document.getElementById("theme-btn-label");
+    if (themeStatusText) {
+        themeStatusText.innerText = (currentTheme === "dark") ? "다크 테마 사용 중" : "라이트 테마 사용 중";
+    }
+    if (themeBtnLabel) {
+        themeBtnLabel.innerText = (currentTheme === "dark") ? "라이트 모드로" : "다크 모드로";
+    }
 }
 
 function applyTimerSetting() {
-    // 홈 화면 토글 스위치 상태 반영
+    // 설정 모달 내 토글 스위치 상태 반영
     var toggle = document.getElementById("timer-toggle");
     if (toggle) toggle.checked = isTimerEnabled();
 
@@ -993,6 +1145,9 @@ function togglePause() {
 
 function saveGame() {
     var dataToSave = {
+        boardSize: gameState.boardSize || 9,
+        boxRows: gameState.boxRows || (gameState.boardSize === 6 ? 2 : 3),
+        boxCols: gameState.boxCols || 3,
         difficulty: gameState.difficulty,
         solutionBoard: gameState.solutionBoard,
         initialBoard: gameState.initialBoard,
@@ -1022,6 +1177,31 @@ function updateWarningUI() {
 // 9. 모달 매니저 & 키보드 단축키
 // ==========================================
 
+function openRecordsModal() {
+    loadBestRecords();
+    document.getElementById("records-modal").style.display = "flex";
+}
+
+function closeRecordsModal() {
+    document.getElementById("records-modal").style.display = "none";
+}
+
+function resetBestRecordsPrompt() {
+    if (confirm("정말 모든 난이도의 개인 최고 기록을 초기화하시겠습니까?")) {
+        localStorage.removeItem("SUDOKU_BEST_RECORDS");
+        loadBestRecords();
+    }
+}
+
+function openSettingsModal() {
+    updateSettingsUI();
+    document.getElementById("settings-modal").style.display = "flex";
+}
+
+function closeSettingsModal() {
+    document.getElementById("settings-modal").style.display = "none";
+}
+
 function openHelpModal() {
     document.getElementById("help-modal").style.display = "flex";
 }
@@ -1030,12 +1210,20 @@ function closeHelpModal() {
     document.getElementById("help-modal").style.display = "none";
 }
 
+function handleModalOverlayClick(e, modalId) {
+    if (e.target && e.target.id === modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) modal.style.display = "none";
+    }
+}
+
 // 물리 키보드 바인딩
 document.onkeydown = function(e) {
     if (gameState.isPaused || !gameState.selectedCell) return;
     
-    // 1-9 숫자 키 대응
-    if (e.key >= '1' && e.key <= '9') {
+    var size = gameState.boardSize || 9;
+    // 1-size 숫자 키 대응
+    if (e.key >= '1' && e.key <= String(size)) {
         pressNumber(parseInt(e.key));
     } 
     // Backspace 또는 Delete 키 -> 지우기 기능 실행
@@ -1057,23 +1245,27 @@ document.onkeydown = function(e) {
 // ==========================================
 
 function isSafe(row, col, num) {
+    var size = gameState.boardSize || 9;
+    var boxRows = gameState.boxRows || (size === 6 ? 2 : 3);
+    var boxCols = gameState.boxCols || 3;
+    
     // 1. 행 검사 (가로)
-    for (var i = 0; i < 9; i++) {
+    for (var i = 0; i < size; i++) {
         if (i !== col && gameState.currentBoard[row][i].value === num) {
             return false;
         }
     }
     // 2. 열 검사 (세로)
-    for (var i = 0; i < 9; i++) {
+    for (var i = 0; i < size; i++) {
         if (i !== row && gameState.currentBoard[i][col].value === num) {
             return false;
         }
     }
-    // 3. 3x3 박스 검사 (구역)
-    var startRow = Math.floor(row / 3) * 3;
-    var startCol = Math.floor(col / 3) * 3;
-    for (var r = 0; r < 3; r++) {
-        for (var c = 0; c < 3; c++) {
+    // 3. 블록 검사 (구역)
+    var startRow = Math.floor(row / boxRows) * boxRows;
+    var startCol = Math.floor(col / boxCols) * boxCols;
+    for (var r = 0; r < boxRows; r++) {
+        for (var c = 0; c < boxCols; c++) {
             var currR = startRow + r;
             var currC = startCol + c;
             if ((currR !== row || currC !== col) && gameState.currentBoard[currR][currC].value === num) {
@@ -1085,27 +1277,30 @@ function isSafe(row, col, num) {
 }
 
 function removePencilMarksInScope(row, col, num) {
+    var size = gameState.boardSize || 9;
+    var boxRows = gameState.boxRows || (size === 6 ? 2 : 3);
+    var boxCols = gameState.boxCols || 3;
     var idx = num - 1;
     
     // 1. 동일 행(Row) 메모 소거
-    for (var c = 0; c < 9; c++) {
+    for (var c = 0; c < size; c++) {
         if (c !== col) {
             gameState.currentBoard[row][c].pencilMarks[idx] = false;
         }
     }
     
     // 2. 동일 열(Col) 메모 소거
-    for (var r = 0; r < 9; r++) {
+    for (var r = 0; r < size; r++) {
         if (r !== row) {
             gameState.currentBoard[r][col].pencilMarks[idx] = false;
         }
     }
     
-    // 3. 동일 3x3 박스(Box) 메모 소거
-    var startRow = Math.floor(row / 3) * 3;
-    var startCol = Math.floor(col / 3) * 3;
-    for (var r = 0; r < 3; r++) {
-        for (var c = 0; c < 3; c++) {
+    // 3. 동일 블록(Box) 메모 소거
+    var startRow = Math.floor(row / boxRows) * boxRows;
+    var startCol = Math.floor(col / boxCols) * boxCols;
+    for (var r = 0; r < boxRows; r++) {
+        for (var c = 0; c < boxCols; c++) {
             var currR = startRow + r;
             var currC = startCol + c;
             if (currR !== row || currC !== col) {
@@ -1116,29 +1311,43 @@ function removePencilMarksInScope(row, col, num) {
 }
 
 function updateKeypad() {
-    // 1~9 숫자별 보드 위 존재 개수 집계
-    var counts = new Array(10).fill(0);
-    for (var r = 0; r < 9; r++) {
-        for (var c = 0; c < 9; c++) {
+    var size = gameState.boardSize || 9;
+    var keypad = document.querySelector(".keypad");
+    if (keypad) {
+        if (size === 6) {
+            keypad.classList.add("size-6");
+        } else {
+            keypad.classList.remove("size-6");
+        }
+    }
+    
+    // 1~size 숫자별 보드 위 존재 개수 집계
+    var counts = new Array(size + 1).fill(0);
+    for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
             var val = gameState.currentBoard[r][c].value;
-            if (val >= 1 && val <= 9) {
+            if (val >= 1 && val <= size) {
                 counts[val]++;
             }
         }
     }
     
-    // 9개 다 쓰인 숫자는 비활성화(disabled) 및 클래스 토글
+    // 키패드 버튼 제어 (6x6일 때는 7~9 숨김)
     var keyBtns = document.querySelectorAll(".keypad .key-btn");
     keyBtns.forEach(function(btn, idx) {
         var num = idx + 1;
-        var isCompleted = (counts[num] >= 9);
-        
-        if (isCompleted) {
-            btn.setAttribute("disabled", "true");
-            btn.classList.add("completed");
+        if (num > size) {
+            btn.style.display = "none";
         } else {
-            btn.removeAttribute("disabled");
-            btn.classList.remove("completed");
+            btn.style.display = "";
+            var isCompleted = (counts[num] >= size);
+            if (isCompleted) {
+                btn.setAttribute("disabled", "true");
+                btn.classList.add("completed");
+            } else {
+                btn.removeAttribute("disabled");
+                btn.classList.remove("completed");
+            }
         }
     });
 }
@@ -1149,6 +1358,7 @@ function updateKeypad() {
 var audioCtx = null;
 
 function playSFX(type) {
+    if (!isSFXEnabled()) return;
     try {
         if (audioCtx && (audioCtx.state === 'closed' || (audioCtx.state === 'suspended' && !audioCtx.resume))) {
             audioCtx = null;
@@ -1240,6 +1450,7 @@ function runOscillator(type) {
 }
 
 function triggerVibration(type) {
+    if (!isVibrationEnabled()) return;
     if (navigator.vibrate) {
         if (type === 'error') {
             navigator.vibrate([100, 50, 100]); // 짧게 두 번 진동
@@ -1259,13 +1470,17 @@ window.addEventListener('popstate', function(event) {
 });
 
 function highlightConflict(row, col, num) {
+    var size = gameState.boardSize || 9;
+    var boxRows = gameState.boxRows || (size === 6 ? 2 : 3);
+    var boxCols = gameState.boxCols || 3;
+    
     var conflictCells = [];
     var conflictRows = new Set();
     var conflictCols = new Set();
     var conflictBoxes = false;
     
     // 1. 행 검사 (중복 원인 탐색)
-    for (var i = 0; i < 9; i++) {
+    for (var i = 0; i < size; i++) {
         if (i !== col && gameState.currentBoard[row][i].value === num) {
             conflictCells.push({ r: row, c: i });
             conflictRows.add(row);
@@ -1273,18 +1488,18 @@ function highlightConflict(row, col, num) {
     }
     
     // 2. 열 검사 (중복 원인 탐색)
-    for (var i = 0; i < 9; i++) {
+    for (var i = 0; i < size; i++) {
         if (i !== row && gameState.currentBoard[i][col].value === num) {
             conflictCells.push({ r: i, c: col });
             conflictCols.add(col);
         }
     }
     
-    // 3. 3x3 박스 검사 (중복 원인 탐색)
-    var startRow = Math.floor(row / 3) * 3;
-    var startCol = Math.floor(col / 3) * 3;
-    for (var r = 0; r < 3; r++) {
-        for (var c = 0; c < 3; c++) {
+    // 3. 블록 검사 (중복 원인 탐색)
+    var startRow = Math.floor(row / boxRows) * boxRows;
+    var startCol = Math.floor(col / boxCols) * boxCols;
+    for (var r = 0; r < boxRows; r++) {
+        for (var c = 0; c < boxCols; c++) {
             var currR = startRow + r;
             var currC = startCol + c;
             if ((currR !== row || currC !== col) && gameState.currentBoard[currR][currC].value === num) {
@@ -1302,7 +1517,7 @@ function highlightConflict(row, col, num) {
         
         var inRow = conflictRows.has(r);
         var inCol = conflictCols.has(c);
-        var inBox = conflictBoxes && (Math.floor(r / 3) === Math.floor(row / 3) && Math.floor(c / 3) === Math.floor(col / 3));
+        var inBox = conflictBoxes && (Math.floor(r / boxRows) === Math.floor(row / boxRows) && Math.floor(c / boxCols) === Math.floor(col / boxCols));
         
         if (inRow || inCol || inBox) {
             cellEl.classList.add("conflict-highlight");
