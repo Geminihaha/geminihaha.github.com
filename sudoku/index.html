@@ -175,6 +175,34 @@
         </div>
     </div>
 
+    <!-- Smart Logical Hint Bottom Sheet (Board is 100% visible) -->
+    <div id="hint-modal" class="hint-sheet-overlay" style="display:none;">
+        <div class="hint-sheet-content">
+            <div class="hint-sheet-header">
+                <div class="hint-sheet-title-group">
+                    <span class="hint-target-icon">🎯</span>
+                    <span id="hint-target-pos" class="hint-target-text">추천 지점 탐색 중</span>
+                    <span id="hint-technique-badge" class="hint-badge">풀이 원리</span>
+                </div>
+                <button class="hint-close-btn" onclick="closeHintModal()" title="닫기">&times;</button>
+            </div>
+            
+            <div class="hint-sheet-body">
+                <p id="hint-explanation-text" class="hint-explanation-text"></p>
+                <div id="hint-reason-tags" class="hint-reason-tags"></div>
+            </div>
+
+            <div class="hint-sheet-footer">
+                <button class="btn btn-secondary hint-action-btn" onclick="solveHintManually()">
+                    <i class="fa-solid fa-pen-to-square"></i> 직접 풀기
+                </button>
+                <button class="btn btn-primary hint-action-btn" onclick="autoFillHintAnswer()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 정답 채우기
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Pause Modal -->
     <div id="pause-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content pause-content">
@@ -378,6 +406,23 @@
         </div>
     </div>
 
-    <script src="app.js?v=2.0.0"></script>
+    <!-- Custom Alert Dialog Modal -->
+    <div id="zen-alert-modal" class="modal-overlay zen-alert-overlay" style="display:none;" onclick="handleModalOverlayClick(event, 'zen-alert-modal')">
+        <div class="modal-content zen-alert-content">
+            <div class="modal-header">
+                <h2 id="zen-alert-title">알림</h2>
+                <button class="close-icon-btn" onclick="closeZenAlert()">&times;</button>
+            </div>
+            <div class="modal-body zen-alert-body">
+                <div id="zen-alert-icon" class="zen-alert-icon-box">🛡️</div>
+                <p id="zen-alert-message" class="zen-alert-msg-text"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="zen-alert-confirm-btn" class="btn btn-primary btn-block" onclick="closeZenAlert()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=2.1.0"></script>
 </body>
 </html>
