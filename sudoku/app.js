@@ -1,5 +1,5 @@
 // SUDOKU ZEN - Core Application Script
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 
 // 홈 화면에서 선택된 게임 모드 (9: 3x3 블록 9x9, 6: 2x3 블록 6x6)
 var homeSelectedMode = 9;
@@ -20,10 +20,15 @@ var gameState = {
     selectedCell: null, // 현재 선택된 셀 좌표 { r: row, c: col }
     selectedNumber: 0,  // 현재 강조 선택된 숫자 (키패드 또는 셀 값 기반)
     warnings: 0,        // 오답 기입 경고 횟수
-    pencilMode: false   // 메모 모드 활성화 여부
+    pencilMode: false,  // 메모 모드 활성화 여부
+    isCleared: false    // 게임 완료 여부
 };
 
 var timerInterval = null;
+
+// 스마트 논리 힌트 활성 상태 관리
+var activeSmartHint = null;
+var smartHintTimeout = null;
 
 // 숫자 잠금(선택) 입력 상태 (숫자 키 터치 → 셀 터치 입력)
 var numberLock = {
@@ -150,14 +155,55 @@ function updateRecordDisplay(elementId, seconds) {
     }
 }
 
-function checkSavedGame() {
-    var saved = localStorage.getItem("SUDOKU_SAVE_GAME");
-    var btn = document.getElementById("continue-btn");
-    if (saved) {
-        btn.removeAttribute("disabled");
-    } else {
-        btn.setAttribute("disabled", "true");
+function isGameCompleted() {
+    if (!gameState.currentBoard || !gameState.solutionBoard) return false;
+    var size = gameState.boardSize || 9;
+    if (gameState.currentBoard.length < size || gameState.solutionBoard.length < size) return false;
+    
+    for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
+            var cell = gameState.currentBoard[r][c];
+            if (!cell || cell.value === 0 || cell.value !== gameState.solutionBoard[r][c]) {
+                return false;
+            }
+        }
     }
+    return true;
+}
+
+function checkSavedGame() {
+    var btn = document.getElementById("continue-btn");
+    if (!btn) return;
+    
+    var saved = localStorage.getItem("SUDOKU_SAVE_GAME");
+    if (saved) {
+        try {
+            var data = JSON.parse(saved);
+            if (data && data.currentBoard && data.solutionBoard) {
+                var size = data.boardSize || 9;
+                var isCompleted = true;
+                for (var r = 0; r < size; r++) {
+                    for (var c = 0; c < size; c++) {
+                        var cell = data.currentBoard[r][c];
+                        if (!cell || cell.value === 0 || cell.value !== data.solutionBoard[r][c]) {
+                            isCompleted = false;
+                            break;
+                        }
+                    }
+                    if (!isCompleted) break;
+                }
+                
+                if (!isCompleted) {
+                    btn.removeAttribute("disabled");
+                    return;
+                }
+            }
+        } catch (e) {}
+    }
+    
+    // 유효한 진행 중인 게임이 없을 때
+    localStorage.removeItem("SUDOKU_SAVE_GAME");
+    btn.setAttribute("disabled", "true");
 }
 
 // ==========================================
@@ -492,6 +538,20 @@ function _renderBoard() {
             }
         }
         
+        // 3.4 스마트 논리 힌트 타겟 및 스코프 하이라이트
+        if (activeSmartHint) {
+            if (activeSmartHint.target.r === r && activeSmartHint.target.c === c) {
+                cellEl.classList.add("hint-target");
+            } else if (activeSmartHint.scope) {
+                var inScopeRow = (activeSmartHint.scope.r === r);
+                var inScopeCol = (activeSmartHint.scope.c === c);
+                var inScopeBox = (Math.floor(r / boxRows) === activeSmartHint.scope.boxRow && Math.floor(c / boxCols) === activeSmartHint.scope.boxCol);
+                if (inScopeRow || inScopeCol || inScopeBox) {
+                    cellEl.classList.add("hint-scope");
+                }
+            }
+        }
+        
         // 4. 에러 스타일링
         if (stateCell.isError) {
             cellEl.classList.add("error");
@@ -557,13 +617,16 @@ function startNewGame(difficulty, size) {
     gameState.isPaused = false;
     gameState.selectedCell = null;
     gameState.pencilMode = false;
+    gameState.isCleared = false;
     
     cancelAllLocks(); // 새 게임 시작 시 잠금 상태 초기화
+    clearActiveSmartHint();
+    closeHintModal();
     
     updateWarningUI();
     document.getElementById("pencil-btn").classList.remove("active");
     document.getElementById("pencil-btn").querySelector("span").innerText = "메모 Off";
-    document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (3)";
+    updateHintButtonUI();
     
     var diffText = difficulty === 'easy' ? '초급' : (difficulty === 'medium' ? '중급' : '고급');
     var modeBadgeText = (size === 6) ? ("2x3 " + diffText) : ("3x3 " + diffText);
@@ -597,11 +660,15 @@ function continueGame() {
     gameState.isPaused = false;
     gameState.selectedCell = null;
     gameState.pencilMode = false;
+    gameState.isCleared = false;
+    
+    clearActiveSmartHint();
+    closeHintModal();
     
     updateWarningUI();
     document.getElementById("pencil-btn").classList.remove("active");
     document.getElementById("pencil-btn").querySelector("span").innerText = "메모 Off";
-    document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (" + gameState.hintsLeft + ")";
+    updateHintButtonUI();
     
     var diffText = gameState.difficulty === 'easy' ? '초급' : (gameState.difficulty === 'medium' ? '중급' : '고급');
     var modeBadgeText = (gameState.boardSize === 6) ? ("2x3 " + diffText) : ("3x3 " + diffText);
@@ -631,6 +698,8 @@ function exitToHome() {
 function exitToHomeNoPush() {
     stopTimer();
     cancelAllLocks(); // 홈 화면 이동 시 잠금 상태 해제
+    clearActiveSmartHint();
+    closeHintModal();
     saveGame();
     checkSavedGame();
     loadBestRecords();
@@ -722,6 +791,7 @@ function inputNumberToCell(r, c, num) {
             }
             
             gameState.selectedNumber = num;
+            clearActiveSmartHint();
         }
     }
     
@@ -895,46 +965,385 @@ function togglePencilMode() {
     }
 }
 
-function triggerHint() {
-    if (gameState.isPaused) return;
-    if (!gameState.selectedCell) return;
+function updateHintButtonUI() {
+    var hintBtn = document.getElementById("hint-btn");
+    if (!hintBtn) return;
+    var span = hintBtn.querySelector("span");
+    if (!span) return;
+    if (window.AndroidNativeBridge && typeof window.AndroidNativeBridge.isNativeApp === 'function') {
+        span.innerText = "힌트 (광고)";
+    } else {
+        span.innerText = "힌트 (" + (gameState.hintsLeft !== undefined ? gameState.hintsLeft : 3) + ")";
+    }
+}
+
+function clearActiveSmartHint() {
+    activeSmartHint = null;
+    if (smartHintTimeout) {
+        clearTimeout(smartHintTimeout);
+        smartHintTimeout = null;
+    }
+}
+
+// 스마트 논리 힌트 탐색 엔진 (풀 수 있는 지점 및 풀이 논리 자동 탐색)
+function findSmartHint() {
+    var size = gameState.boardSize || 9;
+    var boxRows = gameState.boxRows || (size === 6 ? 2 : 3);
+    var boxCols = gameState.boxCols || 3;
+    var blockName = (size === 6) ? "2x3 블록" : "3x3 블록";
     
-    var r = gameState.selectedCell.r;
-    var c = gameState.selectedCell.c;
+    // 1. 각 빈 칸에 들어갈 수 있는 후보 숫자(Candidates)와 배제된 숫자 계산
+    var candidates = Array.from({ length: size }, () => new Array(size).fill(null));
+    var excludedMap = Array.from({ length: size }, () => new Array(size).fill(null));
+    var emptyCells = [];
     
-    // 고정 값이거나 이미 힌트로 채운 칸인 경우 패스
-    if (gameState.initialBoard[r][c] !== 0 || gameState.currentBoard[r][c].isHint) return;
-    
-    if (gameState.hintsLeft <= 0) {
-        alert("남은 힌트가 없습니다.");
-        return;
+    for (var r = 0; r < size; r++) {
+        for (var c = 0; c < size; c++) {
+            var cell = gameState.currentBoard[r][c];
+            if (cell.value === 0) {
+                var possible = [];
+                var excluded = [];
+                
+                for (var num = 1; num <= size; num++) {
+                    if (isSafe(r, c, num)) {
+                        possible.push(num);
+                    } else {
+                        excluded.push(num);
+                    }
+                }
+                candidates[r][c] = possible;
+                excludedMap[r][c] = excluded;
+                emptyCells.push({ r: r, c: c, possibleCount: possible.length, possible: possible });
+            }
+        }
     }
     
-    // 이미 정답이 맞게 채워져 있다면
-    if (gameState.currentBoard[r][c].value === gameState.solutionBoard[r][c]) return;
+    if (emptyCells.length === 0) {
+        return null;
+    }
+    
+    // 만약 사용자가 이미 특정 빈 칸을 선택한 상태라면, 그 칸을 우선적으로 검토!
+    if (gameState.selectedCell) {
+        var sr = gameState.selectedCell.r;
+        var sc = gameState.selectedCell.c;
+        var sCell = gameState.currentBoard[sr][sc];
+        if (sCell.value === 0 && gameState.initialBoard[sr][sc] === 0 && !sCell.isHint) {
+            var sAns = gameState.solutionBoard[sr][sc];
+            var sPossible = candidates[sr][sc] || [];
+            var sExcluded = excludedMap[sr][sc] || [];
+            
+            if (sPossible.length === 1 && sPossible[0] === sAns) {
+                return {
+                    target: { r: sr, c: sc },
+                    val: sAns,
+                    technique: "단일 후보수 (Naked Single)",
+                    badgeText: "유일한 숫자",
+                    explanation: "선택하신 【" + (sr + 1) + "행 " + (sc + 1) + "열】을 살펴보세요!\n같은 가로줄, 세로줄, " + blockName + "에 이미 다른 숫자들 [" + sExcluded.join(', ') + "]이 모두 채워져 있어서, 이 칸에 들어갈 수 있는 숫자는 오직 [" + sAns + "]뿐입니다.",
+                    scope: { r: sr, c: sc, boxRow: Math.floor(sr / boxRows), boxCol: Math.floor(sc / boxCols) },
+                    reasonTags: sExcluded.map(n => ({ text: n + " 제외", isTarget: false })).concat([{ text: sAns + " 확정!", isTarget: true }])
+                };
+            }
+        }
+    }
+    
+    // 기법 1: Naked Single (단일 후보수) 자동 탐색
+    for (var i = 0; i < emptyCells.length; i++) {
+        var ec = emptyCells[i];
+        if (ec.possibleCount === 1) {
+            var ans = ec.possible[0];
+            var correctAns = gameState.solutionBoard[ec.r][ec.c];
+            if (ans === correctAns) {
+                var excludedNums = excludedMap[ec.r][ec.c] || [];
+                return {
+                    target: { r: ec.r, c: ec.c },
+                    val: ans,
+                    technique: "단일 후보수 (Naked Single)",
+                    badgeText: "유일한 숫자",
+                    explanation: "【" + (ec.r + 1) + "행 " + (ec.c + 1) + "열】 칸을 주목해 보세요!\n같은 가로줄, 세로줄, " + blockName + "에 이미 다른 숫자들 [" + excludedNums.join(', ') + "]이 모두 채워져 있어서, 이 칸에는 오직 [" + ans + "]만 들어갈 수 있습니다.",
+                    scope: { r: ec.r, c: ec.c, boxRow: Math.floor(ec.r / boxRows), boxCol: Math.floor(ec.c / boxCols) },
+                    reasonTags: excludedNums.map(n => ({ text: n + " 제외", isTarget: false })).concat([{ text: ans + " 확정!", isTarget: true }])
+                };
+            }
+        }
+    }
+    
+    // 기법 2-A: Hidden Single (블록 내 유일 위치)
+    var numBoxesRow = Math.floor(size / boxRows);
+    var numBoxesCol = Math.floor(size / boxCols);
+    for (var bRow = 0; bRow < numBoxesRow; bRow++) {
+        for (var bCol = 0; bCol < numBoxesCol; bCol++) {
+            var startR = bRow * boxRows;
+            var startC = bCol * boxCols;
+            
+            for (var num = 1; num <= size; num++) {
+                var alreadyInBox = false;
+                for (var r = 0; r < boxRows; r++) {
+                    for (var c = 0; c < boxCols; c++) {
+                        if (gameState.currentBoard[startR + r][startC + c].value === num) {
+                            alreadyInBox = true;
+                            break;
+                        }
+                    }
+                    if (alreadyInBox) break;
+                }
+                if (alreadyInBox) continue;
+                
+                var possiblePositions = [];
+                for (var r = 0; r < boxRows; r++) {
+                    for (var c = 0; c < boxCols; c++) {
+                        var currR = startR + r;
+                        var currC = startC + c;
+                        if (gameState.currentBoard[currR][currC].value === 0 && candidates[currR][currC].includes(num)) {
+                            possiblePositions.push({ r: currR, c: currC });
+                        }
+                    }
+                }
+                
+                if (possiblePositions.length === 1) {
+                    var target = possiblePositions[0];
+                    if (gameState.solutionBoard[target.r][target.c] === num) {
+                        return {
+                            target: target,
+                            val: num,
+                            technique: "블록 내 유일 자리 (Hidden Single)",
+                            badgeText: blockName + " 유일수",
+                            explanation: "【" + (target.r + 1) + "행 " + (target.c + 1) + "열】이 속한 " + blockName + "을 확인해 보세요!\n주변 가로줄과 세로줄의 제약으로 인해, 이 블록 안에서 숫자 [" + num + "]이 들어갈 수 있는 빈 자리는 오직 이 칸 하나뿐입니다.",
+                            scope: { r: target.r, c: target.c, boxRow: bRow, boxCol: bCol },
+                            reasonTags: [{ text: blockName + " 구역", isTarget: false }, { text: "숫자 " + num + " 자리 확정!", isTarget: true }]
+                        };
+                    }
+                }
+            }
+        }
+    }
+    
+    // 기법 2-B: Hidden Single (가로줄 내 유일 위치)
+    for (var r = 0; r < size; r++) {
+        for (var num = 1; num <= size; num++) {
+            var alreadyInRow = false;
+            for (var c = 0; c < size; c++) {
+                if (gameState.currentBoard[r][c].value === num) {
+                    alreadyInRow = true;
+                    break;
+                }
+            }
+            if (alreadyInRow) continue;
+            
+            var possibleCols = [];
+            for (var c = 0; c < size; c++) {
+                if (gameState.currentBoard[r][c].value === 0 && candidates[r][c].includes(num)) {
+                    possibleCols.push(c);
+                }
+            }
+            
+            if (possibleCols.length === 1) {
+                var targetC = possibleCols[0];
+                if (gameState.solutionBoard[r][targetC] === num) {
+                    return {
+                        target: { r: r, c: targetC },
+                        val: num,
+                        technique: "가로줄 내 유일 자리 (Hidden Single)",
+                        badgeText: "가로줄 유일수",
+                        explanation: "【" + (r + 1) + "행 " + (targetC + 1) + "열】이 속한 가로줄을 살펴보세요!\n세로줄과 블록의 간섭으로 인해, " + (r + 1) + "번째 가로줄에서 숫자 [" + num + "]이 들어갈 수 있는 자리는 오직 이 칸뿐입니다.",
+                        scope: { r: r, c: targetC, boxRow: Math.floor(r / boxRows), boxCol: Math.floor(targetC / boxCols) },
+                        reasonTags: [{ text: (r + 1) + "행 가로줄", isTarget: false }, { text: "숫자 " + num + " 자리 확정!", isTarget: true }]
+                    };
+                }
+            }
+        }
+    }
+    
+    // 기법 2-C: Hidden Single (세로줄 내 유일 위치)
+    for (var c = 0; c < size; c++) {
+        for (var num = 1; num <= size; num++) {
+            var alreadyInCol = false;
+            for (var r = 0; r < size; r++) {
+                if (gameState.currentBoard[r][c].value === num) {
+                    alreadyInCol = true;
+                    break;
+                }
+            }
+            if (alreadyInCol) continue;
+            
+            var possibleRows = [];
+            for (var r = 0; r < size; r++) {
+                if (gameState.currentBoard[r][c].value === 0 && candidates[r][c].includes(num)) {
+                    possibleRows.push(r);
+                }
+            }
+            
+            if (possibleRows.length === 1) {
+                var targetR = possibleRows[0];
+                if (gameState.solutionBoard[targetR][c] === num) {
+                    return {
+                        target: { r: targetR, c: c },
+                        val: num,
+                        technique: "세로줄 내 유일 자리 (Hidden Single)",
+                        badgeText: "세로줄 유일수",
+                        explanation: "【" + (targetR + 1) + "행 " + (c + 1) + "열】이 속한 세로줄을 살펴보세요!\n가로줄과 블록의 간섭으로 인해, " + (c + 1) + "번째 세로줄에서 숫자 [" + num + "]이 들어갈 수 있는 자리는 오직 이 칸뿐입니다.",
+                        scope: { r: targetR, c: c, boxRow: Math.floor(targetR / boxRows), boxCol: Math.floor(c / boxCols) },
+                        reasonTags: [{ text: (c + 1) + "열 세로줄", isTarget: false }, { text: "숫자 " + num + " 자리 확정!", isTarget: true }]
+                    };
+                }
+            }
+        }
+    }
+    
+    // 기법 3: Fallback (최소 후보수 칸 추천)
+    emptyCells.sort((a, b) => a.possibleCount - b.possibleCount);
+    for (var i = 0; i < emptyCells.length; i++) {
+        var ec = emptyCells[i];
+        var ans = gameState.solutionBoard[ec.r][ec.c];
+        if (ec.possible.includes(ans)) {
+            var candStr = ec.possible.join(', ');
+            return {
+                target: { r: ec.r, c: ec.c },
+                val: ans,
+                technique: "최소 후보수 추천 지점",
+                badgeText: "핵심 추천",
+                explanation: "현재 판에서 후보가 가장 좁혀진 핵심 칸인 【" + (ec.r + 1) + "행 " + (ec.c + 1) + "열】을 확인해 보세요!\n가능한 후보 숫자가 [" + candStr + "]뿐이며, 논리적인 정답은 [" + ans + "]입니다.",
+                scope: { r: ec.r, c: ec.c, boxRow: Math.floor(ec.r / boxRows), boxCol: Math.floor(ec.c / boxCols) },
+                reasonTags: ec.possible.map(n => ({ text: "후보 " + n, isTarget: (n === ans) }))
+            };
+        }
+    }
+    
+    // 최종 Fallback: 첫 번째 빈 칸
+    var firstEmpty = emptyCells[0];
+    var firstAns = gameState.solutionBoard[firstEmpty.r][firstEmpty.c];
+    return {
+        target: { r: firstEmpty.r, c: firstEmpty.c },
+        val: firstAns,
+        technique: "추천 풀이 지점",
+        badgeText: "추천 칸",
+        explanation: "【" + (firstEmpty.r + 1) + "행 " + (firstEmpty.c + 1) + "열】을 살펴보세요. 가로줄, 세로줄 및 블록의 단서들을 종합하면 정답은 [" + firstAns + "]입니다.",
+        scope: { r: firstEmpty.r, c: firstEmpty.c, boxRow: Math.floor(firstEmpty.r / boxRows), boxCol: Math.floor(firstEmpty.c / boxCols) },
+        reasonTags: [{ text: "정답 " + firstAns, isTarget: true }]
+    };
+}
+
+function openHintModal(hint) {
+    activeSmartHint = hint;
+    
+    var posText = (hint.target.r + 1) + "행 " + (hint.target.c + 1) + "열 추천";
+    var posEl = document.getElementById("hint-target-pos");
+    var badgeEl = document.getElementById("hint-technique-badge");
+    var expEl = document.getElementById("hint-explanation-text");
+    var tagsContainer = document.getElementById("hint-reason-tags");
+    
+    if (posEl) posEl.innerText = posText;
+    if (badgeEl) badgeEl.innerText = hint.badgeText || hint.technique;
+    if (expEl) expEl.innerText = hint.explanation;
+    
+    if (tagsContainer) {
+        tagsContainer.innerHTML = "";
+        if (hint.reasonTags && hint.reasonTags.length > 0) {
+            hint.reasonTags.forEach(function(tag) {
+                var tagEl = document.createElement("span");
+                tagEl.className = "hint-reason-tag" + (tag.isTarget ? " target-val" : "");
+                tagEl.innerText = tag.text;
+                tagsContainer.appendChild(tagEl);
+            });
+        }
+    }
+    
+    // 추천된 셀로 포커스 자동 선택
+    gameState.selectedCell = { r: hint.target.r, c: hint.target.c };
+    gameState.selectedNumber = 0;
+    
+    // 보드 렌더링 (타겟 펄스 및 스코프 하이라이트 반영)
+    renderBoard();
+    
+    // 모달 표시
+    var modal = document.getElementById("hint-modal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeHintModal() {
+    var modal = document.getElementById("hint-modal");
+    if (modal) modal.style.display = "none";
+}
+
+function solveHintManually() {
+    closeHintModal();
+    // 사용자가 해당 칸을 직접 채울 수 있도록 15초 동안 힌트 타겟 펄스 유지
+    if (smartHintTimeout) clearTimeout(smartHintTimeout);
+    smartHintTimeout = setTimeout(function() {
+        activeSmartHint = null;
+        renderBoard();
+    }, 15000);
+}
+
+function autoFillHintAnswer() {
+    closeHintModal();
+    if (!activeSmartHint) return;
+    
+    var r = activeSmartHint.target.r;
+    var c = activeSmartHint.target.c;
+    var ans = activeSmartHint.val;
     
     saveActionToHistory();
     
     var cell = gameState.currentBoard[r][c];
-    var ans = gameState.solutionBoard[r][c];
     cell.value = ans;
     cell.isHint = true;
     cell.pencilMarks.fill(false);
     gameState.selectedNumber = ans;
     
-    // 힌트가 들어갔으므로 동일 행, 열, 블록의 메모에서 이 정답 소거
     removePencilMarksInScope(r, c, ans);
     
-    gameState.hintsLeft--;
-    document.getElementById("hint-btn").querySelector("span").innerText = "힌트 (" + gameState.hintsLeft + ")";
+    if (gameState.hintsLeft > 0) {
+        gameState.hintsLeft--;
+    }
+    updateHintButtonUI();
     
+    clearActiveSmartHint();
     gameState.selectedCell = null;
     
+    playSFX('input');
     updateErrors();
     renderBoard();
     saveGame();
     checkWinCondition();
 }
+
+function executeSmartHintFlow() {
+    var hint = findSmartHint();
+    if (!hint) {
+        showZenAlert("알림 💡", "현재 풀 수 있는 빈 칸이 없거나 이미 모든 칸이 채워졌습니다.", "info");
+        return;
+    }
+    
+    openHintModal(hint);
+}
+
+function triggerHint() {
+    if (gameState.isPaused) return;
+    
+    // 네이티브 앱 환경: 보상형 전면 광고 호출
+    if (window.AndroidNativeBridge && typeof window.AndroidNativeBridge.showRewardedAdForHint === 'function') {
+        window.AndroidNativeBridge.showRewardedAdForHint();
+        return;
+    }
+    
+    // 웹 환경: 남은 힌트 횟수 검증
+    if (gameState.hintsLeft <= 0) {
+        showZenAlert("힌트 소진 💡", "남은 힌트가 없습니다.", "info");
+        return;
+    }
+    
+    executeSmartHintFlow();
+}
+
+// 레거시 호환용 함수
+function executeHintOnSelectedCell() {
+    executeSmartHintFlow();
+}
+
+// 네이티브 브릿지에서 보상형 광고 시청 완료 시 호출되는 글로벌 콜백
+window.onHintRewardGranted = function() {
+    executeSmartHintFlow();
+};
 
 // 실시간 에러(정답 대조) 마킹
 function updateErrors() {
@@ -1003,7 +1412,8 @@ function handleGameClear() {
     document.getElementById("new-record-badge").style.display = isNewRecord ? "inline-block" : "none";
     document.getElementById("clear-modal").style.display = "flex";
     
-    // 클리어했으므로 진행중이던 세션은 지움
+    // 클리어 플래그 활성화 및 진행중 세션 영구 제거
+    gameState.isCleared = true;
     localStorage.removeItem("SUDOKU_SAVE_GAME");
     checkSavedGame();
 }
@@ -1144,6 +1554,16 @@ function togglePause() {
 }
 
 function saveGame() {
+    // 게임이 이미 클리어되었거나 완성된 상태라면 저장하지 않고 세션 삭제
+    if (gameState.isCleared || isGameCompleted()) {
+        localStorage.removeItem("SUDOKU_SAVE_GAME");
+        return;
+    }
+    
+    if (!gameState.currentBoard || gameState.currentBoard.length === 0) {
+        return;
+    }
+
     var dataToSave = {
         boardSize: gameState.boardSize || 9,
         boxRows: gameState.boxRows || (gameState.boardSize === 6 ? 2 : 3),
@@ -1212,6 +1632,10 @@ function closeHelpModal() {
 
 function handleModalOverlayClick(e, modalId) {
     if (e.target && e.target.id === modalId) {
+        if (modalId === 'hint-modal') {
+            solveHintManually();
+            return;
+        }
         var modal = document.getElementById(modalId);
         if (modal) modal.style.display = "none";
     }
@@ -1451,6 +1875,10 @@ function runOscillator(type) {
 
 function triggerVibration(type) {
     if (!isVibrationEnabled()) return;
+    if (window.AndroidNativeBridge && typeof window.AndroidNativeBridge.vibrate === 'function') {
+        window.AndroidNativeBridge.vibrate(type === 'error' ? 120 : 50);
+        return;
+    }
     if (navigator.vibrate) {
         if (type === 'error') {
             navigator.vibrate([100, 50, 100]); // 짧게 두 번 진동
@@ -1563,6 +1991,48 @@ window.addEventListener('focus', handlePWARecovery);
 // 12. 백업 및 복구 매니저 (JSON 백업/가져오기)
 // ==========================================
 
+var zenAlertCallback = null;
+
+function showZenAlert(title, message, iconType, onConfirm) {
+    var modal = document.getElementById("zen-alert-modal");
+    if (!modal) {
+        alert(message);
+        if (typeof onConfirm === 'function') onConfirm();
+        return;
+    }
+    
+    document.getElementById("zen-alert-title").innerText = title || "알림";
+    document.getElementById("zen-alert-message").innerText = message || "";
+    
+    var iconEl = document.getElementById("zen-alert-icon");
+    if (iconType === 'success') {
+        iconEl.innerText = "✨";
+    } else if (iconType === 'error') {
+        iconEl.innerText = "⚠️";
+    } else if (iconType === 'restore') {
+        iconEl.innerText = "📂";
+    } else if (iconType === 'backup') {
+        iconEl.innerText = "🛡️";
+    } else {
+        iconEl.innerText = "💡";
+    }
+    
+    zenAlertCallback = onConfirm || null;
+    modal.style.display = "flex";
+}
+
+function closeZenAlert() {
+    var modal = document.getElementById("zen-alert-modal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+    if (typeof zenAlertCallback === 'function') {
+        var cb = zenAlertCallback;
+        zenAlertCallback = null;
+        cb();
+    }
+}
+
 function openBackupModal() {
     document.getElementById("backup-modal").style.display = "flex";
 }
@@ -1583,12 +2053,37 @@ function exportBackup() {
         };
         
         var jsonStr = JSON.stringify(backupData, null, 2);
+        var fileName = "sudoku_zen_backup_" + new Date().toISOString().slice(0,10) + ".json";
+        
+        // 1. 안드로이드 하이브리드 앱 네이티브 환경
+        if (window.AndroidNativeBridge && typeof window.AndroidNativeBridge.saveBackupFile === 'function') {
+            var isSaved = window.AndroidNativeBridge.saveBackupFile(jsonStr, fileName);
+            if (isSaved) {
+                playSFX('input');
+                closeBackupModal();
+                showZenAlert(
+                    "백업 완료 🛡️",
+                    "다운로드(Download) 폴더에 백업 파일이 안전하게 저장되었습니다!\n\n파일명: " + fileName,
+                    "backup"
+                );
+            } else {
+                playSFX('error');
+                showZenAlert(
+                    "백업 실패 ⚠️",
+                    "백업 파일을 기기에 저장하는 중 문제가 발생했습니다.",
+                    "error"
+                );
+            }
+            return;
+        }
+        
+        // 2. 일반 웹 브라우저 환경 Fallback
         var blob = new Blob([jsonStr], { type: "application/json" });
         var url = URL.createObjectURL(blob);
         
         var a = document.createElement("a");
         a.href = url;
-        a.download = "sudoku_zen_backup_" + new Date().toISOString().slice(0,10) + ".json";
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         
@@ -1596,9 +2091,19 @@ function exportBackup() {
         URL.revokeObjectURL(url);
         
         playSFX('input');
-        alert("백업 파일이 성공적으로 다운로드되었습니다.");
+        closeBackupModal();
+        showZenAlert(
+            "백업 완료 🛡️",
+            "백업 파일 다운로드가 완료되었습니다.\n\n파일명: " + fileName,
+            "backup"
+        );
     } catch (e) {
-        alert("백업 파일 내보내기 중 에러가 발생했습니다: " + e.message);
+        playSFX('error');
+        showZenAlert(
+            "백업 오류 ⚠️",
+            "백업 파일 생성 중 에러가 발생했습니다:\n" + e.message,
+            "error"
+        );
     }
 }
 
@@ -1612,7 +2117,7 @@ function importBackup(event) {
             var data = JSON.parse(e.target.result);
             
             if (data.records === undefined || data.theme === undefined) {
-                throw new Error("올바른 백업 파일 형식이 아닙니다.");
+                throw new Error("올바른 Sudoku Zen 백업 파일 형식이 아닙니다.");
             }
             
             if (data.records) {
@@ -1631,11 +2136,22 @@ function importBackup(event) {
             }
             
             playSFX('input');
-            alert("성공적으로 복구되었습니다! 기록 갱신을 위해 페이지를 새로고침합니다.");
-            location.reload();
+            closeBackupModal();
+            showZenAlert(
+                "복구 완료 🎉",
+                "개인 최고 기록과 저장 데이터가 안전하게 복구되었습니다!\n\n확인을 누르면 화면이 새로고침됩니다.",
+                "restore",
+                function() {
+                    location.reload();
+                }
+            );
         } catch (err) {
             playSFX('error');
-            alert("기록 복구 실패: " + err.message);
+            showZenAlert(
+                "복구 실패 ⚠️",
+                "기록 복구 중 오류가 발생했습니다:\n" + err.message,
+                "error"
+            );
         }
     };
     reader.readAsText(file);
@@ -1648,3 +2164,7 @@ document.addEventListener('touchmove', function(event) {
         event.preventDefault();
     }
 }, { passive: false });
+
+window.addEventListener('DOMContentLoaded', function() {
+    updateHintButtonUI();
+});
